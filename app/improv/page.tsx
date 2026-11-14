@@ -64,11 +64,12 @@ export default function ImprovModePage() {
           mode="improv"
           timeLimitSeconds={IMPROV_TIME_LIMIT_SECONDS}
           sidePanel={
-            <section aria-label="Topic Briefing" className="card">
-              <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Topic</p>
-              <h2 className="mt-1 text-lg font-semibold">{state.topicBriefing.topic}</h2>
-              <h3 className="mt-4 text-sm font-medium text-neutral-500 dark:text-neutral-400">Speaking Points</h3>
-              <SpeakingPointsList speakingPoints={state.topicBriefing.speakingPoints} className="mt-2 text-sm" />
+            <section aria-label="Topic Briefing" className="rule-top">
+              <h2 className="text-2xl font-extrabold leading-tight tracking-tight font-stretch-condensed">
+                {state.topicBriefing.topic}
+              </h2>
+              <h3 className="mt-5 font-bold">Speaking Points</h3>
+              <SpeakingPointsList speakingPoints={state.topicBriefing.speakingPoints} className="mt-2" />
             </section>
           }
           onFinished={(delivery) => dispatch({ type: "deliveryFinished", delivery })}

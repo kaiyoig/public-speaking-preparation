@@ -47,41 +47,21 @@ interface HostProps {
   placeholder?: string;
 }
 
-/** The Host's avatar placeholder, speaking indicator and caption. */
+/** The Host as type: its state line, the red live mark while it speaks, and its caption. */
 export function Host({ caption, isSpeaking, placeholder = "…" }: HostProps) {
   return (
-    <section aria-label="Host" className="card flex items-start gap-4">
-      <div className="relative shrink-0">
-        {isSpeaking && (
-          <span
-            aria-hidden
-            className="absolute inset-0 animate-ping rounded-full bg-indigo-400/50 dark:bg-indigo-400/40"
-          />
-        )}
-        <div
-          className={`relative flex size-14 items-center justify-center rounded-full text-lg font-semibold text-white transition-colors ${
-            isSpeaking ? "bg-indigo-600 dark:bg-indigo-500" : "bg-neutral-400 dark:bg-neutral-600"
-          }`}
-        >
-          <svg aria-hidden viewBox="0 0 24 24" fill="currentColor" className="size-7">
-            <path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.42 0-8 2.24-8 5v1.5h16V19c0-2.76-3.58-5-8-5Z" />
-          </svg>
-        </div>
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          Host <span className="sr-only">is</span>
-          <span className="ml-1 text-xs font-normal">{isSpeaking ? "speaking…" : "listening"}</span>
-        </p>
-        <p
-          aria-live="polite"
-          className={`mt-1 text-lg leading-snug ${
-            isSpeaking ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-600 dark:text-neutral-400"
-          }`}
-        >
-          {caption || placeholder}
-        </p>
-      </div>
+    <section aria-label="Host" className="rule-top">
+      <p className="flex items-center gap-3 text-lg font-bold">
+        Host
+        <span className={`flex items-center gap-2 font-normal ${isSpeaking ? "text-ink" : "text-mute"}`}>
+          <span className="sr-only">is</span>
+          {isSpeaking && <span aria-hidden className="live-mark" />}
+          {isSpeaking ? "Speaking" : "Listening"}
+        </span>
+      </p>
+      <p aria-live="polite" className={`mt-3 text-xl leading-snug ${isSpeaking ? "text-ink" : "text-mute"}`}>
+        {caption || placeholder}
+      </p>
     </section>
   );
 }

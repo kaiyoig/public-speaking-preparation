@@ -115,91 +115,91 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   }, [state, overtimeSeconds, endSpeech]);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-      <div className="flex flex-col gap-4">
-        <CameraPlaceholder live={state.status === "speaking"} />
+    <div className="flex flex-col gap-8">
+      <Timer
+        label={inOvertime ? "Overtime" : state.status === "ready" || state.status === "starting" ? "Time Limit" : "Time left"}
+        value={inOvertime ? `+${formatClock(overtimeSeconds, "floor")}` : formatClock(remainingSeconds, "ceil")}
+        warning={inOvertime}
+        note={
+          inOvertime && state.status === "speaking" ? (
+            <p role="status" className="text-lg font-semibold">
+              You're over the Time Limit. Delivery will end automatically in {graceLeftSeconds}s.
+            </p>
+          ) : null
+        }
+      />
 
-        {inOvertime && state.status === "speaking" && (
-          <div
-            role="status"
-            className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 font-medium text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
-          >
-            You're over the Time Limit. Delivery will end automatically in {graceLeftSeconds}s.
+      <div className="grid gap-8 lg:grid-cols-9">
+        <div className="flex flex-col gap-4 lg:col-span-6">
+          <CameraPlaceholder live={state.status === "speaking"} />
+
+          {startError && <ErrorView compact message={startError} onRetry={startSpeech} />}
+          {stopError && <ErrorView compact message={stopError} onRetry={stopCapture} />}
+
+          <div className="flex flex-wrap items-center gap-3">
+            {(state.status === "ready" || state.status === "starting") && (
+              <button
+                type="button"
+                onClick={startSpeech}
+                disabled={state.status === "starting" || isSpeaking || greeting.status === "pending"}
+                className="btn-primary"
+              >
+                {state.status === "starting" ? "Starting…" : "Start speech"}
+              </button>
+            )}
+            {state.status === "speaking" && (
+              <button type="button" onClick={() => endSpeech(state.startedAt)} className="btn-primary">
+                End speech
+              </button>
+            )}
+            {state.status === "ending" && !stopError && (
+              <span role="status" className="text-lg">
+                Wrapping up…
+              </span>
+            )}
+            {state.status !== "ending" && (
+              <span className="ml-auto">
+                <QuitButton onQuit={onQuit} />
+              </span>
+            )}
           </div>
-        )}
-
-        {startError && <ErrorView compact message={startError} onRetry={startSpeech} />}
-        {stopError && <ErrorView compact message={stopError} onRetry={stopCapture} />}
-
-        <div className="flex flex-wrap items-center gap-3">
-          {(state.status === "ready" || state.status === "starting") && (
-            <button
-              type="button"
-              onClick={startSpeech}
-              disabled={state.status === "starting" || isSpeaking || greeting.status === "pending"}
-              className="btn-primary"
-            >
-              {state.status === "starting" ? "Starting…" : "Start speech"}
-            </button>
-          )}
-          {state.status === "speaking" && (
-            <button type="button" onClick={() => endSpeech(state.startedAt)} className="btn-primary">
-              End speech
-            </button>
-          )}
-          {state.status === "ending" && !stopError && (
-            <span role="status" className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
-              <span
-                aria-hidden
-                className="size-4 animate-spin rounded-full border-2 border-neutral-300 border-t-indigo-600 dark:border-neutral-700 dark:border-t-indigo-400"
-              />
-              Wrapping up…
-            </span>
-          )}
-          {state.status !== "ending" && (
-            <span className="ml-auto">
-              <QuitButton onQuit={onQuit} />
-            </span>
-          )}
         </div>
-      </div>
 
-      <aside className="flex flex-col gap-4">
-        <Timer
-          label={inOvertime ? "Overtime" : state.status === "ready" || state.status === "starting" ? "Time Limit" : "Time left"}
-          value={inOvertime ? `+${formatClock(overtimeSeconds, "floor")}` : formatClock(remainingSeconds, "ceil")}
-          warning={inOvertime}
-        />
-        <Host caption={caption} isSpeaking={isSpeaking} />
-        {greeting.status === "error" && (
-          <ErrorView compact message={greeting.message} onRetry={() => setGreetingAttempt((n) => n + 1)} />
-        )}
-        {sidePanel}
-      </aside>
+        <aside className="flex flex-col gap-8 lg:col-span-3">
+          <Host caption={caption} isSpeaking={isSpeaking} />
+          {greeting.status === "error" && (
+            <ErrorView compact message={greeting.message} onRetry={() => setGreetingAttempt((n) => n + 1)} />
+          )}
+          {sidePanel}
+        </aside>
+      </div>
     </div>
   );
 }
 
-function Timer({ label, value, warning }: { label: string; value: string; warning: boolean }) {
+interface TimerProps {
+  label: string;
+  value: string;
+  /** Overtime: the whole block turns signal red. */
+  warning: boolean;
+  note: ReactNode;
+}
+
+/** The signature element: huge condensed numerals across the content field. */
+function Timer({ label, value, warning, note }: TimerProps) {
   return (
     <section
       aria-label="Timer"
-      className={`card text-center transition-colors ${
-        warning ? "border-amber-400 bg-amber-50 dark:border-amber-600 dark:bg-amber-950" : ""
+      className={`border-t-2 pt-3 pb-5 ${
+        // In Overtime the red bleeds into the gutter so the numerals don't move.
+        warning ? "-mx-4 border-signal bg-signal px-4 text-white sm:-mx-5 sm:px-5" : "border-ink"
       }`}
     >
-      <p
-        className={`text-sm font-medium ${
-          warning ? "text-amber-800 dark:text-amber-300" : "text-neutral-500 dark:text-neutral-400"
-        }`}
-      >
-        {label}
-      </p>
-      <p
-        className={`mt-1 text-5xl font-semibold tabular-nums tracking-tight ${
-          warning ? "text-amber-600 dark:text-amber-400" : ""
-        }`}
-      >
+      <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1">
+        <p className="text-lg font-bold">{label}</p>
+        {note}
+      </div>
+      <p className="mt-3 text-[clamp(6rem,min(28vw,30vh),18rem)] font-black leading-[0.8] tracking-[-0.03em] tabular-nums font-stretch-condensed">
         {value}
       </p>
     </section>
