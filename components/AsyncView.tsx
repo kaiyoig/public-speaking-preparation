@@ -33,7 +33,7 @@ export function AsyncView<T>({ run, label, children }: AsyncViewProps<T>) {
         if (!cancelled) {
           setState({
             status: "error",
-            message: error instanceof Error ? error.message : "Something went wrong.",
+            message: errorMessage(error),
           });
         }
       },
@@ -46,17 +46,7 @@ export function AsyncView<T>({ run, label, children }: AsyncViewProps<T>) {
   if (state.status === "pending") return <LoadingView label={label} />;
 
   if (state.status === "error") {
-    return (
-      <div
-        role="alert"
-        className="flex flex-col items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-10 text-center dark:border-neutral-800 dark:bg-neutral-900"
-      >
-        <p className="text-neutral-700 dark:text-neutral-300">{state.message}</p>
-        <button type="button" onClick={() => setAttempt((n) => n + 1)} className="btn-primary">
-          Try again
-        </button>
-      </div>
-    );
+    return <ErrorView message={state.message} onRetry={() => setAttempt((n) => n + 1)} />;
   }
 
   return <>{children(state.value)}</>;
@@ -75,4 +65,33 @@ export function LoadingView({ label }: { label: string }) {
       <span>{label}</span>
     </div>
   );
+}
+
+interface ErrorViewProps {
+  message: string;
+  onRetry: () => void;
+  /** A smaller inline version for use inside other cards. */
+  compact?: boolean;
+}
+
+export function ErrorView({ message, onRetry, compact = false }: ErrorViewProps) {
+  return (
+    <div
+      role="alert"
+      className={
+        compact
+          ? "flex flex-wrap items-center justify-between gap-3 rounded-lg border border-neutral-300 bg-neutral-100 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800"
+          : "flex flex-col items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-10 text-center dark:border-neutral-800 dark:bg-neutral-900"
+      }
+    >
+      <p className="text-neutral-700 dark:text-neutral-300">{message}</p>
+      <button type="button" onClick={onRetry} className={compact ? "btn-secondary" : "btn-primary"}>
+        Try again
+      </button>
+    </div>
+  );
+}
+
+export function errorMessage(error: unknown): string {
+  return error instanceof Error && error.message ? error.message : "Something went wrong.";
 }
