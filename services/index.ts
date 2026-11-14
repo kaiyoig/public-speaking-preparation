@@ -2,8 +2,8 @@ import type { HostBrain } from "./HostBrain";
 import type { SpeechCapture } from "./SpeechCapture";
 import type { TopicSource } from "./TopicSource";
 import { BrowserSpeechCapture } from "./BrowserSpeechCapture";
+import { BrightDataTopicSource } from "./BrightDataTopicSource";
 import { GeminiHostBrain } from "./GeminiHostBrain";
-import { FakeTopicSource } from "./fakes/FakeTopicSource";
 
 export type { HostBrain, ReflectionInput } from "./HostBrain";
 export type { SpeechCapture, SpeechCaptureStartOptions } from "./SpeechCapture";
@@ -21,6 +21,6 @@ export interface Services {
  */
 export const services: Services = {
   speechCapture: new BrowserSpeechCapture(),
-  topicSource: new FakeTopicSource(),
+  topicSource: new BrightDataTopicSource(),
   hostBrain: new GeminiHostBrain(),
 };

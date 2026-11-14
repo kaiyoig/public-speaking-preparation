@@ -226,6 +226,61 @@ export async function generateHostReflection(
   return JSON.parse(response.text ?? "{}") as Reflection;
 }
 
+export interface RawResearchSource {
+  title: string;
+  description: string;
+  url: string;
+}
+
+/**
+ * Uses Gemini to parse raw Bright Data SERP results into 4-5 neat, speakable
+ * talking points (facts, supporting arguments, and a counterargument) for Improv Mode.
+ */
+export async function distillTopicSpeakingPoints(
+  topic: string,
+  sources: RawResearchSource[]
+): Promise<string[]> {
+  if (sources.length === 0) return [];
+
+  const sourceList = sources
+    .map(
+      (s, i) =>
+        `[${i + 1}] ${s.title}\nSnippet: ${s.description || "(No snippet)"}\nURL: ${s.url}`
+    )
+    .join("\n\n");
+
+  const prompt =
+    `Improv/Debate Topic: "${topic}"\n\n` +
+    `Web Search Results:\n${sourceList}\n\n` +
+    `Turn these search results into 4-5 concise, speakable talking points for a 2-minute impromptu speech. ` +
+    `Include key facts/evidence, a strong supporting angle, and 1 counterargument or nuance to address. ` +
+    `Keep each point to 1 clear sentence without markdown or citations.`;
+
+  const response = await ai.models.generateContent({
+    model: config.defaultGeminiModel,
+    contents: prompt,
+    config: {
+      systemInstruction:
+        "You are a debate and public speaking coach. Distill raw web search snippets into neat, " +
+        "conversational, well-balanced talking points that a speaker can glance at and use immediately.",
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          speakingPoints: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+          },
+        },
+        required: ["speakingPoints"],
+      },
+    },
+  });
+
+  const parsed = JSON.parse(response.text ?? "{}") as { speakingPoints?: string[] };
+  return (parsed.speakingPoints ?? []).map((p) => p.trim()).filter(Boolean).slice(0, 5);
+}
+
 // Run standalone starter check if executed directly: `npm run gemini`
 if (import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, "/")}`) {
   const sampleBrief: SpeechBrief = {

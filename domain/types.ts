@@ -14,10 +14,16 @@ export interface SpeechBrief {
   notes?: string;
 }
 
+export interface TopicSourceLink {
+  title: string;
+  url: string;
+}
+
 /** The randomly chosen topic and its Speaking Points, given before an Improv Mode Session. */
 export interface TopicBriefing {
   topic: string;
   speakingPoints: string[];
+  sources?: TopicSourceLink[];
 }
 
 /** What SpeechCapture returns when capture stops. */

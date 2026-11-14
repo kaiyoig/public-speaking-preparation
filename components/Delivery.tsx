@@ -119,36 +119,34 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
       <div className="flex flex-col gap-4">
         <CameraPlaceholder live={state.status === "speaking"} />
 
-        {mode === "normal" && (
-          <section
-            aria-label="Live Transcript"
-            className="card flex flex-col gap-2"
+        <section
+          aria-label="Live Transcript"
+          className="card flex flex-col gap-2"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              Live Transcript
+            </h2>
+            {state.status === "speaking" && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                <span className="size-2 animate-pulse rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                Listening…
+              </span>
+            )}
+          </div>
+          <p
+            aria-live="polite"
+            className="max-h-40 min-h-16 overflow-y-auto whitespace-pre-wrap text-base leading-relaxed text-neutral-800 dark:text-neutral-200"
           >
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                Live Transcript
-              </h2>
-              {state.status === "speaking" && (
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                  <span className="size-2 animate-pulse rounded-full bg-indigo-600 dark:bg-indigo-400" />
-                  Listening…
-                </span>
-              )}
-            </div>
-            <p
-              aria-live="polite"
-              className="max-h-40 min-h-16 overflow-y-auto whitespace-pre-wrap text-base leading-relaxed text-neutral-800 dark:text-neutral-200"
-            >
-              {capture.liveTranscript || (
-                <span className="text-neutral-400 dark:text-neutral-500">
-                  {state.status === "speaking"
-                    ? "Speak into your microphone — your words will stream here in real time…"
-                    : 'Press "Start speech" to begin capturing your microphone.'}
-                </span>
-              )}
-            </p>
-          </section>
-        )}
+            {capture.liveTranscript || (
+              <span className="text-neutral-400 dark:text-neutral-500">
+                {state.status === "speaking"
+                  ? "Speak into your microphone — your words will stream here in real time…"
+                  : 'Press "Start speech" to begin capturing your microphone.'}
+              </span>
+            )}
+          </p>
+        </section>
 
         {inOvertime && state.status === "speaking" && (
           <div
