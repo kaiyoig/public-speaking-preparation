@@ -5,6 +5,8 @@
  * Red means "live" and nothing else: the mic capturing, the Host speaking, Overtime.
  * Paper and ink stop just short of pure white and black so body text doesn't glare.
  * Mute is for secondary text: about 65% of ink.
+ * Highlight is a marker-pen yellow, always a fill under dark text and never a text colour.
+ * It marks where to go: the arrow into a Mode.
  */
 :root {
   color-scheme: light dark;
@@ -13,6 +15,8 @@
   --mute: #666666;
   --field: #ebebeb;
   --signal: #e4002b;
+  --highlight: #ffd60a;
+  --on-highlight: #0a0a0a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,6 +35,8 @@
   --color-mute: var(--mute);
   --color-field: var(--field);
   --color-signal: var(--signal);
+  --color-highlight: var(--highlight);
+  --color-on-highlight: var(--on-highlight);
 
   --animate-indeterminate: indeterminate 1.6s ease-in-out infinite;
 
@@ -46,8 +52,8 @@
 
 @layer base {
   ::selection {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--highlight);
+    color: var(--on-highlight);
   }
 
   :focus-visible {
