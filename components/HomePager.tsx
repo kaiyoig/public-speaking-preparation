@@ -2,10 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
-type View = "about" | "modes";
+/** The panels, top to bottom. */
+const VIEWS = ["title", "about", "modes"] as const;
 
-/** The URL hash that means the Modes panel is showing. Anything else shows the About panel. */
-const MODES_HASH = "#modes";
+type View = (typeof VIEWS)[number];
+
+/** The URL hash each panel is kept under. The Title panel has none: any other hash shows it. */
+const HASHES: Partial<Record<View, string>> = { about: "#about", modes: "#modes" };
+
+/** How far the stack of panels is shifted up to bring each one on screen. */
+const SHIFT: Record<View, string> = { title: "", about: "-translate-y-1/3", modes: "-translate-y-2/3" };
 
 /** How long the slide between panels takes. Scroll input is ignored until it has finished. */
 const SLIDE_MS = 600;
@@ -16,33 +22,29 @@ const SAME_GESTURE_MS = 200;
 /** How far a finger has to travel before a swipe changes panel. */
 const SWIPE_PX = 48;
 
-const viewFromHash = (): View => (window.location.hash === MODES_HASH ? "modes" : "about");
+const viewFromHash = (): View => VIEWS.find((view) => HASHES[view] === window.location.hash) ?? "title";
 
-interface HomePagerProps {
-  about: ReactNode;
-  modes: ReactNode;
-}
+type HomePagerProps = Record<View, ReactNode>;
 
 /**
- * Home as two full-screen panels, About above Modes, with nothing in between:
- * scrolling down from About slides straight to Modes, and scrolling up from Modes
- * slides straight back. The view never rests part-way.
+ * Home as three full-screen panels, Title above About above Modes, with nothing in
+ * between: scrolling down slides straight to the next panel, and scrolling up slides
+ * straight back to the one before. The view never rests part-way.
  *
  * A panel taller than the screen scrolls inside itself first, and only hands over
- * to the other panel from its own edge.
+ * to its neighbour from its own edge.
  *
- * The showing panel is kept in the URL hash, so links to `#modes` and `#about`
+ * The showing panel is kept in the URL hash, so links to `#about` and `#modes`
  * change panel, and Back from a Session returns to Modes.
  */
-export function HomePager({ about, modes }: HomePagerProps) {
-  const [view, setView] = useState<View>("about");
+export function HomePager(panels: HomePagerProps) {
+  const [view, setView] = useState<View>("title");
   // Off until the Speaker moves between panels, so opening on #modes doesn't slide in.
   const [animated, setAnimated] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const aboutRef = useRef<HTMLDivElement>(null);
-  const modesRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<View>("about");
+  const panelRefs = useRef<Partial<Record<View, HTMLDivElement | null>>>({});
+  const viewRef = useRef<View>("title");
   const lockedUntil = useRef(0);
 
   const show = useCallback((next: View) => {
@@ -55,7 +57,7 @@ export function HomePager({ about, modes }: HomePagerProps) {
 
   // Focus follows the panel once it stops being inert, so the keyboard scrolls it and Tab starts inside it.
   useEffect(() => {
-    if (animated) (view === "about" ? aboutRef : modesRef).current?.focus({ preventScroll: true });
+    if (animated) panelRefs.current[view]?.focus({ preventScroll: true });
   }, [view, animated]);
 
   useEffect(() => {
@@ -64,18 +66,20 @@ export function HomePager({ about, modes }: HomePagerProps) {
 
     /** Scroll or key input: change panel, and record the change in the URL without adding history. */
     const go = (next: View) => {
-      window.history.replaceState(window.history.state, "", next === "modes" ? MODES_HASH : window.location.pathname);
+      window.history.replaceState(window.history.state, "", HASHES[next] ?? window.location.pathname);
       show(next);
     };
 
-    const panel = () => (viewRef.current === "about" ? aboutRef : modesRef).current;
+    const panel = () => panelRefs.current[viewRef.current];
+    /** The panel below the current one, or above it. Undefined past either end. */
+    const neighbour = (down: boolean): View | undefined => VIEWS[VIEWS.indexOf(viewRef.current) + (down ? 1 : -1)];
     const atStart = () => (panel()?.scrollTop ?? 0) <= 0;
     const atEnd = () => {
       const el = panel();
       return !el || el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
     };
-    /** True when moving in this direction would leave the current panel from its edge. */
-    const leaves = (down: boolean) => (viewRef.current === "about" ? down && atEnd() : !down && atStart());
+    /** The panel that moving in this direction leaves for, once the current one is at that edge. */
+    const leavesFor = (down: boolean) => ((down ? atEnd() : atStart()) ? neighbour(down) : undefined);
 
     // Open on whatever the URL says, without a slide.
     const initial = viewFromHash();
@@ -95,12 +99,13 @@ export function HomePager({ about, modes }: HomePagerProps) {
         return;
       }
       // A gesture that was scrolling inside the panel stops at the edge; the next one crosses it.
-      if (!leaves(event.deltaY > 0) || now - lastInnerScroll < SAME_GESTURE_MS) {
+      const next = leavesFor(event.deltaY > 0);
+      if (!next || now - lastInnerScroll < SAME_GESTURE_MS) {
         lastInnerScroll = now;
         return;
       }
       event.preventDefault();
-      go(viewRef.current === "about" ? "modes" : "about");
+      go(next);
     };
 
     let touchStartY: number | null = null;
@@ -121,7 +126,8 @@ export function HomePager({ about, modes }: HomePagerProps) {
       // Swiping up moves down the page. The swipe has to start with the panel already at its edge.
       const down = travelled < 0;
       const startedAtEdge = down ? touchStartedAtEnd : touchStartedAtStart;
-      if (startedAtEdge && leaves(down)) go(viewRef.current === "about" ? "modes" : "about");
+      const next = startedAtEdge ? leavesFor(down) : undefined;
+      if (next) go(next);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -135,7 +141,8 @@ export function HomePager({ about, modes }: HomePagerProps) {
         event.preventDefault();
         return;
       }
-      if (!leaves(down)) {
+      const next = leavesFor(down);
+      if (!next) {
         // Before anything has focus the keys reach no scroller, so scroll the panel for them.
         if (document.activeElement === document.body) {
           event.preventDefault();
@@ -146,7 +153,7 @@ export function HomePager({ about, modes }: HomePagerProps) {
         return;
       }
       event.preventDefault();
-      go(viewRef.current === "about" ? "modes" : "about");
+      go(next);
     };
 
     window.addEventListener("hashchange", onHashChange);
@@ -163,22 +170,28 @@ export function HomePager({ about, modes }: HomePagerProps) {
     };
   }, [show]);
 
-  const panelClass = "h-1/2 overflow-y-auto overscroll-contain outline-none";
 
   return (
     <div ref={containerRef} data-pager className="fixed inset-0 overflow-clip">
       <div
-        className={`h-[200%] ${view === "modes" ? "-translate-y-1/2" : ""} ${
+        className={`h-[300%] ${SHIFT[view]} ${
           animated ? "motion-safe:transition-transform motion-safe:duration-600 motion-safe:ease-[cubic-bezier(0.7,0,0.2,1)]" : ""
         }`}
       >
-        {/* The panel that is off screen is inert: it can't take focus and isn't read out. */}
-        <div ref={aboutRef} tabIndex={-1} inert={view !== "about"} className={panelClass}>
-          {about}
-        </div>
-        <div ref={modesRef} tabIndex={-1} inert={view !== "modes"} className={panelClass}>
-          {modes}
-        </div>
+        {/* A panel that is off screen is inert: it can't take focus and isn't read out. */}
+        {VIEWS.map((name) => (
+          <div
+            key={name}
+            ref={(el) => {
+              panelRefs.current[name] = el;
+            }}
+            tabIndex={-1}
+            inert={view !== name}
+            className="h-1/3 overflow-y-auto overscroll-contain outline-none"
+          >
+            {panels[name]}
+          </div>
+        ))}
       </div>
     </div>
   );

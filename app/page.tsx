@@ -52,42 +52,61 @@ const HOST_ROLES = [
 ];
 
 export default function Home() {
-  return <HomePager about={<About />} modes={<Modes />} />;
+  return <HomePager title={<Title />} about={<About />} modes={<Modes />} />;
+}
+
+/** The top panel: the name and nothing else, set as wide as the screen allows. */
+function Title() {
+  return (
+    <div className="mx-auto flex h-full w-full max-w-[1280px] items-end overflow-clip px-6 pb-10 sm:px-12 lg:px-24 lg:pb-20">
+      <h1 className="-ml-[0.06em] text-[clamp(3.5rem,min(17vw,40vh),15rem)] font-bold leading-[0.8] tracking-[-0.045em] font-display">
+        Rhetor
+      </h1>
+    </div>
+  );
 }
 
 /**
- * The top panel: the name at poster size, then what the app is and what the Host does.
- * Its lower half sits on the same 3 + 9 columns as the Modes panel beneath it.
+ * The middle panel: what the app is in the rail, and the Host's four roles two by two
+ * in the content field. It sits on the same 3 + 9 columns as the Modes panel beneath it.
  */
 function About() {
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col px-4 pt-5 pb-6 sm:px-6 lg:px-10 lg:pt-9 lg:pb-10">
-      <h1 className="-ml-[0.06em] pb-8 text-[clamp(5rem,min(25vw,42vh),24rem)] font-bold leading-[0.85] tracking-[-0.045em] font-display">
-        Rhetor
-      </h1>
-
-      <div className="mt-auto grid grid-cols-4 gap-x-6 gap-y-8 border-t-2 border-ink pt-4 lg:grid-cols-12 lg:gap-x-8">
-        <p className="col-span-4 max-w-[30ch] text-2xl leading-[1.2] font-medium lg:col-span-3">
+    <div className="mx-auto grid min-h-full w-full max-w-[1280px] grid-cols-4 gap-x-6 px-6 max-lg:grid-rows-[auto_auto_1fr_auto] sm:px-12 lg:grid-cols-12 lg:gap-x-8 lg:px-24">
+      {/* On small screens the rail dissolves into the page, so the link can drop below the roles. */}
+      <div className="max-lg:contents lg:col-span-3 lg:flex lg:flex-col lg:py-20">
+        <a
+          href="#top"
+          className="col-span-4 block self-start pt-5 text-[1.75rem] font-bold leading-[0.92] tracking-tight font-display hover:text-mute lg:pt-0"
+        >
+          Rhetor
+        </a>
+        <h1 className="sr-only">About Rhetor</h1>
+        <p className="col-span-4 mt-6 max-w-[30ch] text-xl leading-[1.25] font-medium lg:mt-14">
           A practice room for speeches. Bring one you’ve prepared, or improvise on a random topic, and give it to an
           AI host.
         </p>
-        <ul className="col-span-4 grid grid-cols-2 gap-x-6 gap-y-5 text-lg leading-snug sm:grid-cols-4 lg:col-span-9 lg:gap-x-8">
-          {HOST_ROLES.map((role) => (
-            <li key={role.title}>
-              <p className="font-bold">{role.title}</p>
-              <p className="text-mute">{role.detail}</p>
-            </li>
-          ))}
-        </ul>
+        <a
+          href="#modes"
+          className="group col-span-4 flex items-center gap-4 self-start pb-6 text-xl font-bold outline-offset-4 max-lg:order-last lg:mt-auto lg:pb-0"
+        >
+          <Arrow className="size-10 rotate-90 p-2 sm:size-11 sm:p-2.5" />
+          Choose a mode
+        </a>
       </div>
 
-      <a
-        href="#modes"
-        className="group mt-10 flex items-center gap-4 self-start text-2xl font-bold outline-offset-4"
-      >
-        <Arrow className="size-12 rotate-90 p-2.5 sm:size-14 sm:p-3" />
-        Choose a mode
-      </a>
+      <ul className="col-span-4 grid auto-rows-fr grid-cols-2 gap-x-6 py-8 lg:col-span-9 lg:gap-x-8 lg:py-20">
+        {HOST_ROLES.map((role) => (
+          <li key={role.title} className="border-t-2 border-ink pt-4 pb-10 lg:pb-12">
+            <h2 className="text-[clamp(1.5rem,min(2.6vw,5.5vh),2.75rem)] font-bold leading-[0.95] tracking-[-0.035em] font-display">
+              {role.title}
+            </h2>
+            <p className="mt-3 max-w-[28ch] text-base leading-snug text-mute sm:text-lg">
+              {role.detail}
+            </p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -95,13 +114,7 @@ function About() {
 /** The bottom panel: the two Modes to choose between. */
 function Modes() {
   return (
-    <Shell
-      rail={
-        <a href="#about" className="text-lg font-semibold underline underline-offset-4 hover:text-mute">
-          About this app
-        </a>
-      }
-    >
+    <Shell>
       <h1 className="sr-only">Choose a mode</h1>
       <nav aria-label="Modes" className="flex grow flex-col">
         <ul className="grid grow auto-rows-fr">
@@ -121,15 +134,15 @@ function ModeEntry({ mode }: { mode: Mode }) {
   return (
     <li className="group relative flex flex-col border-t-2 border-ink pt-4 pb-10 outline-offset-4 outline-ink has-[a:focus-visible]:outline-2 lg:pb-12">
       <div className="flex items-start justify-between gap-6">
-        <h2 className="text-[clamp(2.5rem,min(9vw,17vh),9rem)] font-bold leading-[0.9] tracking-[-0.04em] font-display">
+        <h2 className="text-[clamp(2rem,min(5vw,10vh),5rem)] font-bold leading-[0.9] tracking-[-0.04em] font-display">
           <Link href={mode.href} className="outline-none after:absolute after:inset-0 after:z-10">
             {mode.title}
           </Link>
         </h2>
-        <Arrow className="mt-[0.06em] size-[clamp(2.75rem,min(7.5vw,13.5vh),7rem)] p-[0.4rem] sm:p-3" />
+        <Arrow className="mt-[0.06em] size-[clamp(2.25rem,min(4.2vw,8.5vh),4.25rem)] p-[0.4rem] sm:p-2.5" />
       </div>
 
-      <p className="mt-5 max-w-[34ch] text-2xl leading-[1.2] font-medium sm:text-[1.625rem]">{mode.description}</p>
+      <p className="mt-4 max-w-[36ch] text-xl leading-[1.25] font-medium">{mode.description}</p>
 
       <ol
         aria-label={`${mode.title} Phases`}

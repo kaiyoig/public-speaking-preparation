@@ -19,8 +19,8 @@ export function Shell({ rail, wordmarkLinksHome = true, children }: ShellProps) 
   const wordmark = "Rhetor";
 
   return (
-    <div className="mx-auto grid min-h-screen w-full max-w-[1600px] grid-cols-4 gap-x-6 px-4 sm:px-6 lg:grid-cols-12 lg:gap-x-8 lg:px-10">
-      <header className="col-span-4 flex flex-wrap items-start justify-between gap-x-10 gap-y-6 pt-5 lg:sticky lg:top-0 lg:col-span-3 lg:h-screen lg:flex-col lg:flex-nowrap lg:justify-start lg:gap-14 lg:py-10">
+    <div className="mx-auto grid min-h-screen w-full max-w-[1280px] grid-cols-4 gap-x-6 px-6 sm:px-12 lg:grid-cols-12 lg:gap-x-8 lg:px-24">
+      <header className="col-span-4 flex flex-wrap items-start justify-between gap-x-10 gap-y-6 pt-5 lg:sticky lg:top-0 lg:col-span-3 lg:h-screen lg:flex-col lg:flex-nowrap lg:justify-start lg:gap-14 lg:py-20">
         {wordmarkLinksHome ? (
           <Link href="/" className={`${WORDMARK_CLASS} hover:text-mute`}>
             {wordmark}
@@ -30,7 +30,7 @@ export function Shell({ rail, wordmarkLinksHome = true, children }: ShellProps) 
         )}
         {rail}
       </header>
-      <main className="col-span-4 flex flex-col py-8 lg:col-span-9 lg:py-10">{children}</main>
+      <main className="col-span-4 flex flex-col py-8 lg:col-span-9 lg:py-20">{children}</main>
     </div>
   );
 }
