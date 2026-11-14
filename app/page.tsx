@@ -7,45 +7,53 @@ const MODES = [
     title: "Normal Mode",
     description:
       "Practise a speech you prepared. Describe it in a Speech Brief, deliver it, then answer the Host's Questions.",
-    phases: "Setup · Delivery · Q&A · Reflection",
+    phases: ["Setup", "Delivery", "Q&A", "Reflection"],
   },
   {
     href: "/improv",
     title: "Improv Mode",
     description:
       "Speak for 2 minutes on a random topic. You get a Topic Briefing with Speaking Points to draw on.",
-    phases: "Setup · Delivery · Reflection",
+    phases: ["Setup", "Delivery", "Reflection"],
   },
 ] as const;
 
 export default function Home() {
   return (
-    <Shell>
-    <div className="flex flex-col gap-12 py-8">
-      <header className="max-w-2xl">
-        <h1 className="text-4xl font-semibold tracking-tight">Public Speaking Preparation</h1>
-        <p className="mt-3 text-lg text-neutral-600 dark:text-neutral-400">
+    <Shell
+      rail={
+        <p className="max-w-xs text-lg leading-snug">
           Rehearse in front of an AI Host that listens, watches, asks Questions and gives you a spoken Reflection.
         </p>
-      </header>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {MODES.map((mode) => (
-          <Link
-            key={mode.href}
-            href={mode.href}
-            className="card group flex flex-col gap-3 p-8 transition-colors hover:border-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:hover:border-indigo-500"
-          >
-            <h2 className="text-2xl font-semibold">{mode.title}</h2>
-            <p className="text-neutral-600 dark:text-neutral-400">{mode.description}</p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-500">{mode.phases}</p>
-            <span className="mt-auto pt-4 font-medium text-indigo-600 group-hover:underline dark:text-indigo-400">
-              Start {mode.title} →
-            </span>
-          </Link>
-        ))}
-      </div>
-    </div>
+      }
+    >
+      <h1 className="sr-only">Public Speaking Preparation</h1>
+      <nav aria-label="Modes">
+        <ul>
+          {MODES.map((mode) => (
+            <li
+              key={mode.href}
+              className="grid gap-x-8 gap-y-6 border-t-2 border-ink pt-4 pb-14 lg:grid-cols-9 lg:pb-20"
+            >
+              <Link
+                href={mode.href}
+                className="col-span-full text-[clamp(3.5rem,10.5vw,10rem)] font-black leading-[0.85] tracking-[-0.025em] font-stretch-condensed decoration-[0.07em] underline-offset-[0.1em] hover:underline"
+              >
+                {mode.title}
+              </Link>
+              <p className="max-w-[52ch] text-lg leading-relaxed lg:col-span-5">{mode.description}</p>
+              <ol aria-label={`${mode.title} Phases`} className="text-lg lg:col-span-3 lg:col-start-7">
+                {mode.phases.map((phase, index) => (
+                  <li key={phase} className="flex items-baseline gap-2.5">
+                    <span className="w-3 tabular-nums">{index + 1}</span>
+                    <span>{phase}</span>
+                  </li>
+                ))}
+              </ol>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </Shell>
   );
 }
