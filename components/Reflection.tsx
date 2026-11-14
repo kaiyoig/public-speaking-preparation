@@ -8,14 +8,14 @@ import { services, type ReflectionInput } from "@/services";
 
 interface ReflectionProps {
   input: ReflectionInput;
-  onPractiseAgain: () => void;
+  onPracticeAgain: () => void;
 }
 
 /** The Reflection Phase, shared by both Modes: what the Speaker can improve. No numeric scores. */
-export function Reflection({ input, onPractiseAgain }: ReflectionProps) {
+export function Reflection({ input, onPracticeAgain }: ReflectionProps) {
   return (
     <AsyncView run={() => services.hostBrain.getReflection(input)} label="The host is writing your reflection…">
-      {(reflection) => <ReflectionView reflection={reflection} onPractiseAgain={onPractiseAgain} />}
+      {(reflection) => <ReflectionView reflection={reflection} onPracticeAgain={onPracticeAgain} />}
     </AsyncView>
   );
 }
@@ -26,7 +26,7 @@ const SECTIONS = [
   { key: "content", title: "Content" },
 ] as const;
 
-function ReflectionView({ reflection, onPractiseAgain }: { reflection: ReflectionData; onPractiseAgain: () => void }) {
+function ReflectionView({ reflection, onPracticeAgain }: { reflection: ReflectionData; onPracticeAgain: () => void }) {
   const { caption, isSpeaking, say } = useHost();
 
   return (
@@ -58,8 +58,8 @@ function ReflectionView({ reflection, onPractiseAgain }: { reflection: Reflectio
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={onPractiseAgain} className="btn-primary">
-          Practise again
+        <button type="button" onClick={onPracticeAgain} className="btn-primary">
+          Practice again
         </button>
         <Link href="/" className="btn-secondary">
           Home

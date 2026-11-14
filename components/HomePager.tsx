@@ -32,7 +32,7 @@ type HomePagerProps = Record<View, ReactNode>;
  * straight back to the one before. The view never rests part-way.
  *
  * A panel taller than the screen scrolls inside itself first, and only hands over
- * to its neighbour from its own edge.
+ * to its neighbor from its own edge.
  *
  * The showing panel is kept in the URL hash, so links to `#about` and `#modes`
  * change panel, and Back from a Session returns to Modes.
@@ -72,14 +72,14 @@ export function HomePager(panels: HomePagerProps) {
 
     const panel = () => panelRefs.current[viewRef.current];
     /** The panel below the current one, or above it. Undefined past either end. */
-    const neighbour = (down: boolean): View | undefined => VIEWS[VIEWS.indexOf(viewRef.current) + (down ? 1 : -1)];
+    const neighbor = (down: boolean): View | undefined => VIEWS[VIEWS.indexOf(viewRef.current) + (down ? 1 : -1)];
     const atStart = () => (panel()?.scrollTop ?? 0) <= 0;
     const atEnd = () => {
       const el = panel();
       return !el || el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
     };
     /** The panel that moving in this direction leaves for, once the current one is at that edge. */
-    const leavesFor = (down: boolean) => ((down ? atEnd() : atStart()) ? neighbour(down) : undefined);
+    const leavesFor = (down: boolean) => ((down ? atEnd() : atStart()) ? neighbor(down) : undefined);
 
     // Open on whatever the URL says, without a slide.
     const initial = viewFromHash();
@@ -120,11 +120,11 @@ export function HomePager(panels: HomePagerProps) {
     const onTouchMove = (event: TouchEvent) => {
       const touch = event.touches[0];
       if (!touch || touchStartY === null || performance.now() < lockedUntil.current) return;
-      const travelled = touch.clientY - touchStartY;
-      if (Math.abs(travelled) < SWIPE_PX) return;
+      const traveled = touch.clientY - touchStartY;
+      if (Math.abs(traveled) < SWIPE_PX) return;
       touchStartY = null;
       // Swiping up moves down the page. The swipe has to start with the panel already at its edge.
-      const down = travelled < 0;
+      const down = traveled < 0;
       const startedAtEdge = down ? touchStartedAtEnd : touchStartedAtStart;
       const next = startedAtEdge ? leavesFor(down) : undefined;
       if (next) go(next);

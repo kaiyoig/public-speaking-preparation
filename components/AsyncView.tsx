@@ -23,14 +23,14 @@ export function AsyncView<T>({ run, label, children }: AsyncViewProps<T>) {
   runRef.current = run;
 
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     setState({ status: "pending" });
     runRef.current().then(
       (value) => {
-        if (!cancelled) setState({ status: "done", value });
+        if (!canceled) setState({ status: "done", value });
       },
       (error: unknown) => {
-        if (!cancelled) {
+        if (!canceled) {
           setState({
             status: "error",
             message: errorMessage(error),
@@ -39,7 +39,7 @@ export function AsyncView<T>({ run, label, children }: AsyncViewProps<T>) {
       },
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [attempt]);
 

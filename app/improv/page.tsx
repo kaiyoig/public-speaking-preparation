@@ -18,7 +18,7 @@ type State =
 type Action =
   | { type: "started"; topicBriefing: TopicBriefing }
   | { type: "deliveryFinished"; delivery: Recording }
-  | { type: "practiseAgain" };
+  | { type: "practiceAgain" };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -28,7 +28,7 @@ function reducer(state: State, action: Action): State {
       return state.phase === "delivery"
         ? { phase: "reflection", topicBriefing: state.topicBriefing, delivery: action.delivery }
         : state;
-    case "practiseAgain":
+    case "practiceAgain":
       // Setup fetches a fresh Topic Briefing when it mounts.
       return state.phase === "reflection" ? { phase: "setup" } : state;
   }
@@ -82,7 +82,7 @@ export default function ImprovModePage() {
       {state.phase === "reflection" && (
         <Reflection
           input={{ mode: "improv", topicBriefing: state.topicBriefing, delivery: state.delivery }}
-          onPractiseAgain={() => dispatch({ type: "practiseAgain" })}
+          onPracticeAgain={() => dispatch({ type: "practiceAgain" })}
         />
       )}
     </Shell>

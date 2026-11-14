@@ -41,20 +41,20 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
 
   // ready: fetch the greeting Formality and have the Host say it.
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     setGreeting({ status: "pending" });
     services.hostBrain.getFormality("greeting", mode).then(
       (line) => {
-        if (cancelled) return;
+        if (canceled) return;
         setGreeting({ status: "done" });
         void say(line);
       },
       (error: unknown) => {
-        if (!cancelled) setGreeting({ status: "error", message: errorMessage(error) });
+        if (!canceled) setGreeting({ status: "error", message: errorMessage(error) });
       },
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [mode, say, greetingAttempt]);
 

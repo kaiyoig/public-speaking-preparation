@@ -89,15 +89,15 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
 
   // Each Host line is said when its step begins; the next step follows when the Host finishes.
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     const sayThen = (text: string, next: () => void) => {
       setError(null);
       say(text).then(
         () => {
-          if (!cancelled) next();
+          if (!canceled) next();
         },
         (speakError: unknown) => {
-          if (!cancelled) setError({ message: errorMessage(speakError), retry: () => setStep({ ...step }) });
+          if (!canceled) setError({ message: errorMessage(speakError), retry: () => setStep({ ...step }) });
         },
       );
     };
@@ -112,7 +112,7 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
     }
 
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [step, questions, qaHandoff, closing, say, beginAnswer, finish]);
 

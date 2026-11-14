@@ -54,7 +54,7 @@ function toFields(initial?: SpeechBrief): Fields {
 }
 
 interface SpeechBriefFormProps {
-  /** Prefills the form, e.g. when the Speaker chooses "Practise again". */
+  /** Prefills the form, e.g. when the Speaker chooses "Practice again". */
   initial?: SpeechBrief | undefined;
   onSubmit: (brief: SpeechBrief) => void;
 }

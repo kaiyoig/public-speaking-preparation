@@ -20,7 +20,7 @@ type Action =
   | { type: "briefSubmitted"; brief: SpeechBrief }
   | { type: "deliveryFinished"; delivery: Recording }
   | { type: "qandaFinished"; answers: Recording[] }
-  | { type: "practiseAgain" };
+  | { type: "practiceAgain" };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -32,7 +32,7 @@ function reducer(state: State, action: Action): State {
       return state.phase === "qa"
         ? { phase: "reflection", brief: state.brief, delivery: state.delivery, answers: action.answers }
         : state;
-    case "practiseAgain":
+    case "practiceAgain":
       return state.phase === "reflection" ? { phase: "setup", brief: state.brief } : state;
   }
 }
@@ -84,7 +84,7 @@ export default function NormalModePage() {
       {state.phase === "reflection" && (
         <Reflection
           input={{ mode: "normal", brief: state.brief, delivery: state.delivery, answers: state.answers }}
-          onPractiseAgain={() => dispatch({ type: "practiseAgain" })}
+          onPracticeAgain={() => dispatch({ type: "practiceAgain" })}
         />
       )}
     </Shell>

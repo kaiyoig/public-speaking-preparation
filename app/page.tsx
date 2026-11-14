@@ -23,7 +23,7 @@ const MODES: Mode[] = [
   {
     href: "/normal",
     title: "Normal Mode",
-    description: "Practise a speech you’ve prepared, then take questions on it.",
+    description: "Practice a speech you’ve prepared, then take questions on it.",
     phases: {
       Setup: "Describe your speech",
       Delivery: "You set the time limit",
