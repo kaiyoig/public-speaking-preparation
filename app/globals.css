@@ -64,11 +64,6 @@
 }
 
 /* A section opens with a heavy ink rule instead of sitting in a box. */
-@utility card {
-  @apply border-t-2 border-ink pt-4;
-}
-
-/* Same as card; card goes once every screen uses this name. */
 @utility rule-top {
   @apply border-t-2 border-ink pt-3;
 }
