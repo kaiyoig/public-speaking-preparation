@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HomePager } from "@/components/HomePager";
 import { Shell } from "@/components/Shell";
+import { SpeechBackdrop } from "@/components/SpeechBackdrop";
 import { TypedName } from "@/components/TypedName";
 import { IMPROV_TIME_LIMIT_SECONDS, QUESTION_COUNT } from "@/domain/config";
 
@@ -56,14 +57,19 @@ export default function Home() {
   return <HomePager title={<Title />} about={<About />} modes={<Modes />} />;
 }
 
-/** The top panel: the name, centered, with one line on what the app is. */
+/**
+ * The top panel: the name, centered, with one line on what the app is.
+ * Behind both, famous speeches type themselves out.
+ */
 function Title() {
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center overflow-clip px-6 text-center">
+      <SpeechBackdrop />
       <h1 className="relative text-[clamp(3.5rem,min(17vw,26vh),13rem)] font-bold leading-[0.8] tracking-[-0.045em] font-display">
         <TypedName />
       </h1>
-      <p className="relative mt-[clamp(1.25rem,4vh,2.5rem)] text-lg font-medium text-mute sm:text-xl">
+      {/* On paper, so the line stays readable where a speech runs behind it. */}
+      <p className="relative mt-[clamp(1.25rem,4vh,2.5rem)] bg-paper px-3 py-1 text-lg font-medium text-mute sm:text-xl">
         Practice speeches with an AI host.
       </p>
     </div>
