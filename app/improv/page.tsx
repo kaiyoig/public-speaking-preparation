@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { Delivery } from "@/components/Delivery";
 import { PhaseSteps } from "@/components/PhaseSteps";
+import { Reflection } from "@/components/Reflection";
 import { SpeakingPointsList, TopicBriefingView } from "@/components/TopicBriefingView";
 import { IMPROV_TIME_LIMIT_SECONDS } from "@/domain/config";
 import type { Recording, TopicBriefing } from "@/domain/types";
@@ -79,19 +80,11 @@ export default function ImprovModePage() {
       )}
 
       {state.phase === "reflection" && (
-        <Placeholder label="Reflection — coming in ticket 07" onAdvance={() => dispatch({ type: "practiseAgain" })} />
+        <Reflection
+          input={{ mode: "improv", topicBriefing: state.topicBriefing, delivery: state.delivery }}
+          onPractiseAgain={() => dispatch({ type: "practiseAgain" })}
+        />
       )}
-    </div>
-  );
-}
-
-function Placeholder({ label, onAdvance }: { label: string; onAdvance: () => void }) {
-  return (
-    <div className="card flex flex-col items-center gap-4 p-10">
-      <p className="text-neutral-600 dark:text-neutral-400">{label}</p>
-      <button type="button" onClick={onAdvance} className="btn-primary">
-        Next
-      </button>
     </div>
   );
 }
