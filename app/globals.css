@@ -6,7 +6,8 @@
  * Paper and ink stop just short of pure white and black so body text doesn't glare.
  * Mute is for secondary text: about 65% of ink.
  * Highlight is a marker-pen yellow, always a fill under dark text and never a text colour.
- * It marks where to go: the arrow into a Mode.
+ * It marks where to go and what is yours right now: the arrow into a Mode, the main
+ * button under the pointer, the current Phase, a chosen option, the Improv topic.
  */
 :root {
   color-scheme: light dark;
@@ -62,9 +63,12 @@
   }
 }
 
-/* Buttons are plain rectangles: solid ink for the main action, an ink outline for the rest. */
+/*
+ * Buttons are plain rectangles: solid ink for the main action, an ink outline for the rest.
+ * Only the main action turns highlight yellow under the pointer.
+ */
 @utility btn-primary {
-  @apply inline-flex min-h-12 items-center justify-center gap-2 border-2 border-ink bg-ink px-6 font-semibold text-paper hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:border-mute disabled:bg-mute disabled:text-paper;
+  @apply inline-flex min-h-12 items-center justify-center gap-2 border-2 border-ink bg-ink px-6 font-semibold text-paper hover:bg-highlight hover:text-on-highlight disabled:cursor-not-allowed disabled:border-mute disabled:bg-mute disabled:text-paper;
 }
 
 @utility btn-secondary {

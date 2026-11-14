@@ -139,7 +139,7 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
                     aria-invalid={Boolean(errors.purpose)}
                     className="peer sr-only"
                   />
-                  <span className="block cursor-pointer border-2 border-ink px-4 py-2.5 font-semibold hover:bg-field peer-checked:bg-ink peer-checked:text-paper peer-checked:hover:bg-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-3 peer-focus-visible:outline-ink">
+                  <span className="block cursor-pointer border-2 border-ink px-4 py-2.5 font-semibold hover:bg-field peer-checked:bg-highlight peer-checked:text-on-highlight peer-checked:hover:bg-highlight peer-focus-visible:outline-2 peer-focus-visible:outline-offset-3 peer-focus-visible:outline-ink">
                     {purpose.label}
                   </span>
                 </label>

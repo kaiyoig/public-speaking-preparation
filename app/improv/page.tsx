@@ -66,7 +66,9 @@ export default function ImprovModePage() {
           sidePanel={
             <section aria-label="Topic Briefing" className="rule-top">
               <h2 className="text-2xl font-extrabold leading-tight tracking-tight font-stretch-condensed">
-                {state.topicBriefing.topic}
+                <span className="bg-highlight box-decoration-clone px-[0.15em] text-on-highlight">
+                  {state.topicBriefing.topic}
+                </span>
               </h2>
               <h3 className="mt-5 font-bold">Speaking Points</h3>
               <SpeakingPointsList speakingPoints={state.topicBriefing.speakingPoints} className="mt-2" />

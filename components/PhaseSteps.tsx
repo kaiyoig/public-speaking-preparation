@@ -3,7 +3,7 @@ interface PhaseStepsProps<P extends string> {
   current: P;
 }
 
-/** Shows where the Session is: each Phase numbered in order, the current one set bold. */
+/** Shows where the Session is: each Phase numbered in order, the current one set bold with its number highlighted. */
 export function PhaseSteps<P extends string>({ phases, current }: PhaseStepsProps<P>) {
   const currentIndex = phases.findIndex((phase) => phase.id === current);
   return (
@@ -18,7 +18,9 @@ export function PhaseSteps<P extends string>({ phases, current }: PhaseStepsProp
               state === "current" ? "font-bold text-ink" : state === "done" ? "text-ink" : "text-mute"
             }`}
           >
-            <span className="w-3 tabular-nums">{index + 1}</span>
+            <span className={`w-6 text-center tabular-nums ${state === "current" ? "bg-highlight text-on-highlight" : ""}`}>
+              {index + 1}
+            </span>
             <span>{phase.label}</span>
           </li>
         );
