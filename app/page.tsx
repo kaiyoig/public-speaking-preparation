@@ -68,10 +68,6 @@ function Title() {
       <h1 className="relative text-[clamp(3.5rem,min(17vw,26vh),13rem)] font-bold leading-[0.8] tracking-[-0.045em] font-display">
         <TypedName />
       </h1>
-      {/* On paper, so the line stays readable where a speech runs behind it. */}
-      <p className="relative mt-[clamp(1.25rem,4vh,2.5rem)] bg-paper px-3 py-1 text-lg font-medium text-mute sm:text-xl">
-        speech rehearsal—redefined.
-      </p>
     </div>
   );
 }
