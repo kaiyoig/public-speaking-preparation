@@ -56,9 +56,7 @@ export default function ImprovModePage() {
       }
     >
       {state.phase === "setup" && (
-        <div className="max-w-3xl">
-          <TopicBriefingView onStart={(topicBriefing) => dispatch({ type: "started", topicBriefing })} />
-        </div>
+        <TopicBriefingView onStart={(topicBriefing) => dispatch({ type: "started", topicBriefing })} />
       )}
 
       {state.phase === "delivery" && (

@@ -60,9 +60,7 @@ export default function NormalModePage() {
       }
     >
       {state.phase === "setup" && (
-        <div className="max-w-3xl">
-          <SpeechBriefForm initial={state.brief} onSubmit={(brief) => dispatch({ type: "briefSubmitted", brief })} />
-        </div>
+        <SpeechBriefForm initial={state.brief} onSubmit={(brief) => dispatch({ type: "briefSubmitted", brief })} />
       )}
 
       {state.phase === "delivery" && (
