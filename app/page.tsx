@@ -1,59 +1,127 @@
 import Link from "next/link";
 import { Shell } from "@/components/Shell";
+import { IMPROV_TIME_LIMIT_SECONDS, QUESTION_COUNT } from "@/domain/config";
 
-const MODES = [
+/**
+ * Both Modes are laid out on the same four Phase columns, so what sets them
+ * apart reads straight across: Improv Mode's Q&A column is simply empty.
+ */
+const PHASE_COLUMNS = ["Setup", "Delivery", "Q&A", "Reflection"] as const;
+
+type PhaseName = (typeof PHASE_COLUMNS)[number];
+
+interface Mode {
+  href: string;
+  title: string;
+  description: string;
+  /** What each Phase involves in this Mode. A Phase left out is one the Mode skips. */
+  phases: Partial<Record<PhaseName, string>>;
+}
+
+const MODES: Mode[] = [
   {
     href: "/normal",
     title: "Normal Mode",
-    description:
-      "Practise a speech you prepared. Describe it in a Speech Brief, deliver it, then answer the Host's Questions.",
-    phases: ["Setup", "Delivery", "Q&A", "Reflection"],
+    description: "Practise a speech you’ve prepared, then take questions on it.",
+    phases: {
+      Setup: "Describe your speech",
+      Delivery: "You set the time limit",
+      "Q&A": `${QUESTION_COUNT} questions from the host`,
+      Reflection: "Spoken feedback",
+    },
   },
   {
     href: "/improv",
     title: "Improv Mode",
-    description:
-      "Speak for 2 minutes on a random topic. You get a Topic Briefing with Speaking Points to draw on.",
-    phases: ["Setup", "Delivery", "Reflection"],
+    description: "Speak off the cuff on a random topic, with a few facts to draw on.",
+    phases: {
+      Setup: "Get a random topic",
+      Delivery: `${IMPROV_TIME_LIMIT_SECONDS / 60} minutes`,
+      Reflection: "Spoken feedback",
+    },
   },
-] as const;
+];
 
 export default function Home() {
   return (
     <Shell
       rail={
-        <p className="max-w-xs text-lg leading-snug">
-          Rehearse in front of an AI Host that listens, watches, asks Questions and gives you a spoken Reflection.
-        </p>
+        <div className="flex max-w-xs flex-col gap-6 text-lg leading-snug text-mute lg:grow">
+          <p>Rehearse in front of an AI host that listens, watches, asks questions and gives you spoken feedback.</p>
+          <p className="lg:mt-auto">Nothing is saved. Each session starts fresh.</p>
+        </div>
       }
     >
       <h1 className="sr-only">Public Speaking Preparation</h1>
-      <nav aria-label="Modes">
-        <ul>
+      <nav aria-label="Modes" className="flex grow flex-col">
+        <ul className="grid grow auto-rows-fr">
           {MODES.map((mode) => (
-            <li
-              key={mode.href}
-              className="grid gap-x-8 gap-y-6 border-t-2 border-ink pt-4 pb-14 lg:grid-cols-9 lg:pb-20"
-            >
-              <Link
-                href={mode.href}
-                className="col-span-full text-[clamp(3.5rem,10.5vw,10rem)] font-black leading-[0.85] tracking-[-0.025em] font-stretch-condensed decoration-[0.07em] underline-offset-[0.1em] hover:underline"
-              >
-                {mode.title}
-              </Link>
-              <p className="max-w-[52ch] text-lg leading-relaxed lg:col-span-5">{mode.description}</p>
-              <ol aria-label={`${mode.title} Phases`} className="text-lg lg:col-span-3 lg:col-start-7">
-                {mode.phases.map((phase, index) => (
-                  <li key={phase} className="flex items-baseline gap-2.5">
-                    <span className="w-3 tabular-nums">{index + 1}</span>
-                    <span>{phase}</span>
-                  </li>
-                ))}
-              </ol>
-            </li>
+            <ModeEntry key={mode.href} mode={mode} />
           ))}
         </ul>
       </nav>
     </Shell>
+  );
+}
+
+/** One Mode. The whole entry is the link; the highlighted arrow says so before any hover. */
+function ModeEntry({ mode }: { mode: Mode }) {
+  const included = PHASE_COLUMNS.filter((phase) => mode.phases[phase]);
+
+  return (
+    <li className="group relative flex flex-col border-t-2 border-ink pt-4 pb-10 outline-offset-4 outline-ink has-[a:focus-visible]:outline-2 lg:pb-12">
+      <div className="flex items-start justify-between gap-6">
+        <h2 className="text-[clamp(3.5rem,min(10.5vw,19vh),10rem)] font-black leading-[0.85] tracking-[-0.025em] font-stretch-condensed">
+          <Link href={mode.href} className="outline-none after:absolute after:inset-0 after:z-10">
+            {mode.title}
+          </Link>
+        </h2>
+        <Arrow />
+      </div>
+
+      <p className="mt-5 max-w-[34ch] text-2xl leading-[1.2] font-medium sm:text-[1.625rem]">{mode.description}</p>
+
+      <ol
+        aria-label={`${mode.title} Phases`}
+        className="mt-auto grid grid-cols-2 gap-x-6 gap-y-5 pt-10 sm:grid-cols-4 lg:gap-x-8"
+      >
+        {PHASE_COLUMNS.map((phase) => {
+          const detail = mode.phases[phase];
+          if (!detail) {
+            // Hold the column open so the Phases after it stay aligned with the other Mode.
+            return <li key={phase} aria-hidden="true" className="hidden sm:block" />;
+          }
+          return (
+            <li key={phase} className="border-t border-mute pt-2.5 text-lg leading-snug">
+              <p className="flex items-baseline gap-2.5 font-bold">
+                <span className="tabular-nums">{included.indexOf(phase) + 1}</span>
+                <span>{phase}</span>
+              </p>
+              <p className="text-mute">{detail}</p>
+            </li>
+          );
+        })}
+      </ol>
+    </li>
+  );
+}
+
+/** Drawn rather than typed so its stroke can match the headline's weight. */
+function Arrow() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3.25"
+      strokeLinecap="square"
+      className="pointer-events-none mt-[0.06em] size-[clamp(2.75rem,min(7.5vw,13.5vh),7rem)] shrink-0 overflow-visible bg-highlight p-[0.4rem] text-on-highlight sm:p-3"
+    >
+      <path
+        d="M2 12h18M13.2 3.5l8.5 8.5-8.5 8.5"
+        className="group-hover:translate-x-[1.5px] motion-safe:transition-transform motion-safe:duration-150"
+      />
+    </svg>
   );
 }
