@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
 /** The panels, top to bottom. */
 const VIEWS = ["title", "about", "modes"] as const;
@@ -25,6 +25,11 @@ const SWIPE_PX = 48;
 const viewFromHash = (): View => VIEWS.find((view) => HASHES[view] === window.location.hash) ?? "title";
 
 type HomePagerProps = Record<View, ReactNode>;
+
+const PanelShowing = createContext(false);
+
+/** Whether the panel this is rendered in is the one on screen. Lets a panel start and stop its own motion. */
+export const usePanelShowing = () => useContext(PanelShowing);
 
 /**
  * Home as three full-screen panels, Title above About above Modes, with nothing in
@@ -189,7 +194,7 @@ export function HomePager(panels: HomePagerProps) {
             inert={view !== name}
             className="h-1/3 overflow-y-auto overscroll-contain outline-none"
           >
-            {panels[name]}
+            <PanelShowing value={view === name}>{panels[name]}</PanelShowing>
           </div>
         ))}
       </div>
