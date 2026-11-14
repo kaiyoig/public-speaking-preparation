@@ -13,7 +13,7 @@ const archivo = Archivo({
 export const metadata: Metadata = {
   title: "Public Speaking Preparation",
   description:
-    "Rehearse a speech in front of an AI Host that listens, watches, asks Questions and gives a spoken Reflection.",
+    "Rehearse a speech in front of an AI host that listens, watches, asks questions and gives spoken feedback.",
 };
 
 export default function RootLayout({

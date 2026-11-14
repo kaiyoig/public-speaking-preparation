@@ -31,7 +31,7 @@ function validate(fields: Fields): { errors: Errors; brief?: SpeechBrief } {
 
   const minutes = Number(fields.timeLimitMinutes);
   if (!fields.timeLimitMinutes.trim()) {
-    errors.timeLimitMinutes = "Enter a Time Limit.";
+    errors.timeLimitMinutes = "Enter a time limit.";
   } else if (!Number.isInteger(minutes) || minutes < MIN_MINUTES || minutes > MAX_MINUTES) {
     errors.timeLimitMinutes = `Enter a whole number of minutes from ${MIN_MINUTES} to ${MAX_MINUTES}.`;
   }
@@ -100,7 +100,7 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
         <h2 className="text-5xl font-extrabold leading-none tracking-tight font-stretch-condensed sm:text-6xl">
           Speech Brief
         </h2>
-        <p className="mt-4 max-w-[52ch] text-lg">Tell the Host about your speech so it can ask the right Questions.</p>
+        <p className="mt-4 max-w-[52ch] text-lg">Tell the host about your speech so it can ask the right questions.</p>
       </header>
 
       <div className="flex flex-col gap-9">

@@ -34,7 +34,7 @@ export function QandA({ brief, delivery, onFinished, onQuit }: QandAProps) {
   };
 
   return (
-    <AsyncView run={loadScript} label="The Host is preparing Questions…">
+    <AsyncView run={loadScript} label="The host is preparing questions…">
       {(script) => <QandASession script={script} onFinished={onFinished} onQuit={onQuit} />}
     </AsyncView>
   );
@@ -187,7 +187,7 @@ function statusText(step: Step): string {
   switch (step.kind) {
     case "handoff":
     case "asking":
-      return "Listen to the Host.";
+      return "Listen to the host.";
     case "starting":
       return "Getting ready to listen…";
     case "answering":
@@ -196,13 +196,13 @@ function statusText(step: Step): string {
       return "Saving your answer…";
     case "closing":
     case "finished":
-      return "Q&A is over. Your Reflection is next.";
+      return "Q&A is over. Your reflection is next.";
   }
 }
 
 function QuestionProgress({ current, total }: { current: number; total: number }) {
   const label =
-    current < 0 ? "Q&A is starting" : current >= total ? "All Questions answered" : `Question ${current + 1} of ${total}`;
+    current < 0 ? "Q&A is starting" : current >= total ? "All questions answered" : `Question ${current + 1} of ${total}`;
   return (
     <section aria-label="Question progress" className="rule-top">
       <p className="text-[clamp(3rem,9vw,7rem)] font-black leading-[0.9] tracking-[-0.025em] font-stretch-condensed">

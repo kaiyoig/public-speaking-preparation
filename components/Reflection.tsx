@@ -14,7 +14,7 @@ interface ReflectionProps {
 /** The Reflection Phase, shared by both Modes: what the Speaker can improve. No numeric scores. */
 export function Reflection({ input, onPractiseAgain }: ReflectionProps) {
   return (
-    <AsyncView run={() => services.hostBrain.getReflection(input)} label="The Host is writing your Reflection…">
+    <AsyncView run={() => services.hostBrain.getReflection(input)} label="The host is writing your reflection…">
       {(reflection) => <ReflectionView reflection={reflection} onPractiseAgain={onPractiseAgain} />}
     </AsyncView>
   );
@@ -39,14 +39,14 @@ function ReflectionView({ reflection, onPractiseAgain }: { reflection: Reflectio
           <p className="mt-4 max-w-[38ch] text-2xl leading-snug sm:text-3xl sm:leading-tight">{reflection.summary}</p>
         </section>
         <div className="flex flex-col gap-5 lg:col-span-3">
-          <Host caption={caption} isSpeaking={isSpeaking} placeholder='Press "Play Reflection" to hear it.' />
+          <Host caption={caption} isSpeaking={isSpeaking} placeholder='Press "Play reflection" to hear it.' />
           <button
             type="button"
             onClick={() => void say(reflection.summary).catch(() => {})}
             disabled={isSpeaking}
             className="btn-secondary self-start"
           >
-            {isSpeaking ? "Playing…" : "Play Reflection"}
+            {isSpeaking ? "Playing…" : "Play reflection"}
           </button>
         </div>
       </div>
