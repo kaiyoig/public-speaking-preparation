@@ -16,15 +16,7 @@ const WORDMARK_CLASS = "block text-[1.75rem] font-extrabold leading-[0.92] track
  * collapsing to a top band with the content below on small ones.
  */
 export function Shell({ rail, wordmarkLinksHome = true, children }: ShellProps) {
-  const wordmark = (
-    <>
-      Public
-      <br />
-      Speaking
-      <br />
-      Preparation
-    </>
-  );
+  const wordmark = "Rhetor";
 
   return (
     <div className="mx-auto grid min-h-screen w-full max-w-[1600px] grid-cols-4 gap-x-6 px-4 sm:px-6 lg:grid-cols-12 lg:gap-x-8 lg:px-10">

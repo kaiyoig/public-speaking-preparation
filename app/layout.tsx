@@ -11,7 +11,7 @@ const archivo = Archivo({
 });
 
 export const metadata: Metadata = {
-  title: "Public Speaking Preparation",
+  title: "Rhetor",
   description:
     "Rehearse a speech in front of an AI host that listens, watches, asks questions and gives spoken feedback.",
 };

@@ -63,11 +63,7 @@ function About() {
   return (
     <div className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col px-4 pt-5 pb-6 sm:px-6 lg:px-10 lg:pt-9 lg:pb-10">
       <h1 className="pb-8 text-[clamp(3.75rem,min(17vw,19vh),17rem)] font-black leading-[0.85] tracking-[-0.025em] font-stretch-condensed">
-        Public
-        <br />
-        Speaking
-        <br />
-        Preparation
+        Rhetor
       </h1>
 
       <div className="mt-auto grid grid-cols-4 gap-x-6 gap-y-8 border-t-2 border-ink pt-4 lg:grid-cols-12 lg:gap-x-8">
