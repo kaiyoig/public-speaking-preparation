@@ -41,7 +41,7 @@ export function ConfirmDialog({
       }}
       className="m-auto w-[calc(100%-2rem)] max-w-md border-2 border-ink bg-paper p-6 text-ink backdrop:bg-black/60"
     >
-      <h2 id="confirm-dialog-title" className="text-3xl font-extrabold leading-none tracking-tight font-stretch-condensed">
+      <h2 id="confirm-dialog-title" className="text-3xl font-bold leading-none tracking-tight font-display">
         {title}
       </h2>
       <p className="mt-3 text-lg">{message}</p>

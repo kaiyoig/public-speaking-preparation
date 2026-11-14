@@ -9,7 +9,7 @@ interface ShellProps {
   children: ReactNode;
 }
 
-const WORDMARK_CLASS = "block text-[1.75rem] font-extrabold leading-[0.92] tracking-tight font-stretch-condensed";
+const WORDMARK_CLASS = "block text-[1.75rem] font-bold leading-[0.92] tracking-tight font-display";
 
 /**
  * The page grid: a 3-column rail and a 9-column content field on large screens,
@@ -39,7 +39,7 @@ export function Shell({ rail, wordmarkLinksHome = true, children }: ShellProps) 
 export function SessionRail({ mode, children }: { mode: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-4xl font-extrabold leading-[0.9] tracking-tight font-stretch-condensed">{mode}</h1>
+      <h1 className="text-4xl font-bold leading-[0.9] tracking-tight font-display">{mode}</h1>
       {children}
     </div>
   );

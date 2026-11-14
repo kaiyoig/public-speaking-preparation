@@ -73,7 +73,7 @@ function ReflectionView({ reflection, onPractiseAgain }: { reflection: Reflectio
 function ReflectionSectionRow({ title, section }: { title: string; section: ReflectionSection }) {
   return (
     <section aria-label={title} className="rule-top hang-row">
-      <h3 className="text-3xl font-extrabold leading-[0.95] tracking-tight font-stretch-condensed lg:col-span-2">
+      <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">
         {title}
       </h3>
       <div className="hang-body mt-2 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:mt-0">

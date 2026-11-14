@@ -97,7 +97,7 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
   return (
     <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-10">
       <header className="rule-top">
-        <h2 className="text-5xl font-extrabold leading-none tracking-tight font-stretch-condensed sm:text-6xl">
+        <h2 className="text-5xl font-bold leading-none tracking-tight font-display sm:text-6xl">
           Speech Brief
         </h2>
         <p className="mt-4 max-w-[52ch] text-lg">Tell the host about your speech so it can ask the right questions.</p>

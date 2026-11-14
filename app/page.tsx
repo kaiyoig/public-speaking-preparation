@@ -62,7 +62,7 @@ export default function Home() {
 function About() {
   return (
     <div className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col px-4 pt-5 pb-6 sm:px-6 lg:px-10 lg:pt-9 lg:pb-10">
-      <h1 className="pb-8 text-[clamp(3.75rem,min(17vw,19vh),17rem)] font-black leading-[0.85] tracking-[-0.025em] font-stretch-condensed">
+      <h1 className="-ml-[0.06em] pb-8 text-[clamp(5rem,min(25vw,42vh),24rem)] font-bold leading-[0.85] tracking-[-0.045em] font-display">
         Rhetor
       </h1>
 
@@ -121,7 +121,7 @@ function ModeEntry({ mode }: { mode: Mode }) {
   return (
     <li className="group relative flex flex-col border-t-2 border-ink pt-4 pb-10 outline-offset-4 outline-ink has-[a:focus-visible]:outline-2 lg:pb-12">
       <div className="flex items-start justify-between gap-6">
-        <h2 className="text-[clamp(3.5rem,min(10.5vw,19vh),10rem)] font-black leading-[0.85] tracking-[-0.025em] font-stretch-condensed">
+        <h2 className="text-[clamp(2.5rem,min(9vw,17vh),9rem)] font-bold leading-[0.9] tracking-[-0.04em] font-display">
           <Link href={mode.href} className="outline-none after:absolute after:inset-0 after:z-10">
             {mode.title}
           </Link>

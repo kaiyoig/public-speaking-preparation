@@ -17,7 +17,7 @@ export function TopicBriefingView({ onStart }: TopicBriefingViewProps) {
         <div className="rule-top flex flex-col gap-9">
           <div className="hang-row lg:items-baseline">
             <p className="hang-label">Your topic</p>
-            <h2 className="hang-body text-5xl font-extrabold leading-[0.95] tracking-tight font-stretch-condensed sm:text-6xl">
+            <h2 className="hang-body text-5xl font-bold leading-[0.95] tracking-tight font-display sm:text-6xl">
               <span className="bg-highlight box-decoration-clone px-[0.12em] text-on-highlight">{topicBriefing.topic}</span>
             </h2>
           </div>

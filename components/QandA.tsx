@@ -205,7 +205,7 @@ function QuestionProgress({ current, total }: { current: number; total: number }
     current < 0 ? "Q&A is starting" : current >= total ? "All questions answered" : `Question ${current + 1} of ${total}`;
   return (
     <section aria-label="Question progress" className="rule-top">
-      <p className="text-[clamp(3rem,9vw,7rem)] font-black leading-[0.9] tracking-[-0.025em] font-stretch-condensed">
+      <p className="text-[clamp(3rem,9vw,7rem)] font-bold leading-[0.9] tracking-[-0.025em] font-display">
         {label}
       </p>
       {/* Filled up to and including the Question being asked. */}

@@ -185,7 +185,7 @@ interface TimerProps {
   note: ReactNode;
 }
 
-/** The signature element: huge condensed numerals across the content field. */
+/** The signature element: huge numerals across the content field. */
 function Timer({ label, value, warning, note }: TimerProps) {
   return (
     <section
@@ -199,7 +199,7 @@ function Timer({ label, value, warning, note }: TimerProps) {
         <p className="text-lg font-bold">{label}</p>
         {note}
       </div>
-      <p className="mt-3 text-[clamp(6rem,min(28vw,30vh),18rem)] font-black leading-[0.8] tracking-[-0.03em] tabular-nums font-stretch-condensed">
+      <p className="mt-3 text-[clamp(6rem,min(28vw,30vh),18rem)] font-bold leading-[0.8] tracking-[-0.03em] tabular-nums font-display">
         {value}
       </p>
     </section>

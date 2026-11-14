@@ -65,7 +65,7 @@ export default function ImprovModePage() {
           timeLimitSeconds={IMPROV_TIME_LIMIT_SECONDS}
           sidePanel={
             <section aria-label="Topic Briefing" className="rule-top">
-              <h2 className="text-2xl font-extrabold leading-tight tracking-tight font-stretch-condensed">
+              <h2 className="text-2xl font-bold leading-tight tracking-tight font-display">
                 <span className="bg-highlight box-decoration-clone px-[0.15em] text-on-highlight">
                   {state.topicBriefing.topic}
                 </span>

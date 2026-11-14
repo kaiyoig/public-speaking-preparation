@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Archivo } from "next/font/google";
+import { Archivo, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
-// Variable in weight and width: condensed for display, normal width for body text.
+// Body text and everything at reading size.
 const archivo = Archivo({
   subsets: ["latin"],
-  axes: ["wdth"],
   variable: "--font-archivo",
+  display: "swap",
+});
+
+// Display type: the name, Mode titles, headings and the big numerals.
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
   display: "swap",
 });
 
@@ -22,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={archivo.variable}>
+    <html lang="en" className={`${archivo.variable} ${spaceGrotesk.variable}`}>
       <body className="min-h-screen bg-paper font-sans text-ink antialiased">{children}</body>
     </html>
   );
