@@ -60,7 +60,7 @@ function Title() {
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center overflow-clip px-6 text-center">
       <h1 className="relative text-[clamp(3.5rem,min(17vw,26vh),13rem)] font-bold leading-[0.8] tracking-[-0.045em] font-display">
-        Rhetor
+        Rhetor.
       </h1>
       <p className="relative mt-[clamp(1.25rem,4vh,2.5rem)] text-lg font-medium text-mute sm:text-xl">
         Practice speeches with an AI host.
@@ -82,7 +82,7 @@ function About() {
           href="#top"
           className="col-span-4 block self-start pt-5 text-[1.75rem] font-bold leading-[0.92] tracking-tight font-display hover:text-mute lg:pt-0"
         >
-          Rhetor
+          Rhetor.
         </a>
         <h1 className="sr-only">About Rhetor</h1>
         <p className="col-span-4 mt-6 max-w-[30ch] text-xl leading-[1.25] font-medium lg:mt-14">

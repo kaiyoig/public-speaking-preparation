@@ -17,7 +17,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Rhetor",
+  title: "Rhetor.",
   description:
     "Rehearse a speech in front of an AI host that listens, watches, asks questions and gives spoken feedback.",
 };
