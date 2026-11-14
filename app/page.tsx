@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { HomePager } from "@/components/HomePager";
 import { Shell } from "@/components/Shell";
-import { TitlePolygon } from "@/components/TitlePolygon";
 import { IMPROV_TIME_LIMIT_SECONDS, QUESTION_COUNT } from "@/domain/config";
 
 /**
@@ -56,11 +55,10 @@ export default function Home() {
   return <HomePager title={<Title />} about={<About />} modes={<Modes />} />;
 }
 
-/** The top panel: the name centered over a polygon outline, with one line on what the app is. */
+/** The top panel: the name, centered, with one line on what the app is. */
 function Title() {
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center overflow-clip px-6 text-center">
-      <TitlePolygon />
       <h1 className="relative text-[clamp(3.5rem,min(17vw,26vh),13rem)] font-bold leading-[0.8] tracking-[-0.045em] font-display">
         Rhetor
       </h1>

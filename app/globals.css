@@ -41,14 +41,6 @@
   --color-on-highlight: var(--on-highlight);
 
   --animate-indeterminate: indeterminate 1.6s ease-in-out infinite;
-  /* One full turn every three minutes: slow enough to notice only if you watch. */
-  --animate-turn: turn 180s linear infinite;
-
-  @keyframes turn {
-    to {
-      transform: rotate(360deg);
-    }
-  }
 
   @keyframes indeterminate {
     from {
