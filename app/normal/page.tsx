@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useReducer } from "react";
+import { Delivery } from "@/components/Delivery";
 import { PhaseSteps } from "@/components/PhaseSteps";
 import { SpeechBriefForm } from "@/components/SpeechBriefForm";
 import type { Recording, SpeechBrief } from "@/domain/types";
@@ -40,11 +42,11 @@ const PHASES = [
   { id: "reflection", label: "Reflection" },
 ] as const;
 
-const EMPTY_RECORDING: Recording = { transcript: "", bodyLanguageObservations: [] };
-
 /** A Normal Mode Session. Sessions are not saved: refreshing restarts it. */
 export default function NormalModePage() {
   const [state, dispatch] = useReducer(reducer, { phase: "setup" });
+  const router = useRouter();
+  const quit = () => router.push("/");
 
   return (
     <div className="flex flex-col gap-8">
@@ -63,9 +65,11 @@ export default function NormalModePage() {
       )}
 
       {state.phase === "delivery" && (
-        <Placeholder
-          label="Delivery — coming in ticket 05"
-          onAdvance={() => dispatch({ type: "deliveryFinished", delivery: EMPTY_RECORDING })}
+        <Delivery
+          mode="normal"
+          timeLimitSeconds={state.brief.timeLimitMinutes * 60}
+          onFinished={(delivery) => dispatch({ type: "deliveryFinished", delivery })}
+          onQuit={quit}
         />
       )}
 
