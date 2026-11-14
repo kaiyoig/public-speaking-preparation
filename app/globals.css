@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 /*
- * Swiss tokens. Paper and ink invert in dark mode; signal red never changes.
- * Red means "live" and nothing else: the mic capturing, the Host speaking, Overtime.
+ * Swiss tokens. Paper and ink invert in dark mode; the red never changes.
+ * Red is the one accent, under two names so the roles stay separate in code.
+ * Signal means "live": the mic capturing, the Host speaking, Overtime.
  * Paper and ink stop just short of pure white and black so body text doesn't glare.
  * Mute is for secondary text: about 65% of ink.
- * Highlight is a marker-pen yellow, always a fill under dark text and never a text colour.
+ * Highlight is the same red, always a fill under white text and never a text colour.
  * It marks where to go and what is yours right now: the arrow into a Mode, the main
  * button under the pointer, the current Phase, a chosen option, the Improv topic.
  */
@@ -16,8 +17,8 @@
   --mute: #666666;
   --field: #ebebeb;
   --signal: #e4002b;
-  --highlight: #ffd60a;
-  --on-highlight: #0a0a0a;
+  --highlight: #e4002b;
+  --on-highlight: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -71,7 +72,7 @@
 
 /*
  * Buttons are plain rectangles: solid ink for the main action, an ink outline for the rest.
- * Only the main action turns highlight yellow under the pointer.
+ * Only the main action turns highlight red under the pointer.
  */
 @utility btn-primary {
   @apply inline-flex min-h-12 items-center justify-center gap-2 border-2 border-ink bg-ink px-6 font-semibold text-paper hover:bg-highlight hover:text-on-highlight disabled:cursor-not-allowed disabled:border-mute disabled:bg-mute disabled:text-paper;
