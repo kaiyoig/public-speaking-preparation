@@ -23,9 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={archivo.variable}>
-      <body className="min-h-screen bg-paper font-sans text-ink antialiased">
-        <main className="mx-auto w-full max-w-6xl px-6 py-10 md:px-10">{children}</main>
-      </body>
+      <body className="min-h-screen bg-paper font-sans text-ink antialiased">{children}</body>
     </html>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Shell } from "@/components/Shell";
 
 const MODES = [
   {
@@ -19,6 +20,7 @@ const MODES = [
 
 export default function Home() {
   return (
+    <Shell>
     <div className="flex flex-col gap-12 py-8">
       <header className="max-w-2xl">
         <h1 className="text-4xl font-semibold tracking-tight">Public Speaking Preparation</h1>
@@ -44,5 +46,6 @@ export default function Home() {
         ))}
       </div>
     </div>
+    </Shell>
   );
 }

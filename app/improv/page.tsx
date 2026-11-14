@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { Delivery } from "@/components/Delivery";
 import { PhaseSteps } from "@/components/PhaseSteps";
+import { SessionRail, Shell } from "@/components/Shell";
 import { Reflection } from "@/components/Reflection";
 import { SpeakingPointsList, TopicBriefingView } from "@/components/TopicBriefingView";
 import { IMPROV_TIME_LIMIT_SECONDS } from "@/domain/config";
@@ -47,18 +47,17 @@ export default function ImprovModePage() {
   const quit = () => router.push("/");
 
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Improv Mode</h1>
-        <PhaseSteps phases={PHASES} current={state.phase} />
-      </header>
-
+    <Shell
+      wordmarkLinksHome={state.phase !== "delivery"}
+      rail={
+        <SessionRail mode="Improv Mode">
+          <PhaseSteps phases={PHASES} current={state.phase} />
+        </SessionRail>
+      }
+    >
       {state.phase === "setup" && (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+        <div className="max-w-3xl">
           <TopicBriefingView onStart={(topicBriefing) => dispatch({ type: "started", topicBriefing })} />
-          <Link href="/" className="self-start text-sm text-neutral-600 hover:underline dark:text-neutral-400">
-            ← Back to Home
-          </Link>
         </div>
       )}
 
@@ -85,6 +84,6 @@ export default function ImprovModePage() {
           onPractiseAgain={() => dispatch({ type: "practiseAgain" })}
         />
       )}
-    </div>
+    </Shell>
   );
 }
