@@ -70,7 +70,7 @@ function Title() {
       </h1>
       {/* On paper, so the line stays readable where a speech runs behind it. */}
       <p className="relative mt-[clamp(1.25rem,4vh,2.5rem)] bg-paper px-3 py-1 text-lg font-medium text-mute sm:text-xl">
-        Practice speeches with an AI host.
+        speech rehearsal—redefined.
       </p>
     </div>
   );
