@@ -17,9 +17,7 @@ export async function generateText(
   const response = await ai.models.generateContent({
     model: config.defaultGeminiModel,
     contents: prompt,
-    config: systemInstruction
-      ? { systemInstruction }
-      : undefined,
+    ...(systemInstruction ? { config: { systemInstruction } } : {}),
   });
 
   return response.text ?? "";
@@ -62,7 +60,7 @@ export async function generateSpeechReflection(
 }
 
 // Run standalone starter check if executed directly: `npm run gemini`
-if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, "/")}`) {
+if (import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, "/")}`) {
   const sampleReply = await generateText(
     "Give me one quick tip for calming nerves before a public speech in two sentences."
   );

@@ -79,7 +79,7 @@ export async function listVoices() {
 }
 
 // Run standalone starter check if executed directly: `npm run elevenlabs`
-if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, "/")}`) {
+if (import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, "/")}`) {
   const outputPath = "./output/elevenlabs-test.mp3";
   console.log("Generating sample speech with ElevenLabs...");
   await saveSpeechToFile(
