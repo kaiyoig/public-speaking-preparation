@@ -67,7 +67,7 @@ export async function speakText(
     modelId: config.defaultElevenLabsModelId,
   });
 
-  await play(audioStream);
+  await play(audioStream as unknown as AsyncIterable<Uint8Array>);
 }
 
 /**
