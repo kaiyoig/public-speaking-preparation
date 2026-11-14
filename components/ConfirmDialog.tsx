@@ -39,13 +39,13 @@ export function ConfirmDialog({
         event.preventDefault();
         onCancel();
       }}
-      className="m-auto w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-6 text-neutral-900 shadow-xl backdrop:bg-black/40 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
+      className="m-auto w-[calc(100%-2rem)] max-w-md border-2 border-ink bg-paper p-6 text-ink backdrop:bg-black/60"
     >
-      <h2 id="confirm-dialog-title" className="text-lg font-semibold">
+      <h2 id="confirm-dialog-title" className="text-3xl font-bold leading-none tracking-tight font-display">
         {title}
       </h2>
-      <p className="mt-2 text-neutral-600 dark:text-neutral-400">{message}</p>
-      <div className="mt-6 flex justify-end gap-3">
+      <p className="mt-3 text-lg">{message}</p>
+      <div className="mt-8 flex flex-wrap gap-3">
         <button type="button" onClick={onCancel} className="btn-secondary" autoFocus>
           {cancelLabel}
         </button>

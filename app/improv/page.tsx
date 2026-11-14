@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { Delivery } from "@/components/Delivery";
 import { PhaseSteps } from "@/components/PhaseSteps";
+import { SessionRail, Shell } from "@/components/Shell";
 import { Reflection } from "@/components/Reflection";
 import { SpeakingPointsList, TopicBriefingView } from "@/components/TopicBriefingView";
 import { IMPROV_TIME_LIMIT_SECONDS } from "@/domain/config";
@@ -18,7 +18,7 @@ type State =
 type Action =
   | { type: "started"; topicBriefing: TopicBriefing }
   | { type: "deliveryFinished"; delivery: Recording }
-  | { type: "practiseAgain" };
+  | { type: "practiceAgain" };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -28,7 +28,7 @@ function reducer(state: State, action: Action): State {
       return state.phase === "delivery"
         ? { phase: "reflection", topicBriefing: state.topicBriefing, delivery: action.delivery }
         : state;
-    case "practiseAgain":
+    case "practiceAgain":
       // Setup fetches a fresh Topic Briefing when it mounts.
       return state.phase === "reflection" ? { phase: "setup" } : state;
   }
@@ -47,19 +47,16 @@ export default function ImprovModePage() {
   const quit = () => router.push("/");
 
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Improv Mode</h1>
-        <PhaseSteps phases={PHASES} current={state.phase} />
-      </header>
-
+    <Shell
+      wordmarkLinksHome={state.phase !== "delivery"}
+      rail={
+        <SessionRail mode="Improv Mode">
+          <PhaseSteps phases={PHASES} current={state.phase} />
+        </SessionRail>
+      }
+    >
       {state.phase === "setup" && (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-          <TopicBriefingView onStart={(topicBriefing) => dispatch({ type: "started", topicBriefing })} />
-          <Link href="/" className="self-start text-sm text-neutral-600 hover:underline dark:text-neutral-400">
-            ← Back to Home
-          </Link>
-        </div>
+        <TopicBriefingView onStart={(topicBriefing) => dispatch({ type: "started", topicBriefing })} />
       )}
 
       {state.phase === "delivery" && (
@@ -67,11 +64,14 @@ export default function ImprovModePage() {
           mode="improv"
           timeLimitSeconds={IMPROV_TIME_LIMIT_SECONDS}
           sidePanel={
-            <section aria-label="Topic Briefing" className="card">
-              <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Topic</p>
-              <h2 className="mt-1 text-lg font-semibold">{state.topicBriefing.topic}</h2>
-              <h3 className="mt-4 text-sm font-medium text-neutral-500 dark:text-neutral-400">Speaking Points</h3>
-              <SpeakingPointsList speakingPoints={state.topicBriefing.speakingPoints} className="mt-2 text-sm" />
+            <section aria-label="Topic Briefing" className="rule-top">
+              <h2 className="text-2xl font-bold leading-tight tracking-tight font-display">
+                <span className="bg-highlight box-decoration-clone px-[0.15em] text-on-highlight">
+                  {state.topicBriefing.topic}
+                </span>
+              </h2>
+              <h3 className="mt-5 font-bold">Speaking Points</h3>
+              <SpeakingPointsList speakingPoints={state.topicBriefing.speakingPoints} className="mt-2" />
             </section>
           }
           onFinished={(delivery) => dispatch({ type: "deliveryFinished", delivery })}
@@ -82,9 +82,9 @@ export default function ImprovModePage() {
       {state.phase === "reflection" && (
         <Reflection
           input={{ mode: "improv", topicBriefing: state.topicBriefing, delivery: state.delivery }}
-          onPractiseAgain={() => dispatch({ type: "practiseAgain" })}
+          onPracticeAgain={() => dispatch({ type: "practiceAgain" })}
         />
       )}
-    </div>
+    </Shell>
   );
 }

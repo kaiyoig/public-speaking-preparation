@@ -31,7 +31,7 @@ function validate(fields: Fields): { errors: Errors; brief?: SpeechBrief } {
 
   const minutes = Number(fields.timeLimitMinutes);
   if (!fields.timeLimitMinutes.trim()) {
-    errors.timeLimitMinutes = "Enter a Time Limit.";
+    errors.timeLimitMinutes = "Enter a time limit.";
   } else if (!Number.isInteger(minutes) || minutes < MIN_MINUTES || minutes > MAX_MINUTES) {
     errors.timeLimitMinutes = `Enter a whole number of minutes from ${MIN_MINUTES} to ${MAX_MINUTES}.`;
   }
@@ -54,7 +54,7 @@ function toFields(initial?: SpeechBrief): Fields {
 }
 
 interface SpeechBriefFormProps {
-  /** Prefills the form, e.g. when the Speaker chooses "Practise again". */
+  /** Prefills the form, e.g. when the Speaker chooses "Practice again". */
   initial?: SpeechBrief | undefined;
   onSubmit: (brief: SpeechBrief) => void;
 }
@@ -81,110 +81,119 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
 
   const fieldId = (key: keyof Fields) => `${id}-${key}`;
   const errorId = (key: keyof Fields) => `${id}-${key}-error`;
+  // A single bottom rule; it thickens (without shifting layout) on focus and on error.
   const inputClass = (key: keyof Fields) =>
-    `mt-1.5 w-full rounded-lg border bg-white px-3 py-2 text-neutral-900 shadow-sm outline-none focus:ring-2 dark:bg-neutral-950 dark:text-neutral-100 ${
-      errors[key]
-        ? "border-red-500 focus:ring-red-500/40"
-        : "border-neutral-300 focus:border-indigo-500 focus:ring-indigo-500/30 dark:border-neutral-700"
+    `w-full border-0 border-b border-ink bg-transparent px-0 py-2 text-xl placeholder:text-mute focus:shadow-[0_2px_0_0_var(--color-ink)] focus-visible:outline-none ${
+      errors[key] ? "shadow-[0_2px_0_0_var(--color-ink)]" : ""
     }`;
   const describedBy = (key: keyof Fields) => (errors[key] ? errorId(key) : undefined);
   const errorText = (key: keyof Fields) =>
     errors[key] ? (
-      <p id={errorId(key)} className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+      <p id={errorId(key)} className="mt-3 font-bold">
         {errors[key]}
       </p>
     ) : null;
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="card flex flex-col gap-6 p-8">
-      <div>
-        <h2 className="text-xl font-semibold">Speech Brief</h2>
-        <p className="mt-1 text-neutral-600 dark:text-neutral-400">
-          Tell the Host about your speech so it can ask the right Questions.
-        </p>
-      </div>
+    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-10">
+      <header className="rule-top">
+        <h2 className="text-5xl font-bold leading-none tracking-tight font-display sm:text-6xl">
+          Speech Brief
+        </h2>
+        <p className="mt-4 max-w-[52ch] text-lg">Tell the host about your speech so it can ask the right questions.</p>
+      </header>
 
-      <div>
-        <label htmlFor={fieldId("audience")} className="font-medium">
-          Audience
-        </label>
-        <input
-          id={fieldId("audience")}
-          type="text"
-          value={fields.audience}
-          onChange={(event) => update("audience", event.target.value)}
-          placeholder="e.g. first-year university students"
-          aria-invalid={Boolean(errors.audience)}
-          aria-describedby={describedBy("audience")}
-          className={inputClass("audience")}
-        />
-        {errorText("audience")}
-      </div>
-
-      <div className="grid gap-6 sm:grid-cols-2">
-        <div>
-          <label htmlFor={fieldId("purpose")} className="font-medium">
-            Purpose
+      <div className="flex flex-col gap-9">
+        <div className="hang-row">
+          <label htmlFor={fieldId("audience")} className="hang-label lg:pt-2">
+            Audience
           </label>
-          <select
-            id={fieldId("purpose")}
-            value={fields.purpose}
-            onChange={(event) => update("purpose", event.target.value as Purpose | "")}
-            aria-invalid={Boolean(errors.purpose)}
-            aria-describedby={describedBy("purpose")}
-            className={inputClass("purpose")}
-          >
-            <option value="" disabled>
-              Choose a purpose
-            </option>
-            {PURPOSES.map((purpose) => (
-              <option key={purpose.value} value={purpose.value}>
-                {purpose.label}
-              </option>
-            ))}
-          </select>
-          {errorText("purpose")}
+          <div className="hang-body max-w-2xl">
+            <input
+              id={fieldId("audience")}
+              type="text"
+              value={fields.audience}
+              onChange={(event) => update("audience", event.target.value)}
+              placeholder="e.g. first-year university students"
+              aria-invalid={Boolean(errors.audience)}
+              aria-describedby={describedBy("audience")}
+              className={inputClass("audience")}
+            />
+            {errorText("audience")}
+          </div>
         </div>
 
-        <div>
-          <label htmlFor={fieldId("timeLimitMinutes")} className="font-medium">
+        <fieldset className="hang-row" aria-describedby={describedBy("purpose")}>
+          {/* Floated so the legend joins the grid like any other label. */}
+          <legend className="hang-label float-left lg:pt-2.5">Purpose</legend>
+          <div className="hang-body">
+            <div className="flex flex-wrap">
+              {PURPOSES.map((purpose) => (
+                <label key={purpose.value} className="-ml-0.5 first:ml-0">
+                  <input
+                    type="radio"
+                    name={fieldId("purpose")}
+                    value={purpose.value}
+                    checked={fields.purpose === purpose.value}
+                    onChange={() => update("purpose", purpose.value)}
+                    aria-invalid={Boolean(errors.purpose)}
+                    className="peer sr-only"
+                  />
+                  <span className="block cursor-pointer border-2 border-ink px-4 py-2.5 font-semibold hover:bg-field peer-checked:bg-highlight peer-checked:text-on-highlight peer-checked:hover:bg-highlight peer-focus-visible:outline-2 peer-focus-visible:outline-offset-3 peer-focus-visible:outline-ink">
+                    {purpose.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {errorText("purpose")}
+          </div>
+        </fieldset>
+
+        <div className="hang-row">
+          <label htmlFor={fieldId("timeLimitMinutes")} className="hang-label lg:pt-2">
             Time Limit (minutes)
           </label>
-          <input
-            id={fieldId("timeLimitMinutes")}
-            type="number"
-            inputMode="numeric"
-            min={MIN_MINUTES}
-            max={MAX_MINUTES}
-            step={1}
-            value={fields.timeLimitMinutes}
-            onChange={(event) => update("timeLimitMinutes", event.target.value)}
-            aria-invalid={Boolean(errors.timeLimitMinutes)}
-            aria-describedby={describedBy("timeLimitMinutes")}
-            className={inputClass("timeLimitMinutes")}
-          />
-          {errorText("timeLimitMinutes")}
+          <div className="hang-body">
+            <input
+              id={fieldId("timeLimitMinutes")}
+              type="number"
+              inputMode="numeric"
+              min={MIN_MINUTES}
+              max={MAX_MINUTES}
+              step={1}
+              value={fields.timeLimitMinutes}
+              onChange={(event) => update("timeLimitMinutes", event.target.value)}
+              aria-invalid={Boolean(errors.timeLimitMinutes)}
+              aria-describedby={describedBy("timeLimitMinutes")}
+              className={`${inputClass("timeLimitMinutes")} max-w-24 tabular-nums`}
+            />
+            {errorText("timeLimitMinutes")}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <label htmlFor={fieldId("notes")} className="font-medium">
-          Notes <span className="font-normal text-neutral-500">(optional)</span>
-        </label>
-        <textarea
-          id={fieldId("notes")}
-          rows={6}
-          value={fields.notes}
-          onChange={(event) => update("notes", event.target.value)}
-          placeholder="Key points, an outline, or your full script"
-          className={inputClass("notes")}
-        />
-      </div>
+        <div className="hang-row">
+          <label htmlFor={fieldId("notes")} className="hang-label lg:pt-3">
+            Notes <span className="font-normal text-mute">(optional)</span>
+          </label>
+          <div className="hang-body max-w-2xl">
+            <textarea
+              id={fieldId("notes")}
+              rows={7}
+              value={fields.notes}
+              onChange={(event) => update("notes", event.target.value)}
+              placeholder="Key points, an outline, or your full script"
+              className="block w-full resize-y border border-ink bg-transparent p-3 text-lg placeholder:text-mute focus:shadow-[inset_0_0_0_1px_var(--color-ink)] focus-visible:outline-none"
+            />
+          </div>
+        </div>
 
-      <div className="flex justify-end">
-        <button type="submit" className="btn-primary">
-          Continue
-        </button>
+        <div className="hang-row">
+          <div className="hang-body lg:col-start-3">
+            <button type="submit" className="btn-primary">
+              Continue
+            </button>
+          </div>
+        </div>
       </div>
     </form>
   );
