@@ -3,6 +3,7 @@ import { HomePager } from "@/components/HomePager";
 import { Shell } from "@/components/Shell";
 import { SpeechBackdrop } from "@/components/SpeechBackdrop";
 import { TypedName } from "@/components/TypedName";
+import { Wordmark } from "@/components/Wordmark";
 import { IMPROV_TIME_LIMIT_SECONDS, QUESTION_COUNT } from "@/domain/config";
 
 /**
@@ -85,7 +86,7 @@ function About() {
           href="#top"
           className="col-span-4 block self-start pt-5 text-[1.75rem] font-bold leading-[0.92] tracking-tight font-display hover:text-mute lg:pt-0"
         >
-          Rhetor.
+          <Wordmark />
         </a>
         <h1 className="sr-only">About Rhetor</h1>
         <p className="col-span-4 mt-6 max-w-[30ch] text-xl leading-[1.25] font-medium lg:mt-14">

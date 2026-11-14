@@ -3,8 +3,12 @@
 import { useEffect, useRef } from "react";
 import Typed from "typed.js";
 import { usePanelShowing } from "@/components/HomePager";
+import { Wordmark } from "@/components/Wordmark";
 
 const NAME = "Rhetor.";
+
+/** What gets typed: the name with its period in highlight yellow, as in the Wordmark. */
+const NAME_HTML = `Rhetor<span class="text-highlight">.</span>`;
 
 /** The slide onto the Title panel is most of the way in before the first letter lands. */
 const START_DELAY_MS = 350;
@@ -28,7 +32,7 @@ export function TypedName() {
     const el = ref.current;
     if (!el || !showing) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.textContent = NAME;
+      el.innerHTML = NAME_HTML;
       return;
     }
 
@@ -36,12 +40,12 @@ export function TypedName() {
     el.textContent = "";
     el.classList.add("type-cursor");
     const typed = new Typed(el, {
-      strings: [NAME],
+      strings: [NAME_HTML],
       typeSpeed: 110,
       startDelay: START_DELAY_MS,
       showCursor: false,
       autoInsertCss: false,
-      contentType: "null",
+      contentType: "html",
       onComplete: () => {
         lingering = window.setTimeout(() => el.classList.remove("type-cursor"), CURSOR_LINGER_MS);
       },
@@ -53,7 +57,7 @@ export function TypedName() {
       typed.destroy();
       // Leave the whole name in place while the panel slides away.
       el.classList.remove("type-cursor");
-      el.textContent = NAME;
+      el.innerHTML = NAME_HTML;
     };
   }, [showing]);
 
@@ -61,7 +65,9 @@ export function TypedName() {
     <>
       <span className="sr-only">{NAME}</span>
       <span aria-hidden="true" className="relative inline-block">
-        <span className="invisible">{NAME}</span>
+        <span className="invisible">
+          <Wordmark />
+        </span>
         <span className="absolute inset-0 text-left whitespace-nowrap">
           <span ref={ref} />
         </span>

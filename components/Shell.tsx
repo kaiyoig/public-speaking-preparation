@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Wordmark } from "@/components/Wordmark";
 
 interface ShellProps {
   /** What orients the Speaker: the Mode name and Phase list, or a short intro on Home. */
@@ -16,7 +17,7 @@ const WORDMARK_CLASS = "block text-[1.75rem] font-bold leading-[0.92] tracking-t
  * collapsing to a top band with the content below on small ones.
  */
 export function Shell({ rail, wordmarkLinksHome = true, children }: ShellProps) {
-  const wordmark = "Rhetor.";
+  const wordmark = <Wordmark />;
 
   return (
     <div className="mx-auto grid min-h-screen w-full max-w-[1280px] grid-cols-4 gap-x-6 px-6 sm:px-12 lg:grid-cols-12 lg:gap-x-8 lg:px-24">
