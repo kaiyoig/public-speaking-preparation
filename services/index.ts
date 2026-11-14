@@ -1,12 +1,12 @@
 import type { HostBrain } from "./HostBrain";
 import type { SpeechCapture } from "./SpeechCapture";
 import type { TopicSource } from "./TopicSource";
-import { FakeHostBrain } from "./fakes/FakeHostBrain";
-import { FakeSpeechCapture } from "./fakes/FakeSpeechCapture";
+import { BrowserSpeechCapture } from "./BrowserSpeechCapture";
+import { GeminiHostBrain } from "./GeminiHostBrain";
 import { FakeTopicSource } from "./fakes/FakeTopicSource";
 
 export type { HostBrain, ReflectionInput } from "./HostBrain";
-export type { SpeechCapture } from "./SpeechCapture";
+export type { SpeechCapture, SpeechCaptureStartOptions } from "./SpeechCapture";
 export type { TopicSource } from "./TopicSource";
 
 export interface Services {
@@ -20,7 +20,7 @@ export interface Services {
  * The UI imports services only from here, never from `fakes/`.
  */
 export const services: Services = {
-  speechCapture: new FakeSpeechCapture(),
+  speechCapture: new BrowserSpeechCapture(),
   topicSource: new FakeTopicSource(),
-  hostBrain: new FakeHostBrain(),
+  hostBrain: new GeminiHostBrain(),
 };

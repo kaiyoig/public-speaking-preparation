@@ -23,9 +23,8 @@ export function getConfig(): AppConfig {
   return {
     geminiApiKey,
     elevenLabsApiKey,
-    defaultGeminiModel: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
-    // Default voice: "George" (JBFqnCBsd6RMkjVDRZzb) - standard ElevenLabs pre-made voice
-    defaultElevenLabsVoiceId: process.env.ELEVENLABS_VOICE_ID ?? "JBFqnCBsd6RMkjVDRZzb",
+    defaultGeminiModel: process.env.GEMINI_MODEL ?? "gemini-3.5-flash-lite",
+    defaultElevenLabsVoiceId: process.env.ELEVENLABS_VOICE_ID ?? "c6SfcYrb2t09NHXiT80T",
     defaultElevenLabsModelId: process.env.ELEVENLABS_MODEL_ID ?? "eleven_multilingual_v2",
   };
 }

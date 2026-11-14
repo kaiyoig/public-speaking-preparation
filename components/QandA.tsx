@@ -18,19 +18,17 @@ interface QandAProps {
 
 interface QandAScript {
   questions: Question[];
-  qaHandoff: string;
   closing: string;
 }
 
-/** The Q&A Phase (Normal Mode only): the Host asks Questions and the Speaker answers aloud. */
+/** The Q&A Phase (Normal Mode only): the Host asks each Question via ElevenLabs and the Speaker answers aloud. */
 export function QandA({ brief, delivery, onFinished, onQuit }: QandAProps) {
   const loadScript = async (): Promise<QandAScript> => {
-    const [questions, qaHandoff, closing] = await Promise.all([
+    const [questions, closing] = await Promise.all([
       services.hostBrain.getQuestions(brief, delivery),
-      services.hostBrain.getFormality("qaHandoff", "normal"),
       services.hostBrain.getFormality("closing", "normal"),
     ]);
-    return { questions, qaHandoff, closing };
+    return { questions, closing };
   };
 
   return (
@@ -41,7 +39,6 @@ export function QandA({ brief, delivery, onFinished, onQuit }: QandAProps) {
 }
 
 type Step =
-  | { kind: "handoff" }
   | { kind: "asking"; index: number }
   | { kind: "starting"; index: number }
   | { kind: "answering"; index: number }
@@ -56,10 +53,12 @@ interface QandASessionProps {
 }
 
 function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
-  const { questions, qaHandoff, closing } = script;
+  const { questions, closing } = script;
   const { caption, isSpeaking, say } = useHost();
-  const capture = useSpeechCapture();
-  const [step, setStep] = useState<Step>({ kind: "handoff" });
+  const { start: startCapture, stop: stopCapture, isRunning, liveTranscript } = useSpeechCapture();
+  const [step, setStep] = useState<Step>(() =>
+    questions.length > 0 ? { kind: "asking", index: 0 } : { kind: "closing" }
+  );
   const [error, setError] = useState<{ message: string; retry: () => void } | null>(null);
   const answers = useRef<Recording[]>([]);
   // Read through a ref so a new callback from the parent doesn't re-run the step effect.
@@ -78,16 +77,17 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
       setError(null);
       setStep({ kind: "starting", index });
       try {
-        await capture.start();
+        await startCapture();
         setStep({ kind: "answering", index });
       } catch (startError) {
         setError({ message: errorMessage(startError), retry: () => void beginAnswer(index) });
       }
     },
-    [capture],
+    [startCapture],
   );
 
-  // Each Host line is said when its step begins; the next step follows when the Host finishes.
+  // Each Question is spoken by ElevenLabs when its "asking" step begins;
+  // once ElevenLabs finishes speaking, microphone capture starts so the user can respond.
   useEffect(() => {
     let cancelled = false;
     const sayThen = (text: string, next: () => void) => {
@@ -102,11 +102,13 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
       );
     };
 
-    if (step.kind === "handoff") {
-      sayThen(qaHandoff, () => setStep(questions.length > 0 ? { kind: "asking", index: 0 } : { kind: "closing" }));
-    } else if (step.kind === "asking") {
+    if (step.kind === "asking") {
       const question = questions[step.index];
-      if (question) sayThen(question.text, () => void beginAnswer(step.index));
+      if (question) {
+        sayThen(question.text, () => void beginAnswer(step.index));
+      } else {
+        setStep({ kind: "closing" });
+      }
     } else if (step.kind === "closing") {
       sayThen(closing, finish);
     }
@@ -114,13 +116,15 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
     return () => {
       cancelled = true;
     };
-  }, [step, questions, qaHandoff, closing, say, beginAnswer, finish]);
+  }, [step, questions, closing, say, beginAnswer, finish]);
 
+  // When the user finishes their response, stop recording and advance to the next question
+  // so ElevenLabs immediately speaks the next question.
   const doneAnswering = async (index: number) => {
     setError(null);
     setStep({ kind: "stopping", index });
     try {
-      answers.current = [...answers.current, await capture.stop()];
+      answers.current = [...answers.current, await stopCapture()];
       setStep(index + 1 < questions.length ? { kind: "asking", index: index + 1 } : { kind: "closing" });
     } catch (stopError) {
       setStep({ kind: "answering", index });
@@ -129,12 +133,12 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
   };
 
   const skipToReflection = async () => {
-    const wasRunning = capture.isRunning();
+    const wasRunning = isRunning();
     setStep({ kind: "finished" });
     if (wasRunning) {
       try {
         // Keep the partial answer: it's still useful for the Reflection.
-        answers.current = [...answers.current, await capture.stop()];
+        answers.current = [...answers.current, await stopCapture()];
       } catch {
         // Capture is discarded on unmount; move on with the answers so far.
       }
@@ -142,13 +146,41 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
     onFinished(answers.current);
   };
 
-  const questionIndex = "index" in step ? step.index : step.kind === "handoff" ? -1 : questions.length;
+  const questionIndex = "index" in step ? step.index : questions.length;
   const busy = step.kind === "starting" || step.kind === "stopping" || step.kind === "finished";
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
       <div className="flex flex-col gap-4">
         <CameraPlaceholder live={step.kind === "answering"} />
+
+        <section aria-label="Your Answer Transcript" className="card flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              Your Response (Live Transcript)
+            </h2>
+            {step.kind === "answering" && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                <span className="size-2 animate-pulse rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                Listening to your answer…
+              </span>
+            )}
+          </div>
+          <p
+            aria-live="polite"
+            className="max-h-36 min-h-14 overflow-y-auto whitespace-pre-wrap text-base leading-relaxed text-neutral-800 dark:text-neutral-200"
+          >
+            {liveTranscript || (
+              <span className="text-neutral-400 dark:text-neutral-500">
+                {step.kind === "asking"
+                  ? "ElevenLabs is speaking the question…"
+                  : step.kind === "answering"
+                    ? 'Speak your answer into the microphone, then click "Done answering" for the next question…'
+                    : "Waiting for the next step…"}
+              </span>
+            )}
+          </p>
+        </section>
 
         {error && <ErrorView compact message={error.message} onRetry={error.retry} />}
 
@@ -173,7 +205,7 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
       </div>
 
       <aside className="flex flex-col gap-4">
-        <QuestionProgress current={questionIndex} total={questions.length} />
+        <QuestionProgress current={questionIndex} total={questions.length} questions={questions} />
         <Host caption={caption} isSpeaking={isSpeaking} />
       </aside>
     </div>
@@ -182,13 +214,12 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
 
 function statusText(step: Step): string {
   switch (step.kind) {
-    case "handoff":
     case "asking":
-      return "Listen to the Host.";
+      return "Listen as the Host asks the question.";
     case "starting":
-      return "Getting ready to listen…";
+      return "Starting microphone for your answer…";
     case "answering":
-      return 'Answer aloud, then press "Done answering".';
+      return 'Answer aloud, then press "Done answering" to hear the next question.';
     case "stopping":
       return "Saving your answer…";
     case "closing":
@@ -197,7 +228,15 @@ function statusText(step: Step): string {
   }
 }
 
-function QuestionProgress({ current, total }: { current: number; total: number }) {
+function QuestionProgress({
+  current,
+  total,
+  questions,
+}: {
+  current: number;
+  total: number;
+  questions: Question[];
+}) {
   const label =
     current < 0 ? "Q&A is starting" : current >= total ? "All Questions answered" : `Question ${current + 1} of ${total}`;
   return (
@@ -218,6 +257,26 @@ function QuestionProgress({ current, total }: { current: number; total: number }
           />
         ))}
       </div>
+      <ol className="mt-4 flex flex-col gap-2 text-sm">
+        {questions.map((question, index) => {
+          const isCurrent = index === current;
+          const isDone = index < current;
+          return (
+            <li
+              key={question.id}
+              className={`rounded-md px-2.5 py-1.5 ${
+                isCurrent
+                  ? "bg-indigo-50 font-medium text-indigo-950 dark:bg-indigo-950/60 dark:text-indigo-100"
+                  : isDone
+                    ? "text-neutral-400 line-through dark:text-neutral-500"
+                    : "text-neutral-600 dark:text-neutral-400"
+              }`}
+            >
+              {index + 1}. {question.text}
+            </li>
+          );
+        })}
+      </ol>
     </section>
   );
 }

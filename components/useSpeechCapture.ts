@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Recording } from "@/domain/types";
 import { services } from "@/services";
 
@@ -11,6 +11,8 @@ export interface SpeechCaptureControls {
   stop: () => Promise<Recording>;
   /** Whether capture is currently running (started and not yet stopped). */
   isRunning: () => boolean;
+  /** Live, streaming transcript of what the Speaker is saying right now. */
+  liveTranscript: string;
 }
 
 /**
@@ -21,10 +23,14 @@ export interface SpeechCaptureControls {
 export function useSpeechCapture(): SpeechCaptureControls {
   const status = useRef<CaptureStatus>("idle");
   const pendingStart = useRef<Promise<void> | null>(null);
+  const [liveTranscript, setLiveTranscript] = useState("");
 
   const start = useCallback(async () => {
     status.current = "starting";
-    const starting = services.speechCapture.start();
+    setLiveTranscript("");
+    const starting = services.speechCapture.start({
+      onTranscript: (text) => setLiveTranscript(text),
+    });
     pendingStart.current = starting;
     try {
       await starting;
@@ -62,5 +68,8 @@ export function useSpeechCapture(): SpeechCaptureControls {
     };
   }, []);
 
-  return useMemo(() => ({ start, stop, isRunning }), [start, stop, isRunning]);
+  return useMemo(
+    () => ({ start, stop, isRunning, liveTranscript }),
+    [start, stop, isRunning, liveTranscript]
+  );
 }
