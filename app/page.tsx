@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HomePager } from "@/components/HomePager";
 import { Shell } from "@/components/Shell";
+import { TitlePolygon } from "@/components/TitlePolygon";
 import { IMPROV_TIME_LIMIT_SECONDS, QUESTION_COUNT } from "@/domain/config";
 
 /**
@@ -55,13 +56,17 @@ export default function Home() {
   return <HomePager title={<Title />} about={<About />} modes={<Modes />} />;
 }
 
-/** The top panel: the name and nothing else, set as wide as the screen allows. */
+/** The top panel: the name centered over a polygon outline, with one line on what the app is. */
 function Title() {
   return (
-    <div className="mx-auto flex h-full w-full max-w-[1280px] items-end overflow-clip px-6 pb-10 sm:px-12 lg:px-24 lg:pb-20">
-      <h1 className="-ml-[0.06em] text-[clamp(3.5rem,min(17vw,40vh),15rem)] font-bold leading-[0.8] tracking-[-0.045em] font-display">
+    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-clip px-6 text-center">
+      <TitlePolygon />
+      <h1 className="relative text-[clamp(3.5rem,min(17vw,26vh),13rem)] font-bold leading-[0.8] tracking-[-0.045em] font-display">
         Rhetor
       </h1>
+      <p className="relative mt-[clamp(1.25rem,4vh,2.5rem)] text-lg font-medium text-mute sm:text-xl">
+        Practice speeches with an AI host.
+      </p>
     </div>
   );
 }
