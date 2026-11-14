@@ -46,6 +46,9 @@
     "esModuleInterop": true,
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "paths": {
+      "@/*": ["./*"]
+    },
     "plugins": [
       {
         "name": "next"
