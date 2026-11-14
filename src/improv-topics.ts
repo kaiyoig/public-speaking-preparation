@@ -15,5 +15,5 @@ const topics: string[] = [
 export function getRandomTopic(): string {
   const randomIndex = Math.floor(Math.random() * topics.length);
 
-  return topics[randomIndex];
+  return topics[randomIndex]!;
 }
