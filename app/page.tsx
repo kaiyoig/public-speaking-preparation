@@ -101,13 +101,9 @@ function Modes() {
   return (
     <Shell
       rail={
-        <div className="flex max-w-xs flex-col gap-6 text-lg leading-snug text-mute lg:grow">
-          <p>Rehearse in front of an AI host that listens, watches, asks questions and gives you spoken feedback.</p>
-          <a href="#about" className="self-start font-semibold text-ink underline underline-offset-4 hover:text-mute">
-            About this app
-          </a>
-          <p className="lg:mt-auto">Nothing is saved. Each session starts fresh.</p>
-        </div>
+        <a href="#about" className="text-lg font-semibold underline underline-offset-4 hover:text-mute">
+          About this app
+        </a>
       }
     >
       <h1 className="sr-only">Choose a mode</h1>
