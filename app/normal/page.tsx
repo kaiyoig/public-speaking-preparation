@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { Delivery } from "@/components/Delivery";
 import { PhaseSteps } from "@/components/PhaseSteps";
+import { QandA } from "@/components/QandA";
 import { SpeechBriefForm } from "@/components/SpeechBriefForm";
 import type { Recording, SpeechBrief } from "@/domain/types";
 
@@ -74,7 +75,12 @@ export default function NormalModePage() {
       )}
 
       {state.phase === "qa" && (
-        <Placeholder label="Q&A — coming in ticket 06" onAdvance={() => dispatch({ type: "qandaFinished", answers: [] })} />
+        <QandA
+          brief={state.brief}
+          delivery={state.delivery}
+          onFinished={(answers) => dispatch({ type: "qandaFinished", answers })}
+          onQuit={quit}
+        />
       )}
 
       {state.phase === "reflection" && (
