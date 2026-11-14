@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { Recording } from "@/domain/types";
 import { services } from "@/services";
 
@@ -62,5 +62,5 @@ export function useSpeechCapture(): SpeechCaptureControls {
     };
   }, []);
 
-  return { start, stop, isRunning };
+  return useMemo(() => ({ start, stop, isRunning }), [start, stop, isRunning]);
 }
