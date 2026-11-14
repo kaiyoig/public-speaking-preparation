@@ -1,19 +1,15 @@
 {
- "scripts": {
-  "dev": "next dev",
-  "build": "next build",
-  "start": "next start",
-  "lint": "eslint",
-  "lint:fix": "eslint --fix"
- },
- "dependencies": {
-  "next": "^16.4.6",
-  "react": "^19.3.1",
-  "react-dom": "^19.3.1",
-  "typescript": "^7.0.2"
- },
- "devDependencies": {
-  "@types/node": "26.6.6",
-  "@types/react": "19.3.0"
- }
+  "name": "public-speaking-preparation",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.ts",
+    "gemini": "node src/gemini.ts",
+    "elevenlabs": "node src/elevenlabs.ts"
+  },
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.78.0",
+    "@google/genai": "^3.3.0",
+    "dotenv": "^18.0.10"
+  }
 }

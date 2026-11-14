@@ -25,6 +25,8 @@ coverage
 
 # Dependency and package-manager directories
 node_modules/
+dist/
+output/
 jspm_packages/
 web_modules/
 .npm
@@ -84,6 +86,8 @@ tsc/testdata/baselines/tmp
 
 # Legacy Strada build and test output
 /.node_modules/
+dist/
+output/
 /test-args.txt
 /rwc-report.html
 /build.json
