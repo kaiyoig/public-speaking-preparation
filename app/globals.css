@@ -1,22 +1,63 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
+/*
+ * Swiss tokens. Paper and ink invert in dark mode; signal red never changes.
+ * Red means "live" and nothing else: the mic capturing, the Host speaking, Overtime.
+ */
 :root {
   color-scheme: light dark;
+  --paper: #ffffff;
+  --ink: #000000;
+  --mute: #6b6b6b;
+  --field: #ebebeb;
+  --signal: #e4002b;
 }
 
-/* Shared button styles. Indigo is the single accent colour; amber/red is reserved for Overtime. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #000000;
+    --ink: #ffffff;
+    --mute: #9c9c9c;
+    --field: #1c1c1c;
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-archivo), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-mute: var(--mute);
+  --color-field: var(--field);
+  --color-signal: var(--signal);
+}
+
+@layer base {
+  ::selection {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+}
+
+/* Buttons are plain rectangles: solid ink for the main action, an ink outline for the rest. */
 @utility btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400;
+  @apply inline-flex min-h-12 items-center justify-center gap-2 border-2 border-ink bg-ink px-6 font-semibold text-paper hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:border-mute disabled:bg-mute disabled:text-paper;
 }
 
 @utility btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 font-medium text-neutral-800 transition-colors hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800;
+  @apply inline-flex min-h-12 items-center justify-center gap-2 border-2 border-ink bg-transparent px-6 font-semibold text-ink hover:bg-ink hover:text-paper disabled:cursor-not-allowed disabled:border-mute disabled:text-mute disabled:hover:bg-transparent;
 }
 
+/* A section opens with a heavy ink rule instead of sitting in a box. */
 @utility card {
-  @apply rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900;
+  @apply border-t-2 border-ink pt-4;
+}
+
+/* The small red square that means "live". */
+@utility live-mark {
+  @apply inline-block size-2.5 shrink-0 bg-signal;
 }
