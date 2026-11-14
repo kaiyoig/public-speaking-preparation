@@ -59,7 +59,7 @@ export function Host({ caption, isSpeaking, placeholder = "…" }: HostProps) {
           {isSpeaking ? "Speaking" : "Listening"}
         </span>
       </p>
-      <p aria-live="polite" className={`mt-3 text-xl leading-snug ${isSpeaking ? "text-ink" : "text-mute"}`}>
+      <p aria-live="polite" className="mt-3 text-xl leading-snug">
         {caption || placeholder}
       </p>
     </section>

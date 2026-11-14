@@ -146,36 +146,39 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
   const busy = step.kind === "starting" || step.kind === "stopping" || step.kind === "finished";
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-      <div className="flex flex-col gap-4">
-        <CameraPlaceholder live={step.kind === "answering"} />
+    <div className="flex flex-col gap-8">
+      <QuestionProgress current={questionIndex} total={questions.length} />
 
-        {error && <ErrorView compact message={error.message} onRetry={error.retry} />}
+      <div className="grid gap-8 lg:grid-cols-9">
+        <div className="flex flex-col gap-4 lg:col-span-6">
+          <CameraPlaceholder live={step.kind === "answering"} />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => step.kind === "answering" && void doneAnswering(step.index)}
-            disabled={step.kind !== "answering" || isSpeaking}
-            className="btn-primary"
-          >
-            {step.kind === "stopping" ? "Saving answer…" : "Done answering"}
-          </button>
-          <button type="button" onClick={skipToReflection} disabled={busy} className="btn-secondary">
-            Skip to Reflection
-          </button>
-          <span className="ml-auto">
-            <QuitButton onQuit={onQuit} disabled={step.kind === "finished"} />
-          </span>
+          {error && <ErrorView compact message={error.message} onRetry={error.retry} />}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => step.kind === "answering" && void doneAnswering(step.index)}
+              disabled={step.kind !== "answering" || isSpeaking}
+              className="btn-primary"
+            >
+              {step.kind === "stopping" ? "Saving answer…" : "Done answering"}
+            </button>
+            <button type="button" onClick={skipToReflection} disabled={busy} className="btn-secondary">
+              Skip to Reflection
+            </button>
+            <span className="ml-auto">
+              <QuitButton onQuit={onQuit} disabled={step.kind === "finished"} />
+            </span>
+          </div>
+
+          <p className="text-mute">{statusText(step)}</p>
         </div>
 
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">{statusText(step)}</p>
+        <aside className="lg:col-span-3">
+          <Host caption={caption} isSpeaking={isSpeaking} />
+        </aside>
       </div>
-
-      <aside className="flex flex-col gap-4">
-        <QuestionProgress current={questionIndex} total={questions.length} />
-        <Host caption={caption} isSpeaking={isSpeaking} />
-      </aside>
     </div>
   );
 }
@@ -201,21 +204,14 @@ function QuestionProgress({ current, total }: { current: number; total: number }
   const label =
     current < 0 ? "Q&A is starting" : current >= total ? "All Questions answered" : `Question ${current + 1} of ${total}`;
   return (
-    <section aria-label="Question progress" className="card">
-      <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Q&amp;A</p>
-      <p className="mt-1 text-2xl font-semibold">{label}</p>
-      <div aria-hidden className="mt-4 flex gap-2">
+    <section aria-label="Question progress" className="rule-top">
+      <p className="text-[clamp(3rem,9vw,7rem)] font-black leading-[0.9] tracking-[-0.025em] font-stretch-condensed">
+        {label}
+      </p>
+      {/* Filled up to and including the Question being asked. */}
+      <div aria-hidden className="mt-5 flex max-w-2xl gap-1">
         {Array.from({ length: total }, (_, index) => (
-          <span
-            key={index}
-            className={`h-1.5 flex-1 rounded-full ${
-              index < current
-                ? "bg-indigo-600 dark:bg-indigo-500"
-                : index === current
-                  ? "bg-indigo-300 dark:bg-indigo-800"
-                  : "bg-neutral-200 dark:bg-neutral-800"
-            }`}
-          />
+          <span key={index} className={`h-2 flex-1 ${index <= current ? "bg-ink" : "bg-field"}`} />
         ))}
       </div>
     </section>
