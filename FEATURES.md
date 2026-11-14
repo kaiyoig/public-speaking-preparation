@@ -15,3 +15,8 @@ Improv Mode
 - Gives you some information / speaking points on that topic
 - Speak for a certain amount of time
 - It gives similar feedback to the normal mode
+
+Ethan - Gemini integration, ElevenLabs integration
+Seven - OpenCV, speech-to-text
+Andrew - Improv mode / webscraping
+Kaiyo - Frontend Design
