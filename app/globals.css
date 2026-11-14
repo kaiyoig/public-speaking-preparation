@@ -3,21 +3,23 @@
 /*
  * Swiss tokens. Paper and ink invert in dark mode; signal red never changes.
  * Red means "live" and nothing else: the mic capturing, the Host speaking, Overtime.
+ * Paper and ink stop just short of pure white and black so body text doesn't glare.
+ * Mute is for secondary text: about 65% of ink.
  */
 :root {
   color-scheme: light dark;
-  --paper: #ffffff;
-  --ink: #000000;
-  --mute: #6b6b6b;
+  --paper: #fafafa;
+  --ink: #0a0a0a;
+  --mute: #666666;
   --field: #ebebeb;
   --signal: #e4002b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #000000;
-    --ink: #ffffff;
-    --mute: #9c9c9c;
+    --paper: #0a0a0a;
+    --ink: #ededed;
+    --mute: #9e9e9e;
     --field: #1c1c1c;
   }
 }
