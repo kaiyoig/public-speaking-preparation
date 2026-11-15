@@ -14,6 +14,13 @@ const PHASE_COLUMNS = ["Setup", "Briefing", "Delivery", "Q&A", "Reflection"] as 
 
 type PhaseName = (typeof PHASE_COLUMNS)[number];
 
+const NUMBER_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+
+/** Spells out a small count to open a Phase detail, falling back to digits past ten. */
+function spellOut(count: number): string {
+  return NUMBER_WORDS[count] ?? String(count);
+}
+
 interface Mode {
   href: string;
   title: string;
@@ -30,7 +37,7 @@ const MODES: Mode[] = [
     phases: {
       Setup: "Describe your speech",
       Delivery: "You set the time limit",
-      "Q&A": `${QUESTION_COUNT} questions from the host`,
+      "Q&A": `${spellOut(QUESTION_COUNT)} questions from the host`,
       Reflection: "Spoken feedback",
     },
   },
@@ -41,7 +48,7 @@ const MODES: Mode[] = [
     phases: {
       Setup: "Classic or trending topic",
       Briefing: "Read the topic and facts",
-      Delivery: `${IMPROV_TIME_LIMIT_SECONDS / 60} minutes`,
+      Delivery: `${spellOut(IMPROV_TIME_LIMIT_SECONDS / 60)} minutes`,
       Reflection: "Spoken feedback",
     },
   },
