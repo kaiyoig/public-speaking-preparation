@@ -37,6 +37,8 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   const [greetingAttempt, setGreetingAttempt] = useState(0);
   const [startError, setStartError] = useState<string | null>(null);
   const [stopError, setStopError] = useState<string | null>(null);
+  const [timerShown, setTimerShown] = useState(true);
+  const [cameraShown, setCameraShown] = useState(true);
   const ending = useRef(false);
 
   // ready: fetch the greeting Formality and have the Host say it.
@@ -115,8 +117,9 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   }, [state, overtimeSeconds, endSpeech]);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <Timer
+        shown={timerShown}
         label={inOvertime ? "Overtime" : state.status === "ready" || state.status === "starting" ? "Time Limit" : "Time left"}
         value={inOvertime ? `+${formatClock(overtimeSeconds, "floor")}` : formatClock(remainingSeconds, "ceil")}
         warning={inOvertime}
@@ -127,36 +130,27 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
             </p>
           ) : null
         }
+        toggles={
+          <>
+            <ToggleButton shown={timerShown} onToggle={setTimerShown}>
+              timer
+            </ToggleButton>
+            <ToggleButton shown={cameraShown} onToggle={setCameraShown}>
+              camera
+            </ToggleButton>
+          </>
+        }
       />
+
+      {cameraShown && (
+        <CameraPlaceholder
+          live={state.status === "speaking"}
+          className="aspect-video lg:aspect-auto lg:h-[clamp(20rem,62vh,48rem)]"
+        />
+      )}
 
       <div className="grid gap-8 lg:grid-cols-9">
         <div className="flex flex-col gap-4 lg:col-span-6">
-          <CameraPlaceholder live={state.status === "speaking"} />
-
-          <section aria-label="Live Transcript" className="rule-top flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-lg font-bold">Live Transcript</h2>
-              {state.status === "speaking" && (
-                <span className="inline-flex items-center gap-2 font-semibold">
-                  <span aria-hidden className="live-mark" />
-                  Listening…
-                </span>
-              )}
-            </div>
-            <p aria-live="polite" className="max-h-40 min-h-16 overflow-y-auto whitespace-pre-wrap text-lg">
-              {capture.liveTranscript || (
-                <span className="text-mute">
-                  {state.status === "speaking"
-                    ? "Speak into your microphone — your words will stream here in real time…"
-                    : 'Press "Start speech" to begin capturing your microphone.'}
-                </span>
-              )}
-            </p>
-          </section>
-
-          {startError && <ErrorView compact message={startError} onRetry={startSpeech} />}
-          {stopError && <ErrorView compact message={stopError} onRetry={stopCapture} />}
-
           <div className="flex flex-wrap items-center gap-3">
             {(state.status === "ready" || state.status === "starting") && (
               <button
@@ -184,6 +178,30 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
               </span>
             )}
           </div>
+
+          {startError && <ErrorView compact message={startError} onRetry={startSpeech} />}
+          {stopError && <ErrorView compact message={stopError} onRetry={stopCapture} />}
+
+          <section aria-label="Live Transcript" className="rule-top flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-bold">Live Transcript</h2>
+              {state.status === "speaking" && (
+                <span className="inline-flex items-center gap-2 font-semibold">
+                  <span aria-hidden className="live-mark" />
+                  Listening…
+                </span>
+              )}
+            </div>
+            <p aria-live="polite" className="max-h-40 min-h-16 overflow-y-auto whitespace-pre-wrap text-lg">
+              {capture.liveTranscript || (
+                <span className="text-mute">
+                  {state.status === "speaking"
+                    ? "Speak into your microphone — your words will stream here in real time…"
+                    : 'Press "Start speech" to begin capturing your microphone.'}
+                </span>
+              )}
+            </p>
+          </section>
         </div>
 
         <aside className="flex flex-col gap-8 lg:col-span-3">
@@ -199,31 +217,60 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
 }
 
 interface TimerProps {
+  /** False when the Speaker has hidden it. The bar stays for its toggles and the Overtime warning. */
+  shown: boolean;
   label: string;
   value: string;
-  /** Overtime: the whole block turns signal red. */
+  /** Overtime: the whole bar turns signal red, hidden or not. */
   warning: boolean;
   note: ReactNode;
+  toggles: ReactNode;
 }
 
-/** The signature element: huge numerals across the content field. */
-function Timer({ label, value, warning, note }: TimerProps) {
+/** A bar across the top of Delivery: the time on the left, the show and hide toggles on the right. */
+function Timer({ shown, label, value, warning, note, toggles }: TimerProps) {
   return (
     <section
       aria-label="Timer"
-      className={`border-t-2 pt-3 pb-5 ${
+      className={`flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t-2 pt-3 pb-3 ${
         // In Overtime the red bleeds into the gutter so the numerals don't move.
         warning ? "-mx-4 border-signal bg-signal px-4 text-white sm:-mx-5 sm:px-5" : "border-ink"
       }`}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1">
-        <p className="text-lg font-bold">{label}</p>
+      <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+        {shown && (
+          <p className="flex items-baseline gap-4">
+            <span className="text-lg font-bold">{label}</span>
+            <span className="text-5xl font-bold leading-none tracking-[-0.03em] tabular-nums font-display">
+              {value}
+            </span>
+          </p>
+        )}
         {note}
       </div>
-      <p className="mt-3 text-[clamp(6rem,min(28vw,30vh),18rem)] font-bold leading-[0.8] tracking-[-0.03em] tabular-nums font-display">
-        {value}
-      </p>
+      <div className="flex flex-wrap gap-x-5 gap-y-1">{toggles}</div>
     </section>
+  );
+}
+
+/** "Hide timer" / "Show timer" and the like: names what pressing it will do. */
+function ToggleButton({
+  shown,
+  onToggle,
+  children,
+}: {
+  shown: boolean;
+  onToggle: (shown: boolean) => void;
+  children: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(!shown)}
+      className="min-h-10 text-lg font-semibold underline decoration-2 underline-offset-4 hover:bg-highlight hover:text-on-highlight"
+    >
+      {shown ? "Hide" : "Show"} {children}
+    </button>
   );
 }
 
