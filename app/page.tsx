@@ -9,11 +9,7 @@ import { TRANSITION } from "@/components/transitions";
 import { TypedName } from "@/components/TypedName";
 import { IMPROV_TIME_LIMIT_SECONDS, QUESTION_COUNT } from "@/domain/config";
 
-/**
- * Both Modes are laid out on the same five Phase columns, so what sets them
- * apart reads straight across: Normal Mode's Briefing column and Improv Mode's
- * Q&A column are simply empty.
- */
+/** Every Phase a Mode can have, in Session order. Each Mode shows only the ones it includes. */
 const PHASE_COLUMNS = ["Setup", "Briefing", "Delivery", "Q&A", "Reflection"] as const;
 
 type PhaseName = (typeof PHASE_COLUMNS)[number];
@@ -140,24 +136,17 @@ function ModeEntry({ mode }: { mode: Mode }) {
 
       <ol
         aria-label={`${mode.title} Phases`}
-        className="mt-auto grid grid-cols-2 gap-x-6 gap-y-5 pt-10 md:grid-cols-5 lg:gap-x-8"
+        className="mt-auto grid grid-cols-2 gap-x-6 gap-y-5 pt-10 md:grid-cols-4 lg:gap-x-8"
       >
-        {PHASE_COLUMNS.map((phase) => {
-          const detail = mode.phases[phase];
-          if (!detail) {
-            // Hold the column open so the Phases after it stay aligned with the other Mode.
-            return <li key={phase} aria-hidden="true" className="hidden md:block" />;
-          }
-          return (
-            <li key={phase} className="border-t border-mute pt-2.5 text-lg leading-snug">
-              <p className="flex items-baseline gap-2.5 font-bold">
-                <span className="tabular-nums">{included.indexOf(phase) + 1}</span>
-                <span>{phase}</span>
-              </p>
-              <p className="text-mute">{detail}</p>
-            </li>
-          );
-        })}
+        {included.map((phase, index) => (
+          <li key={phase} className="border-t border-mute pt-2.5 text-lg leading-snug">
+            <p className="flex items-baseline gap-2.5 font-bold">
+              <span className="tabular-nums">{index + 1}</span>
+              <span>{phase}</span>
+            </p>
+            <p className="text-mute">{mode.phases[phase]}</p>
+          </li>
+        ))}
       </ol>
     </li>
   );
