@@ -57,7 +57,7 @@ export default async function HistoryPage() {
         <div className="flex flex-col gap-12">
           <header className="flex flex-wrap items-end justify-between gap-4">
             <h1 className="text-5xl font-bold leading-[0.9] tracking-tight font-display sm:text-6xl">
-              History.
+              History<span className="text-highlight">.</span>
             </h1>
             <p className="text-base text-mute">
               {sessions.length} {sessions.length === 1 ? "session" : "sessions"} recorded
