@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { holdLoadingScreen, loadingLabel, loadingVersion, onLoadingChange } from "@/components/loadingHolds";
+import {
+  holdLoadingScreen,
+  loadingImmediate,
+  loadingLabel,
+  loadingVersion,
+  onLoadingChange,
+  setScreenCovered,
+} from "@/components/loadingHolds";
 import { TRAVEL, inkBox, type Box } from "@/components/periodFold";
 
 const LETTERS = ["R", "h", "e", "t", "o", "r"] as const;
 
-/** A load quicker than this never shows the screen at all. */
+/** A load quicker than this never shows the screen at all, unless its hold wants it at once. */
 const SHOW_DELAY_MS = 150;
 
 /** The screen sliding up over the page before anything on it moves. */
@@ -179,6 +186,7 @@ function center(element: Element): { x: number; y: number } {
 export function LoadingScreen() {
   useSyncExternalStore(onLoadingChange, loadingVersion, () => 0);
   const label = loadingLabel();
+  const immediate = loadingImmediate();
   const [shown, setShown] = useState(false);
 
   // The caption keeps the last label while the screen plays its way out.
@@ -194,9 +202,9 @@ export function LoadingScreen() {
 
   useEffect(() => {
     if (label === undefined || shown) return;
-    const timer = window.setTimeout(() => setShown(true), SHOW_DELAY_MS);
+    const timer = window.setTimeout(() => setShown(true), immediate ? 0 : SHOW_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [label, shown]);
+  }, [label, immediate, shown]);
 
   useEffect(() => {
     const screen = screenRef.current;
@@ -274,6 +282,9 @@ export function LoadingScreen() {
       const arrival = reducedMotion
         ? play(screen, [{ opacity: 0 }, { opacity: 1 }], { duration: FADE_MS })
         : play(screen, [{ translate: "0 100%" }, { translate: "0 0" }], { duration: SLIDE_MS, easing: TRAVEL });
+      void arrival.finished.then(() => {
+        if (!canceled) setScreenCovered(true);
+      }, () => {});
       await Promise.all([arrival.finished, Promise.race([document.fonts.ready, wait(FONT_WAIT_MS)])]);
       if (canceled) return;
       fit();
@@ -321,6 +332,7 @@ export function LoadingScreen() {
     };
 
     const goOut = async () => {
+      setScreenCovered(false);
       // From here the letters move, so they're no longer where a fresh measure would put them.
       observer.disconnect();
       if (reducedMotion) {
@@ -405,6 +417,7 @@ export function LoadingScreen() {
 
     return () => {
       canceled = true;
+      setScreenCovered(false);
       cancelAnimationFrame(meltFrame);
       observer.disconnect();
       for (const animation of animations) animation.cancel();

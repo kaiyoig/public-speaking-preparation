@@ -10,6 +10,8 @@
 
 interface Hold {
   label: string;
+  /** Wants the screen up at once, however quick the load, rather than after the usual delay. */
+  immediate: boolean;
 }
 
 const holds: Hold[] = [];
@@ -23,9 +25,12 @@ function changed() {
   for (const listener of [...listeners]) listener();
 }
 
-/** Puts a hold on the loading screen, labeled with what is loading. Returns its release. */
-export function holdLoadingScreen(label: string): () => void {
-  const hold = { label };
+/**
+ * Puts a hold on the loading screen, labeled with what is loading. Returns its release. An
+ * `immediate` hold puts the screen up at once, for something that waits on the screen itself.
+ */
+export function holdLoadingScreen(label: string, { immediate = false } = {}): () => void {
+  const hold = { label, immediate };
   holds.push(hold);
   changed();
   let released = false;
@@ -42,6 +47,11 @@ export function loadingLabel(): string | undefined {
   return holds.at(-1)?.label;
 }
 
+/** Whether any hold wants the screen up at once. */
+export function loadingImmediate(): boolean {
+  return holds.some((hold) => hold.immediate);
+}
+
 /** Changes whenever a hold is put on or released. */
 export function loadingVersion(): number {
   return version;
@@ -55,15 +65,35 @@ export function onLoadingChange(listener: () => void): () => void {
   };
 }
 
+/** Whether the screen has come all the way up and covers the page. */
+let covered = false;
+const coverWaiters = new Set<() => void>();
+
+/** Called by the screen as it finishes covering the page, and as it starts to uncover it. */
+export function setScreenCovered(next: boolean): void {
+  covered = next;
+  if (!covered) return;
+  for (const resolve of [...coverWaiters]) resolve();
+  coverWaiters.clear();
+}
+
+/** Resolves once the screen covers the page, at once if it already does. */
+export function whenScreenCovered(): Promise<void> {
+  if (covered) return Promise.resolve();
+  return new Promise((resolve) => coverWaiters.add(resolve));
+}
+
 let navigationRelease: (() => void) | undefined;
 
 /**
- * Holds the loading screen from a link's click until the page it opens has rendered, so the page
- * being left stays up underneath rather than a route's loading fallback.
+ * Holds the loading screen from a link's click until the page it opens has rendered, and resolves
+ * once the screen covers the page being left. The link navigates only then, so that page stays up
+ * underneath and the screen plays however quickly the next one loads.
  */
-export function holdUntilNavigated(label: string): void {
+export function holdUntilNavigated(label: string): Promise<void> {
   navigationRelease?.();
-  navigationRelease = holdLoadingScreen(label);
+  navigationRelease = holdLoadingScreen(label, { immediate: true });
+  return whenScreenCovered();
 }
 
 /** Releases the hold `holdUntilNavigated` put on, if any. Called once each new route renders. */
