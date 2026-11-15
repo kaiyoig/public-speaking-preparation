@@ -32,7 +32,10 @@ export function inkBox(glyph: HTMLElement, origin: { top: number; left: number }
   context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
   const metrics = context.measureText(glyph.textContent ?? "");
   const box = glyph.getBoundingClientRect();
-  const baseline = box.bottom - metrics.fontBoundingBoxDescent - origin.top;
+  // The font's ascent and descent sit centered in the box: an inline box is exactly as tall as
+  // they are, and an inline-block as tall as its line, with the leading split above and below.
+  const leading = box.height - metrics.fontBoundingBoxAscent - metrics.fontBoundingBoxDescent;
+  const baseline = box.top + leading / 2 + metrics.fontBoundingBoxAscent - origin.top;
   const left = box.left - origin.left;
   return {
     top: baseline - metrics.actualBoundingBoxAscent,
