@@ -15,6 +15,18 @@ const SIDEWAYS_MIN_PX = 4;
 /** Roughly how many pixels a wheel delta given in lines or pages stands for. */
 const LINE_PX = 16;
 
+const ARROWS: Record<string, Direction> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
+
+/**
+ * The way an arrow key moves across the map. Undefined for any other key, with a modifier held
+ * (Alt+Left is the browser's Back), or while typing, where the arrows move the caret.
+ */
+export function arrowKey(event: KeyboardEvent): Direction | undefined {
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return undefined;
+  if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable]")) return undefined;
+  return ARROWS[event.key];
+}
+
 interface ScrollPagingOptions {
   /**
    * What moving in this direction does. Undefined where nothing lies that way, or where the page

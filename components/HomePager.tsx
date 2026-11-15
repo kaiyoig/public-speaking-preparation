@@ -13,7 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { MAP_MOVES, type MapMove } from "@/components/mapMoves";
-import { attachScrollPaging, type Direction } from "@/components/scrollPaging";
+import { arrowKey, attachScrollPaging, type Direction } from "@/components/scrollPaging";
 
 /** The panels, top to bottom. */
 const VIEWS = ["title", "modes"] as const;
@@ -114,8 +114,8 @@ export const usePanelShowing = () => useContext(PanelShowing);
  * to Title. The view never rests part-way.
  *
  * A panel taller than the screen scrolls inside itself first, and only hands over
- * to its neighbor from its own edge. Scrolling sideways leaves Home for the page
- * beside the panel: About beside Title, History beside Modes.
+ * to its neighbor from its own edge. Scrolling sideways, or the Left and Right arrow
+ * keys, leave Home for the page beside the panel: About beside Title, History beside Modes.
  *
  * The showing panel is kept in the URL hash, so links to `#modes` change panel,
  * and Back from a Session returns to Modes.
@@ -210,13 +210,16 @@ export function HomePager(panels: HomePagerProps) {
       const space = event.key === " " && !onControl;
       const down = event.key === "ArrowDown" || event.key === "PageDown" || event.key === "End" || (space && !event.shiftKey);
       const up = event.key === "ArrowUp" || event.key === "PageUp" || event.key === "Home" || (space && event.shiftKey);
-      if (!down && !up) return;
+      const arrow = arrowKey(event);
+      const sideways = arrow === "left" || arrow === "right" ? arrow : undefined;
+      if (!down && !up && !sideways) return;
       if (performance.now() < lockedUntil.current) {
         event.preventDefault();
         return;
       }
-      const move = leavesFor(down ? "down" : "up");
+      const move = leavesFor(sideways ?? (down ? "down" : "up"));
       if (!move) {
+        if (sideways) return;
         // Before anything has focus the keys reach no scroller, so scroll the panel for them.
         if (document.activeElement === document.body) {
           event.preventDefault();
