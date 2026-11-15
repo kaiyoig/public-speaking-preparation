@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
 import { HomePager } from "@/components/HomePager";
+import { PageTransition } from "@/components/PageTransition";
 import { Shell } from "@/components/Shell";
 import { SpeechBackdrop } from "@/components/SpeechBackdrop";
+import { TRANSITION } from "@/components/transitions";
 import { TypedName } from "@/components/TypedName";
 import { IMPROV_TIME_LIMIT_SECONDS, QUESTION_COUNT } from "@/domain/config";
 
@@ -47,7 +49,11 @@ const MODES: Mode[] = [
 ];
 
 export default function Home() {
-  return <HomePager title={<Title />} modes={<Modes />} />;
+  return (
+    <PageTransition>
+      <HomePager title={<Title />} modes={<Modes />} />
+    </PageTransition>
+  );
 }
 
 /**
@@ -63,6 +69,7 @@ function Title() {
       </h1>
       <Link
         href="/about"
+        transitionTypes={[TRANSITION.toAbout]}
         className="text-link absolute top-5 right-6 bg-paper text-lg sm:top-9 sm:right-12 lg:right-24"
       >
         About Rhetor
@@ -85,7 +92,7 @@ function Modes() {
   return (
     <Shell
       rail={
-        <Link href="/about" className="text-link self-start text-lg">
+        <Link href="/about" transitionTypes={[TRANSITION.toAbout]} className="text-link self-start text-lg">
           About Rhetor
         </Link>
       }

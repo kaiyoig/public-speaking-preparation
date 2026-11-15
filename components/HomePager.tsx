@@ -1,6 +1,16 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 
 /** The panels, top to bottom. */
 const VIEWS = ["title", "modes"] as const;
@@ -24,6 +34,45 @@ const SWIPE_PX = 48;
 
 const viewFromHash = (): View => VIEWS.find((view) => HASHES[view] === window.location.hash) ?? "title";
 
+const subscribeNever = () => () => {};
+
+/** True while hydrating server HTML, which can't know the hash; false when Home mounts on a client navigation. */
+const useHydrating = () =>
+  useSyncExternalStore(
+    subscribeNever,
+    () => false,
+    () => true,
+  );
+
+/**
+ * The panel a HomePanelLink is heading for. A client navigation renders Home before the URL
+ * changes, so the hash can't say which panel to open yet.
+ */
+let requestedView: View | undefined;
+
+interface HomePanelLinkProps {
+  panel: View;
+  transitionTypes?: string[];
+  className?: string;
+  children: ReactNode;
+}
+
+/**
+ * A link from another page to one of Home's panels. Home opens straight on that panel, so a
+ * page transition into Home pictures the panel the Speaker asked for.
+ */
+export function HomePanelLink({ panel, ...props }: HomePanelLinkProps) {
+  return (
+    <Link
+      {...props}
+      href={`/${HASHES[panel] ?? ""}`}
+      onNavigate={() => {
+        requestedView = panel;
+      }}
+    />
+  );
+}
+
 type HomePagerProps = Record<View, ReactNode>;
 
 const PanelShowing = createContext(false);
@@ -43,13 +92,16 @@ export const usePanelShowing = () => useContext(PanelShowing);
  * and Back from a Session returns to Modes.
  */
 export function HomePager(panels: HomePagerProps) {
-  const [view, setView] = useState<View>("title");
+  const hydrating = useHydrating();
+  // A page transition into Home pictures its first render, so open on the right panel straight
+  // away rather than correcting it after: that would slide in Title, then jump.
+  const [view, setView] = useState<View>(() => (hydrating ? "title" : (requestedView ?? viewFromHash())));
   // Off until the Speaker moves between panels, so opening on #modes doesn't slide in.
   const [animated, setAnimated] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<Partial<Record<View, HTMLDivElement | null>>>({});
-  const viewRef = useRef<View>("title");
+  const viewRef = useRef<View>(view);
   const lockedUntil = useRef(0);
 
   const show = useCallback((next: View) => {
@@ -86,7 +138,9 @@ export function HomePager(panels: HomePagerProps) {
     /** The panel that moving in this direction leaves for, once the current one is at that edge. */
     const leavesFor = (down: boolean) => ((down ? atEnd() : atStart()) ? neighbor(down) : undefined);
 
-    // Open on whatever the URL says, without a slide.
+    requestedView = undefined;
+
+    // After hydration, open on whatever the URL says, without a slide.
     const initial = viewFromHash();
     if (initial !== viewRef.current) {
       viewRef.current = initial;
