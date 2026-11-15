@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
 import { HomePager } from "@/components/HomePager";
+import { ModeTitle } from "@/components/ModeTitle";
 import { PageTransition } from "@/components/PageTransition";
 import { Shell } from "@/components/Shell";
 import { SpeechBackdrop } from "@/components/SpeechBackdrop";
@@ -117,8 +118,12 @@ function ModeEntry({ mode }: { mode: Mode }) {
     <li className="group relative flex flex-col border-t-2 border-ink pt-4 pb-10 outline-offset-4 outline-ink has-[a:focus-visible]:outline-2 lg:pb-12">
       <div className="flex items-start justify-between gap-6">
         <h2 className="text-[clamp(2rem,min(5vw,10vh),5rem)] font-bold leading-[0.9] tracking-[-0.04em] font-display">
-          <Link href={mode.href} className="outline-none after:absolute after:inset-0 after:z-10">
-            {mode.title}
+          <Link
+            href={mode.href}
+            transitionTypes={[TRANSITION.enterSession]}
+            className="outline-none after:absolute after:inset-0 after:z-10"
+          >
+            <ModeTitle>{mode.title}</ModeTitle>
           </Link>
         </h2>
         <Arrow className="mt-[0.06em] size-[clamp(2.25rem,min(4.2vw,8.5vh),4.25rem)] p-[0.4rem] sm:p-2.5" />

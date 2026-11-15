@@ -1,5 +1,7 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { ViewTransition, type ReactNode } from "react";
+import { ModeTitle } from "@/components/ModeTitle";
+import { TRANSITION } from "@/components/transitions";
 import { Wordmark } from "@/components/Wordmark";
 
 interface ShellProps {
@@ -32,13 +34,20 @@ export function Shell({ rail, wordmarkLinksHome = true, dense = false, children 
           dense ? "lg:col-span-2 lg:gap-10 lg:py-10" : "lg:col-span-3 lg:gap-14 lg:py-20"
         }`}
       >
-        {wordmarkLinksHome ? (
-          <Link href="/" className={`${WORDMARK_CLASS} hover:text-mute`}>
-            {wordmark}
-          </Link>
-        ) : (
-          <p className={WORDMARK_CLASS}>{wordmark}</p>
-        )}
+        {/* The wordmark holds still going from Home into a Session. */}
+        <ViewTransition
+          name="wordmark"
+          share={{ [TRANSITION.enterSession]: "anchor", default: "none" }}
+          default="none"
+        >
+          {wordmarkLinksHome ? (
+            <Link href="/" transitionTypes={[TRANSITION.leaveSession]} className={`${WORDMARK_CLASS} hover:text-mute`}>
+              {wordmark}
+            </Link>
+          ) : (
+            <p className={WORDMARK_CLASS}>{wordmark}</p>
+          )}
+        </ViewTransition>
         {rail}
       </header>
       <main className={`col-span-4 flex flex-col py-8 ${dense ? "lg:col-span-10 lg:py-10" : "lg:col-span-9 lg:py-20"}`}>{children}</main>
@@ -50,7 +59,9 @@ export function Shell({ rail, wordmarkLinksHome = true, dense = false, children 
 export function SessionRail({ mode, children }: { mode: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-4xl font-bold leading-[0.9] tracking-tight font-display">{mode}</h1>
+      <h1 className="text-4xl font-bold leading-[0.9] tracking-tight font-display">
+        <ModeTitle>{mode}</ModeTitle>
+      </h1>
       {children}
     </div>
   );

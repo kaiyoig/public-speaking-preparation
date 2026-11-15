@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { Delivery } from "@/components/Delivery";
+import { PageTransition } from "@/components/PageTransition";
 import { PhaseSteps } from "@/components/PhaseSteps";
 import { SessionRail, Shell } from "@/components/Shell";
+import { TRANSITION } from "@/components/transitions";
 import { Reflection } from "@/components/Reflection";
 import { QandA } from "@/components/QandA";
 import { SpeechBriefForm } from "@/components/SpeechBriefForm";
@@ -48,46 +50,48 @@ const PHASES = [
 export default function NormalModePage() {
   const [state, dispatch] = useReducer(reducer, { phase: "setup" });
   const router = useRouter();
-  const quit = () => router.push("/");
+  const quit = () => router.push("/", { transitionTypes: [TRANSITION.leaveSession] });
 
   return (
-    <Shell
-      wordmarkLinksHome={!(state.phase === "delivery" || state.phase === "qa")}
-      dense={state.phase === "delivery" || state.phase === "qa"}
-      rail={
-        <SessionRail mode="Normal Mode">
-          <PhaseSteps phases={PHASES} current={state.phase} />
-        </SessionRail>
-      }
-    >
-      {state.phase === "setup" && (
-        <SpeechBriefForm initial={state.brief} onSubmit={(brief) => dispatch({ type: "briefSubmitted", brief })} />
-      )}
+    <PageTransition>
+      <Shell
+        wordmarkLinksHome={!(state.phase === "delivery" || state.phase === "qa")}
+        dense={state.phase === "delivery" || state.phase === "qa"}
+        rail={
+          <SessionRail mode="Normal Mode">
+            <PhaseSteps phases={PHASES} current={state.phase} />
+          </SessionRail>
+        }
+      >
+        {state.phase === "setup" && (
+          <SpeechBriefForm initial={state.brief} onSubmit={(brief) => dispatch({ type: "briefSubmitted", brief })} />
+        )}
 
-      {state.phase === "delivery" && (
-        <Delivery
-          mode="normal"
-          timeLimitSeconds={state.brief.timeLimitMinutes * 60}
-          onFinished={(delivery) => dispatch({ type: "deliveryFinished", delivery })}
-          onQuit={quit}
-        />
-      )}
+        {state.phase === "delivery" && (
+          <Delivery
+            mode="normal"
+            timeLimitSeconds={state.brief.timeLimitMinutes * 60}
+            onFinished={(delivery) => dispatch({ type: "deliveryFinished", delivery })}
+            onQuit={quit}
+          />
+        )}
 
-      {state.phase === "qa" && (
-        <QandA
-          brief={state.brief}
-          delivery={state.delivery}
-          onFinished={(answers) => dispatch({ type: "qandaFinished", answers })}
-          onQuit={quit}
-        />
-      )}
+        {state.phase === "qa" && (
+          <QandA
+            brief={state.brief}
+            delivery={state.delivery}
+            onFinished={(answers) => dispatch({ type: "qandaFinished", answers })}
+            onQuit={quit}
+          />
+        )}
 
-      {state.phase === "reflection" && (
-        <Reflection
-          input={{ mode: "normal", brief: state.brief, delivery: state.delivery, answers: state.answers }}
-          onPracticeAgain={() => dispatch({ type: "practiceAgain" })}
-        />
-      )}
-    </Shell>
+        {state.phase === "reflection" && (
+          <Reflection
+            input={{ mode: "normal", brief: state.brief, delivery: state.delivery, answers: state.answers }}
+            onPracticeAgain={() => dispatch({ type: "practiceAgain" })}
+          />
+        )}
+      </Shell>
+    </PageTransition>
   );
 }
