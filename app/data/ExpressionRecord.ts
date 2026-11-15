@@ -49,33 +49,52 @@ export class ExpressionRecord {
     }
 
     const sourceCanvas = document.createElement('canvas')
-    sourceCanvas.width = session.video.videoWidth
-    sourceCanvas.height = session.video.videoHeight
+    // Downscale to 240px width so OpenCV YuNet WASM runs in ~15ms without starving Web Audio on the main thread
+    const aspect =
+      session.video.videoWidth > 0 && session.video.videoHeight > 0
+        ? session.video.videoHeight / session.video.videoWidth
+        : 0.75
+    sourceCanvas.width = 240
+    sourceCanvas.height = Math.max(1, Math.round(240 * aspect))
 
+    let busy = false
     const recordFrame = () => {
-      if (session.video.videoWidth === 0 || session.video.videoHeight === 0) return
-      const result: ExpressionDetection = detectExpressions(
-        session.cv,
-        session.video,
-        session.detector,
-        this.currentEmotionProxy,
-        sourceCanvas,
-      )
-      const timestamp = (performance.now() - this.startedAt) / 1000
+      if (busy || session.video.videoWidth === 0 || session.video.videoHeight === 0) return
+      busy = true
+      try {
+        const result: ExpressionDetection = detectExpressions(
+          session.cv,
+          session.video,
+          session.detector,
+          this.currentEmotionProxy,
+          sourceCanvas,
+        )
+        const timestamp = (performance.now() - this.startedAt) / 1000
 
-      if (result.faceDetected) {
-        this.faceWasDetected = true
-        this.entries.push({ timestamp, expressions: result.expressions })
-        this.notify()
-      } else if (this.faceWasDetected) {
-        this.faceWasDetected = false
-        this.entries.push({ timestamp, expressions: [FACE_NOT_DETECTED] })
-        this.notify()
+        if (result.faceDetected) {
+          this.faceWasDetected = true
+          this.entries.push({ timestamp, expressions: result.expressions })
+          this.notify()
+        } else if (this.faceWasDetected) {
+          this.faceWasDetected = false
+          this.entries.push({ timestamp, expressions: [FACE_NOT_DETECTED] })
+          this.notify()
+        }
+      } finally {
+        busy = false
       }
     }
 
-    recordFrame()
-    this.timer = window.setInterval(recordFrame, this.timestep)
+    const scheduleRecordFrame = () => {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        ;(window as any).requestIdleCallback(recordFrame, { timeout: 500 })
+      } else {
+        recordFrame()
+      }
+    }
+
+    scheduleRecordFrame()
+    this.timer = window.setInterval(scheduleRecordFrame, this.timestep)
     this.notify()
   }
 

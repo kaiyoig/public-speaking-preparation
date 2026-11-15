@@ -30,7 +30,7 @@ export function TopicKindPicker({ onChoose }: TopicKindPickerProps) {
         {TOPIC_KINDS.map(({ kind, title, description }) => (
           <li
             key={kind}
-            className="group relative border-t-2 border-ink pt-4 pb-10 outline-offset-4 outline-ink has-[button:focus-visible]:outline-2"
+            className="group relative pt-4 pb-10 outline-offset-4 outline-ink has-[button:focus-visible]:outline-2"
           >
             <div className="flex items-start justify-between gap-6">
               <h3 className="text-5xl font-bold leading-[0.95] tracking-tight font-display sm:text-6xl">

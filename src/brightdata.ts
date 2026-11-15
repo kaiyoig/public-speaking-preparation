@@ -82,8 +82,8 @@ export async function searchWebContext(
   searchUrl.searchParams.set("gl", "us");
   searchUrl.searchParams.set("brd_json", "1");
 
-  // Step 3: Attempt the request up to 2 times.
-  const maxAttempts = 2;
+  // Step 3: Attempt the request up to 3 times.
+  const maxAttempts = 3;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     console.log(`Bright Data search attempt ${attempt}/${maxAttempts}`);
@@ -153,12 +153,25 @@ export async function searchWebContext(
     try {
       data = JSON.parse(responseText);
     } catch {
+      const preview = responseText.slice(0, 250).replace(/\s+/g, " ").trim();
+      if (attempt < maxAttempts) {
+        console.warn(
+          `Bright Data returned non-JSON (HTTP ${response.status}, length ${responseText.length}): ${preview}. Retrying...`
+        );
+        await wait(1500);
+        continue;
+      }
       throw new Error(
-        `Bright Data returned invalid JSON (HTTP ${response.status}, length: ${responseText.length}).`
+        `Bright Data returned invalid JSON (HTTP ${response.status}, length: ${responseText.length}): ${preview}`
       );
     }
 
     if (!Array.isArray(data.organic)) {
+      if (attempt < maxAttempts) {
+        console.warn("Bright Data response missing organic results. Retrying...");
+        await wait(1500);
+        continue;
+      }
       throw new Error("Bright Data did not return organic search results.");
     }
 
@@ -180,8 +193,9 @@ export async function searchWebContext(
 export async function researchTopic(
   topic: string
 ): Promise<ResearchResponse> {
+  const cleanTopic = topic.replace(/[?!.]+/g, " ").replace(/\s+/g, " ").trim();
   const sources = await searchWebContext(
-    `${topic} arguments for and against pros cons`
+    `${cleanTopic} arguments for and against pros cons`
   );
 
   return {

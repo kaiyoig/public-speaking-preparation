@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Typed from "typed.js";
 import { FAMOUS_SPEECHES, type FamousSpeech } from "@/components/famousSpeeches";
 import { usePanelShowing } from "@/components/HomePager";
+import { afterIntro } from "@/components/intro";
 
 /** Brisk, well ahead of speech, so a few lines are down within seconds of arriving. */
 const MS_PER_CHARACTER = 22;
@@ -52,7 +53,8 @@ const paragraphsOf = async (speech: FamousSpeech, signal: AbortSignal): Promise<
 /**
  * The background of the Title panel: famous speeches typed out one after another,
  * paragraph by paragraph, in a different order each visit, with a line saying whose
- * words they are. Typing pauses while another panel is on screen.
+ * words they are. Typing pauses while another panel is on screen, and starts only
+ * once Home's intro is over.
  *
  * For reduced motion the opening of a single speech is shown, still. It is
  * decoration, so it is hidden from screen readers.
@@ -203,9 +205,11 @@ export function SpeechBackdrop() {
       };
       typeParagraph(0);
     };
-    void deliver(0);
+    // The room stays quiet through Home's intro, until the name is complete.
+    const cancelStart = afterIntro(() => void deliver(0));
 
     return () => {
+      cancelStart();
       abort.abort();
       window.clearTimeout(timer);
       stopTyping();

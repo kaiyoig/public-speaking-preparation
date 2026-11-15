@@ -97,11 +97,11 @@
     overscroll-behavior: none;
   }
 
-  /* The Reflection pages through slides, so it shows no scrollbar. A long slide still scrolls by wheel or touch. */
-  html:has([data-reflection]) {
+  /* No scrollbars anywhere. Pages and panels still scroll by wheel, touch and keyboard. */
+  * {
     scrollbar-width: none;
   }
-  html:has([data-reflection])::-webkit-scrollbar {
+  *::-webkit-scrollbar {
     display: none;
   }
 }
@@ -185,17 +185,7 @@
   --vt-y: -100vh;
 }
 
-/* About and the Modes panel: diagonal neighbors, About up and to the right. */
-::view-transition-old(.about-to-modes) {
-  animation: var(--vt-travel) both vt-slide-out;
-  --vt-x: 100vw;
-  --vt-y: -100vh;
-}
-::view-transition-new(.about-to-modes) {
-  animation: var(--vt-travel) both vt-slide-in;
-  --vt-x: -100vw;
-  --vt-y: 100vh;
-}
+/* The Modes panel up to About: diagonal neighbors, About up and to the right. */
 ::view-transition-old(.modes-to-about) {
   animation: var(--vt-travel) both vt-slide-out;
   --vt-x: -100vw;
@@ -372,6 +362,46 @@
   ::view-transition-new(.anchor) {
     animation: none !important;
   }
+}
+
+/*
+ * Home's intro (components/intro.ts). From the first frame, a sheet of highlight yellow covers
+ * the page; it folds down into the period of the name, the letters type up to it, and then what
+ * waited comes in. The script that sets data-intro never sets it for reduced motion.
+ */
+.intro-sheet {
+  display: none;
+}
+html[data-intro="fold"] .intro-sheet {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--highlight);
+  pointer-events: none;
+  /* Should the page never come alive to fold it, it gets out of the way. */
+  animation: intro-failsafe 0s 5s forwards;
+}
+@keyframes intro-failsafe {
+  to {
+    visibility: hidden;
+  }
+}
+
+/* The name's own period stands in place before its letters arrive. */
+html[data-intro] [data-intro-period] {
+  visibility: visible;
+}
+
+/* What waits for the name: hidden, with its own motion held until it shows. */
+[data-intro-wait] {
+  transition: opacity 500ms ease-out;
+}
+html[data-intro] [data-intro-wait] {
+  opacity: 0;
+}
+html[data-intro] [data-intro-wait] * {
+  animation-play-state: paused;
 }
 
 /*

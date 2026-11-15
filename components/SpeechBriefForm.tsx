@@ -128,7 +128,7 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
 
   return (
     <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-10">
-      <header className="rule-top">
+      <header className="pt-3">
         <h2 className="text-5xl font-bold leading-none tracking-tight font-display sm:text-6xl">
           Speech Brief
         </h2>
@@ -204,19 +204,9 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
         </div>
 
         <div className="hang-row">
-          <div className="hang-label flex flex-col items-start gap-2 lg:pt-3">
-            <label htmlFor={fieldId("notes")}>
-              Notes <span className="font-normal text-mute">(optional)</span>
-            </label>
-            <button
-              type="button"
-              onClick={() => void handleResearchAudience()}
-              disabled={prepLoading}
-              className="text-left text-sm font-semibold underline underline-offset-4 hover:bg-highlight hover:text-on-highlight disabled:opacity-50"
-            >
-              {prepLoading ? "Researching audience & topic…" : "Research audience & topic"}
-            </button>
-          </div>
+          <label htmlFor={fieldId("notes")} className="hang-label lg:pt-3">
+            Notes <span className="font-normal text-mute">(optional)</span>
+          </label>
           <div className="hang-body max-w-2xl">
             <textarea
               id={fieldId("notes")}
@@ -236,7 +226,7 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
             </button>
             {prepError && <p className="mt-3 font-bold">{prepError}</p>}
             {prepResult && (
-              <div className="mt-5 rule-top">
+              <div className="mt-5 pt-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-3">
                   <p className="font-bold">Audience &amp; Evidence Prep</p>
                   <button type="button" onClick={insertInsightsIntoNotes} className="text-link">

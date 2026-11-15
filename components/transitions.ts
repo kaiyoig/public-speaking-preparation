@@ -12,8 +12,6 @@ export const TRANSITION = {
   toAbout: "to-about",
   /** About slides back off to the right and Home slides in from the left. */
   fromAbout: "from-about",
-  /** From About down to the Modes panel: About slides off to the upper right, Modes comes in from the lower left. */
-  aboutToModes: "about-to-modes",
   /** From the Modes panel up to About: Modes slides off to the lower left, About comes in from the upper right. */
   modesToAbout: "modes-to-about",
   /** From the Modes panel across to History: Modes slides off to the left and History slides in from the right. */
@@ -51,7 +49,6 @@ export const TRANSITION = {
 export const PAGE_MOTION: ViewTransitionClassPerType = {
   [TRANSITION.toAbout]: TRANSITION.toAbout,
   [TRANSITION.fromAbout]: TRANSITION.fromAbout,
-  [TRANSITION.aboutToModes]: TRANSITION.aboutToModes,
   [TRANSITION.modesToAbout]: TRANSITION.modesToAbout,
   [TRANSITION.modesToHistory]: TRANSITION.modesToHistory,
   [TRANSITION.historyToModes]: TRANSITION.historyToModes,

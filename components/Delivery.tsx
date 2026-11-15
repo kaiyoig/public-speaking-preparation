@@ -56,7 +56,7 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   const [emotionProxy, setEmotionProxy] = useState<FacialExpressionProxy | undefined>(undefined);
   const expressionRecordRef = useRef<ExpressionRecord | null>(null);
   if (!expressionRecordRef.current) {
-    expressionRecordRef.current = new ExpressionRecord(250);
+    expressionRecordRef.current = new ExpressionRecord(1500);
   }
 
   const handleWebcamData = useCallback((data: WebcamData) => {
@@ -262,7 +262,7 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
           {startError && <ErrorView compact message={startError} onRetry={startSpeech} />}
           {stopError && <ErrorView compact message={stopError} onRetry={stopCapture} />}
 
-          <section aria-label="Live Transcript" className="rule-top flex flex-col gap-2">
+          <section aria-label="Live Transcript" className="pt-3 flex flex-col gap-2">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-bold">Live Transcript</h2>
               {state.status === "speaking" && (
@@ -312,9 +312,9 @@ function Timer({ shown, label, value, warning, note, toggles }: TimerProps) {
   return (
     <section
       aria-label="Timer"
-      className={`flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t-2 pt-3 pb-3 ${
+      className={`flex flex-wrap items-center justify-between gap-x-8 gap-y-3 pt-3 pb-3 ${
         // In Overtime the red bleeds into the gutter so the numerals don't move.
-        warning ? "-mx-4 border-signal bg-signal px-4 text-white sm:-mx-5 sm:px-5" : "border-ink"
+        warning ? "-mx-4 bg-signal px-4 text-white sm:-mx-5 sm:px-5" : ""
       }`}
     >
       <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">

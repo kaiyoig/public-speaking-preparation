@@ -1,4 +1,4 @@
-import { getRealtimeScribeTokenAction } from "@/app/actions/hostBrain";
+import { getRealtimeScribeTokenAction, transcribeAudioAction } from "@/app/actions/hostBrain";
 import type { Recording, VocalDeliveryMetrics } from "@/domain/types";
 import type { SpeechCapture, SpeechCaptureStartOptions } from "./SpeechCapture";
 
@@ -29,20 +29,23 @@ interface ScribeWordTiming {
 
 const SAMPLE_RATE = 16000;
 const SILENCE_RMS_THRESHOLD = 0.015;
+const PAUSE_SECONDS_THRESHOLD = 0.6;
 const MAX_GEMINI_AUDIO_BYTES = 3_500_000;
 
 /**
  * Real-time browser microphone SpeechCapture.
- * - Streams mic audio to ElevenLabs Scribe Realtime (`scribe_v2_realtime`) with word timestamps
- *   (falling back to Web Speech API if ElevenLabs is unavailable).
+ * - Captures mic audio at the device's native sample rate and resamples cleanly to 16 kHz PCM
+ *   for ElevenLabs Scribe Realtime (`scribe_v2_realtime`, locked to `en`).
  * - Measures real-time vocal volume, dynamic range, pitch/inflection variation (Hz), and pauses.
- * - Captures a compressed audio clip via MediaRecorder so Gemini can directly evaluate vocal
- *   inflection, tone, and delivery in the final Reflection.
+ * - Captures a compressed audio clip via MediaRecorder and refines the final transcript via
+ *   ElevenLabs Scribe v2 (`scribe_v2`) + passes audio to Gemini for multimodal Delivery feedback.
  */
 export class BrowserSpeechCapture implements SpeechCapture {
   private mediaStream: MediaStream | null = null;
   private audioContext: AudioContext | null = null;
+  private workletNode: AudioWorkletNode | null = null;
   private processor: ScriptProcessorNode | null = null;
+  private silentGain: GainNode | null = null;
   private socket: WebSocket | null = null;
   private recognition: SpeechRecognitionLike | null = null;
   private mediaRecorder: MediaRecorder | null = null;
@@ -51,6 +54,7 @@ export class BrowserSpeechCapture implements SpeechCapture {
   private committedParts: string[] = [];
   private partialText = "";
   private onTranscript: ((text: string) => void) | undefined;
+  private onCommitWaiter: (() => void) | null = null;
 
   private startedAtMs = 0;
   private voicedRmsValues: number[] = [];
@@ -58,7 +62,7 @@ export class BrowserSpeechCapture implements SpeechCapture {
   private wordTimings: ScribeWordTiming[] = [];
   private acousticPauseCount = 0;
   private wasVoiced = false;
-  private silenceFrames = 0;
+  private silenceSeconds = 0;
 
   async start(options?: SpeechCaptureStartOptions): Promise<void> {
     this.committedParts = [];
@@ -70,7 +74,8 @@ export class BrowserSpeechCapture implements SpeechCapture {
     this.wordTimings = [];
     this.acousticPauseCount = 0;
     this.wasVoiced = false;
-    this.silenceFrames = 0;
+    this.silenceSeconds = 0;
+    this.onCommitWaiter = null;
     this.recordedChunks = [];
 
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
@@ -91,7 +96,7 @@ export class BrowserSpeechCapture implements SpeechCapture {
     if (token) {
       await this.startElevenLabsRealtime(token, this.mediaStream);
     } else {
-      this.startAcousticPipeline(this.mediaStream);
+      await this.startAcousticPipeline(this.mediaStream);
       this.startBrowserSpeechRecognition();
     }
   }
@@ -99,8 +104,20 @@ export class BrowserSpeechCapture implements SpeechCapture {
   async stop(): Promise<Recording> {
     const durationSeconds = Math.max(1, Math.round((Date.now() - this.startedAtMs) / 1000));
 
-    // Send a final commit if ElevenLabs WebSocket is still open
+    // Flush the final partial utterance from ElevenLabs WebSocket before closing
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      const waitForFinalCommit = new Promise<void>((resolve) => {
+        const timer = setTimeout(() => {
+          this.onCommitWaiter = null;
+          resolve();
+        }, 650);
+        this.onCommitWaiter = () => {
+          clearTimeout(timer);
+          this.onCommitWaiter = null;
+          resolve();
+        };
+      });
+
       try {
         this.socket.send(
           JSON.stringify({
@@ -110,12 +127,14 @@ export class BrowserSpeechCapture implements SpeechCapture {
             sample_rate: SAMPLE_RATE,
           })
         );
+        await waitForFinalCommit;
       } catch {
         // Ignore socket send errors during teardown
       }
       this.socket.close();
     }
     this.socket = null;
+    this.onCommitWaiter = null;
 
     if (this.recognition) {
       try {
@@ -126,9 +145,20 @@ export class BrowserSpeechCapture implements SpeechCapture {
       this.recognition = null;
     }
 
+    if (this.workletNode) {
+      this.workletNode.port.onmessage = null;
+      this.workletNode.disconnect();
+      this.workletNode = null;
+    }
+
     if (this.processor) {
       this.processor.disconnect();
       this.processor = null;
+    }
+
+    if (this.silentGain) {
+      this.silentGain.disconnect();
+      this.silentGain = null;
     }
 
     if (this.audioContext) {
@@ -145,7 +175,22 @@ export class BrowserSpeechCapture implements SpeechCapture {
       this.mediaStream = null;
     }
 
-    const transcript = this.buildTranscript();
+    let transcript = this.buildTranscript();
+
+    // Only fall back to batch Scribe v2 if realtime streaming produced no transcript
+    if (!transcript.trim() && audioPayload) {
+      const batch = await transcribeAudioAction(audioPayload.base64, audioPayload.mimeType).catch(
+        () => null
+      );
+      if (batch && batch.text.length > 0) {
+        transcript = batch.text;
+        this.emitTranscriptText(transcript);
+        if (batch.words.length > 0) {
+          this.wordTimings = batch.words;
+        }
+      }
+    }
+
     const vocalMetrics = this.computeVocalMetrics(transcript, durationSeconds);
 
     const recording: Recording = {
@@ -171,6 +216,10 @@ export class BrowserSpeechCapture implements SpeechCapture {
 
   private emitTranscript() {
     this.onTranscript?.(this.buildTranscript());
+  }
+
+  private emitTranscriptText(text: string) {
+    this.onTranscript?.(text);
   }
 
   private startMediaRecorder(stream: MediaStream) {
@@ -233,25 +282,94 @@ export class BrowserSpeechCapture implements SpeechCapture {
     };
   }
 
-  private startAcousticPipeline(stream: MediaStream, onFrame?: (inputData: Float32Array) => void) {
+  private async startAcousticPipeline(
+    stream: MediaStream,
+    onFrame?: (inputData: Float32Array, sampleRate: number) => void
+  ): Promise<void> {
     const audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
+    if (audioContext.state === "suspended") {
+      await audioContext.resume().catch(() => {});
+    }
     this.audioContext = audioContext;
 
     const source = audioContext.createMediaStreamSource(stream);
+    const silentGain = audioContext.createGain();
+    silentGain.gain.value = 0;
+    this.silentGain = silentGain;
+    silentGain.connect(audioContext.destination);
+
+    const actualSampleRate = audioContext.sampleRate;
+
+    // Prefer AudioWorkletNode so PCM capture runs on the dedicated audio rendering thread
+    // and never drops frames when OpenCV WASM runs on the main UI thread.
+    if (typeof AudioWorkletNode !== "undefined" && audioContext.audioWorklet) {
+      try {
+        const workletCode = `
+          class PcmCaptureProcessor extends AudioWorkletProcessor {
+            constructor() {
+              super();
+              this._buffer = new Float32Array(4096);
+              this._offset = 0;
+            }
+            process(inputs) {
+              const input = inputs[0];
+              if (!input || !input[0]) return true;
+              const channel = input[0];
+              let i = 0;
+              while (i < channel.length) {
+                const space = 4096 - this._offset;
+                const copyCount = Math.min(space, channel.length - i);
+                this._buffer.set(channel.subarray(i, i + copyCount), this._offset);
+                this._offset += copyCount;
+                i += copyCount;
+                if (this._offset >= 4096) {
+                  this.port.postMessage(this._buffer.slice(0));
+                  this._offset = 0;
+                }
+              }
+              return true;
+            }
+          }
+          registerProcessor("pcm-capture-processor", PcmCaptureProcessor);
+        `;
+        const blobUrl = URL.createObjectURL(
+          new Blob([workletCode], { type: "application/javascript" })
+        );
+        try {
+          await audioContext.audioWorklet.addModule(blobUrl);
+        } finally {
+          URL.revokeObjectURL(blobUrl);
+        }
+
+        const workletNode = new AudioWorkletNode(audioContext, "pcm-capture-processor");
+        this.workletNode = workletNode;
+        workletNode.port.onmessage = (event: MessageEvent<Float32Array>) => {
+          const inputData = event.data;
+          this.analyzeAudioFrame(inputData, actualSampleRate);
+          onFrame?.(inputData, actualSampleRate);
+        };
+        source.connect(workletNode);
+        workletNode.connect(silentGain);
+        return;
+      } catch {
+        // Fall through to ScriptProcessorNode if AudioWorklet initialization fails
+      }
+    }
+
     const processor = audioContext.createScriptProcessor(4096, 1, 1);
     this.processor = processor;
 
     processor.onaudioprocess = (e) => {
       const inputData = e.inputBuffer.getChannelData(0);
-      this.analyzeAudioFrame(inputData);
-      onFrame?.(inputData);
+      this.analyzeAudioFrame(inputData, actualSampleRate);
+      onFrame?.(inputData, actualSampleRate);
     };
 
     source.connect(processor);
-    processor.connect(audioContext.destination);
+    processor.connect(silentGain);
   }
 
-  private analyzeAudioFrame(samples: Float32Array) {
+  private analyzeAudioFrame(samples: Float32Array, sampleRate: number) {
     let sumSquares = 0;
     for (let i = 0; i < samples.length; i++) {
       const s = samples[i] ?? 0;
@@ -261,19 +379,18 @@ export class BrowserSpeechCapture implements SpeechCapture {
 
     if (rms >= SILENCE_RMS_THRESHOLD) {
       this.voicedRmsValues.push(rms);
-      // ~0.256s per 4096-sample frame at 16kHz; >= 3 silent frames (~0.75s) after speech counts as a pause
-      if (this.wasVoiced && this.silenceFrames >= 3) {
+      if (this.wasVoiced && this.silenceSeconds >= PAUSE_SECONDS_THRESHOLD) {
         this.acousticPauseCount++;
       }
       this.wasVoiced = true;
-      this.silenceFrames = 0;
+      this.silenceSeconds = 0;
 
-      const pitchHz = estimatePitchHz(samples, SAMPLE_RATE);
+      const pitchHz = estimatePitchHz(samples, sampleRate);
       if (pitchHz !== null) {
         this.pitchHzValues.push(pitchHz);
       }
     } else if (this.wasVoiced) {
-      this.silenceFrames++;
+      this.silenceSeconds += samples.length / Math.max(1, sampleRate);
     }
   }
 
@@ -388,6 +505,7 @@ export class BrowserSpeechCapture implements SpeechCapture {
           }
           this.partialText = "";
           this.emitTranscript();
+          this.onCommitWaiter?.();
         } else if (msg.message_type === "committed_transcript_with_timestamps") {
           const text = (msg.text ?? "").trim();
           if (text && this.committedParts[this.committedParts.length - 1] !== text) {
@@ -398,15 +516,17 @@ export class BrowserSpeechCapture implements SpeechCapture {
           }
           this.partialText = "";
           this.emitTranscript();
+          this.onCommitWaiter?.();
         }
       } catch {
         // Ignore malformed messages
       }
     };
 
-    this.startAcousticPipeline(stream, (inputData) => {
+    await this.startAcousticPipeline(stream, (inputData, sourceSampleRate) => {
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
-      const base64Audio = float32ToPcm16Base64(inputData);
+      const resampled = downsampleBuffer(inputData, sourceSampleRate, SAMPLE_RATE);
+      const base64Audio = float32ToPcm16Base64(resampled);
       this.socket.send(
         JSON.stringify({
           message_type: "input_audio_chunk",
@@ -452,6 +572,34 @@ export class BrowserSpeechCapture implements SpeechCapture {
     recognition.start();
     this.recognition = recognition;
   }
+}
+
+function downsampleBuffer(
+  buffer: Float32Array,
+  sourceSampleRate: number,
+  targetSampleRate: number
+): Float32Array {
+  if (sourceSampleRate === targetSampleRate || sourceSampleRate < targetSampleRate) {
+    return buffer;
+  }
+  const ratio = sourceSampleRate / targetSampleRate;
+  const newLength = Math.max(1, Math.round(buffer.length / ratio));
+  const result = new Float32Array(newLength);
+  let offsetResult = 0;
+  let offsetBuffer = 0;
+  while (offsetResult < result.length) {
+    const nextOffsetBuffer = Math.min(buffer.length, Math.round((offsetResult + 1) * ratio));
+    let accum = 0;
+    let count = 0;
+    for (let i = offsetBuffer; i < nextOffsetBuffer; i++) {
+      accum += buffer[i] ?? 0;
+      count++;
+    }
+    result[offsetResult] = count > 0 ? accum / count : 0;
+    offsetResult++;
+    offsetBuffer = nextOffsetBuffer;
+  }
+  return result;
 }
 
 function float32ToPcm16Base64(float32Array: Float32Array): string {
