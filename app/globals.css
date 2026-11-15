@@ -96,6 +96,14 @@
     overflow: hidden;
     overscroll-behavior: none;
   }
+
+  /* The Reflection pages through slides, so it shows no scrollbar. A long slide still scrolls by wheel or touch. */
+  html:has([data-reflection]) {
+    scrollbar-width: none;
+  }
+  html:has([data-reflection])::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /*
@@ -210,6 +218,24 @@
   --vt-y: -3.5rem;
 }
 
+/* Between Reflection slides: the old slide slides off sideways and the next comes in from the other side. */
+::view-transition-old(.slide-next) {
+  animation: var(--vt-leave) both vt-leave-sideways;
+  --vt-x: -3rem;
+}
+::view-transition-new(.slide-next) {
+  animation: 500ms var(--vt-arrive-ease) 150ms both vt-arrive-sideways;
+  --vt-x: 4rem;
+}
+::view-transition-old(.slide-previous) {
+  animation: var(--vt-leave) both vt-leave-sideways;
+  --vt-x: 3rem;
+}
+::view-transition-new(.slide-previous) {
+  animation: 500ms var(--vt-arrive-ease) 150ms both vt-arrive-sideways;
+  --vt-x: -4rem;
+}
+
 /* The highlight travels from the old Phase number to the new one, its number turning over on the way. */
 ::view-transition-group(.marker) {
   animation-duration: 500ms;
@@ -260,6 +286,18 @@
   from {
     opacity: 0;
     translate: 0 var(--vt-y);
+  }
+}
+@keyframes vt-leave-sideways {
+  to {
+    opacity: 0;
+    translate: var(--vt-x) 0;
+  }
+}
+@keyframes vt-arrive-sideways {
+  from {
+    opacity: 0;
+    translate: var(--vt-x) 0;
   }
 }
 @keyframes vt-fade-out {
