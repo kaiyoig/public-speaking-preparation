@@ -7,6 +7,7 @@ import { Shell } from "@/components/Shell";
 import { TRANSITION } from "@/components/transitions";
 import type { PracticeSessionSummary } from "@/domain/types";
 import { listPracticeSessions } from "@/src/db";
+import { getSpeakerId } from "@/src/speaker";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,7 @@ function formatWpmDelta(
 }
 
 export default async function HistoryPage() {
-  const sessions = await listPracticeSessions(30);
+  const sessions = await listPracticeSessions(await getSpeakerId(), 30);
 
   return (
     <PageTransition>

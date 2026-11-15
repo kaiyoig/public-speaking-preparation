@@ -10,6 +10,7 @@ import {
 } from "../../gemini.ts";
 
 const reflectionInputHolderSchema = z.object({
+  speakerId: z.string().nullable(),
   input: z.custom<ReflectionInput>(),
 });
 
@@ -25,12 +26,13 @@ const gatherReflectionContextStep = createStep({
     "Fetches prior practice session history from Neon Postgres and live web research from Bright Data in parallel",
   inputSchema: reflectionInputHolderSchema,
   outputSchema: z.object({
+    speakerId: z.string().nullable(),
     input: z.custom<ReflectionInput>(),
     webSources: z.array(sourceSchema),
     priorSessionSummaries: z.array(z.string()),
   }),
   execute: async ({ inputData }) => {
-    const { input } = inputData;
+    const { speakerId, input } = inputData;
     const hasBrightData = Boolean(
       process.env.BRIGHTDATA_API_KEY && process.env.BRIGHTDATA_SERP_ZONE
     );
@@ -51,7 +53,7 @@ const gatherReflectionContextStep = createStep({
           })()
         : Promise.resolve([]);
 
-    const historyPromise = getRecentSessionSummaries(3);
+    const historyPromise = getRecentSessionSummaries(speakerId, 3);
 
     const [webSources, priorSessionSummaries] = await Promise.all([
       webPromise,
@@ -59,6 +61,7 @@ const gatherReflectionContextStep = createStep({
     ]);
 
     return {
+      speakerId,
       input,
       webSources,
       priorSessionSummaries,
@@ -71,6 +74,7 @@ const generateAndPersistReflectionStep = createStep({
   description:
     "Generates the multimodal Gemini reflection (with vocal telemetry, web sources, and Neon history) and persists the session to Neon Postgres",
   inputSchema: z.object({
+    speakerId: z.string().nullable(),
     input: z.custom<ReflectionInput>(),
     webSources: z.array(sourceSchema),
     priorSessionSummaries: z.array(z.string()),
@@ -79,7 +83,7 @@ const generateAndPersistReflectionStep = createStep({
     reflection: z.custom<Reflection>(),
   }),
   execute: async ({ inputData }) => {
-    const { input, webSources, priorSessionSummaries } = inputData;
+    const { speakerId, input, webSources, priorSessionSummaries } = inputData;
 
     const reflection = await generateHostReflection(
       input,
@@ -87,7 +91,7 @@ const generateAndPersistReflectionStep = createStep({
       priorSessionSummaries.length > 0 ? priorSessionSummaries : undefined
     );
 
-    await savePracticeSession(input, reflection);
+    await savePracticeSession(speakerId, input, reflection);
 
     return { reflection };
   },

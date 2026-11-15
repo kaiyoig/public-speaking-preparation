@@ -37,6 +37,11 @@ async function ensureSchema(): Promise<boolean> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE practice_sessions ADD COLUMN IF NOT EXISTS speaker_id TEXT`;
+  await sql`
+    CREATE INDEX IF NOT EXISTS practice_sessions_speaker_created_idx
+    ON practice_sessions (speaker_id, created_at DESC)
+  `;
 
   schemaInitialized = true;
   return true;
@@ -45,13 +50,15 @@ async function ensureSchema(): Promise<boolean> {
 /**
  * Persists a completed public speaking practice session and its reflection
  * into Neon Postgres (`practice_sessions`) for cross-session progress tracking.
+ * Without a Speaker ID nothing is saved, since no one could ever read it back.
  */
 export async function savePracticeSession(
+  speakerId: string | null,
   input: ReflectionInput,
   reflection: Reflection
 ): Promise<void> {
   const sql = getSql();
-  if (!sql) return;
+  if (!sql || !speakerId) return;
 
   try {
     await ensureSchema();
@@ -63,7 +70,7 @@ export async function savePracticeSession(
     const deliveryTranscript = input.delivery.transcript;
 
     // Guard against duplicate saves (e.g. React StrictMode double-invocation or rapid retries)
-    const signatureKey = `${mode}::${topicOrAudience}::${purpose}::${deliveryTranscript.trim()}`;
+    const signatureKey = `${speakerId}::${mode}::${topicOrAudience}::${purpose}::${deliveryTranscript.trim()}`;
     const nowMs = Date.now();
     if (
       lastSavedSignature &&
@@ -77,7 +84,8 @@ export async function savePracticeSession(
     const existing = await sql`
       SELECT id
       FROM practice_sessions
-      WHERE mode = ${mode}
+      WHERE speaker_id = ${speakerId}
+        AND mode = ${mode}
         AND topic_or_audience = ${topicOrAudience}
         AND delivery_transcript = ${deliveryTranscript}
         AND created_at >= NOW() - INTERVAL '60 seconds'
@@ -101,6 +109,7 @@ export async function savePracticeSession(
 
     await sql`
       INSERT INTO practice_sessions (
+        speaker_id,
         mode,
         topic_or_audience,
         purpose,
@@ -110,6 +119,7 @@ export async function savePracticeSession(
         qa_answers,
         reflection
       ) VALUES (
+        ${speakerId},
         ${mode},
         ${topicOrAudience},
         ${purpose},
@@ -130,10 +140,11 @@ export async function savePracticeSession(
  * so Gemini can reference cross-session growth (e.g. WPM, filler words, recurring habits).
  */
 export async function getRecentSessionSummaries(
+  speakerId: string | null,
   limit = 3
 ): Promise<string[]> {
   const sql = getSql();
-  if (!sql) return [];
+  if (!sql || !speakerId) return [];
 
   try {
     await ensureSchema();
@@ -146,6 +157,7 @@ export async function getRecentSessionSummaries(
         reflection,
         created_at
       FROM practice_sessions
+      WHERE speaker_id = ${speakerId}
       ORDER BY created_at DESC
       LIMIT ${limit}
     `;
@@ -204,13 +216,14 @@ function mapSummaryRow(row: Record<string, unknown>): PracticeSessionSummary {
 }
 
 /**
- * Lists recorded practice sessions from Neon Postgres, newest first.
+ * Lists a Speaker's recorded practice sessions from Neon Postgres, newest first.
  */
 export async function listPracticeSessions(
+  speakerId: string | null,
   limit = 25
 ): Promise<PracticeSessionSummary[]> {
   const sql = getSql();
-  if (!sql) return [];
+  if (!sql || !speakerId) return [];
 
   try {
     await ensureSchema();
@@ -225,6 +238,7 @@ export async function listPracticeSessions(
         reflection,
         created_at
       FROM practice_sessions
+      WHERE speaker_id = ${speakerId}
       ORDER BY created_at DESC, id DESC
       LIMIT ${limit}
     `;
@@ -238,14 +252,15 @@ export async function listPracticeSessions(
 
 /**
  * Fetches a single practice session (including transcript, body language observations,
- * and Q&A answers) by ID from Neon Postgres.
+ * and Q&A answers) by ID from Neon Postgres, if it belongs to the given Speaker.
  */
 export async function getPracticeSessionById(
+  speakerId: string | null,
   id: number
 ): Promise<PracticeSessionDetail | null> {
   if (!Number.isInteger(id) || id <= 0) return null;
   const sql = getSql();
-  if (!sql) return null;
+  if (!sql || !speakerId) return null;
 
   try {
     await ensureSchema();
@@ -264,6 +279,7 @@ export async function getPracticeSessionById(
         created_at
       FROM practice_sessions
       WHERE id = ${id}
+        AND speaker_id = ${speakerId}
       LIMIT 1
     `;
 
