@@ -240,15 +240,13 @@
 
 /*
  * Between Phases: the old Phase lifts away and the next rises in. Practice again runs it downward.
- * Opening a session record from History, and going back, move the same way.
+ * Going back to History from a session record moves the same way.
  */
-::view-transition-old(.phase-forward),
-::view-transition-old(.open-record) {
+::view-transition-old(.phase-forward) {
   animation: var(--vt-leave) both vt-leave;
   --vt-y: -2.5rem;
 }
-::view-transition-new(.phase-forward),
-::view-transition-new(.open-record) {
+::view-transition-new(.phase-forward) {
   animation: 500ms var(--vt-arrive-ease) 150ms both vt-arrive;
   --vt-y: 3.5rem;
 }

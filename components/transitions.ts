@@ -24,8 +24,6 @@ export const TRANSITION = {
   historyToAbout: "history-to-about",
   /** From History to Home's Title panel: History slides off to the lower right, Title comes in from the upper left. */
   historyToTitle: "history-to-title",
-  /** Into a session record from History: History lifts away and the record rises in. */
-  openRecord: "open-record",
   /** Back to History from a session record: the record sinks away and History comes down in its place. */
   closeRecord: "close-record",
   /** Into a Mode from Home: the Mode's title shrinks into the rail, the Session rises in. */
@@ -55,7 +53,6 @@ export const PAGE_MOTION: ViewTransitionClassPerType = {
   [TRANSITION.aboutToHistory]: TRANSITION.aboutToHistory,
   [TRANSITION.historyToAbout]: TRANSITION.historyToAbout,
   [TRANSITION.historyToTitle]: TRANSITION.historyToTitle,
-  [TRANSITION.openRecord]: TRANSITION.openRecord,
   [TRANSITION.closeRecord]: TRANSITION.closeRecord,
   [TRANSITION.enterSession]: TRANSITION.enterSession,
   [TRANSITION.leaveSession]: TRANSITION.leaveSession,
