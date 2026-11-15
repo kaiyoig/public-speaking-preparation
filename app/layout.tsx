@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Archivo, Space_Grotesk } from 'next/font/google'
+import { INTRO_SCRIPT } from '@/components/intro'
 import OpenCvScript from './components/OpenCvScript'
 import './globals.css'
 
@@ -27,7 +28,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${archivo.variable} ${spaceGrotesk.variable}`}>
+    // The intro script marks <html> before hydration, so React is told to expect it.
+    <html lang="en" className={`${archivo.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Decides before first paint whether Home's intro plays, so its sheet is there from the first frame. */}
+        <script dangerouslySetInnerHTML={{ __html: INTRO_SCRIPT }} />
+      </head>
       <body className="min-h-screen bg-paper font-sans text-ink antialiased">
         <OpenCvScript />
         {children}

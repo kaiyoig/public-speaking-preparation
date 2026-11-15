@@ -365,6 +365,46 @@
 }
 
 /*
+ * Home's intro (components/intro.ts). From the first frame, a sheet of highlight yellow covers
+ * the page; it folds down into the period of the name, the letters type up to it, and then what
+ * waited comes in. The script that sets data-intro never sets it for reduced motion.
+ */
+.intro-sheet {
+  display: none;
+}
+html[data-intro="fold"] .intro-sheet {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--highlight);
+  pointer-events: none;
+  /* Should the page never come alive to fold it, it gets out of the way. */
+  animation: intro-failsafe 0s 5s forwards;
+}
+@keyframes intro-failsafe {
+  to {
+    visibility: hidden;
+  }
+}
+
+/* The name's own period stands in place before its letters arrive. */
+html[data-intro] [data-intro-period] {
+  visibility: visible;
+}
+
+/* What waits for the name: hidden, with its own motion held until it shows. */
+[data-intro-wait] {
+  transition: opacity 500ms ease-out;
+}
+html[data-intro] [data-intro-wait] {
+  opacity: 0;
+}
+html[data-intro] [data-intro-wait] * {
+  animation-play-state: paused;
+}
+
+/*
  * Buttons are plain rectangles: solid ink for the main action, an ink outline for the rest.
  * Only the main action turns highlight yellow under the pointer.
  */

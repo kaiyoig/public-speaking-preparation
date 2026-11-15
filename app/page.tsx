@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
+import { HomeIntro } from "@/components/HomeIntro";
 import { HomePager } from "@/components/HomePager";
 import { ModeTitle } from "@/components/ModeTitle";
 import { PageTransition } from "@/components/PageTransition";
@@ -65,23 +66,27 @@ export default function Home() {
 /**
  * The top panel: the name, centered, with famous speeches typing themselves out behind it.
  * About is linked just under the name, and the arrow at the foot shows the Modes are below.
+ * On a full load of Home it opens with the intro, and the links wait until it is over.
  */
 function Title() {
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center overflow-clip px-6 text-center">
       <SpeechBackdrop />
+      <HomeIntro />
       <h1 className="relative text-[clamp(3.5rem,min(17vw,26vh),13rem)] font-bold leading-[0.8] tracking-[-0.045em] font-display">
         <TypedName />
       </h1>
       <Link
         href="/about"
         transitionTypes={[TRANSITION.toAbout]}
+        data-intro-wait
         className="text-link relative mt-8 bg-paper text-lg sm:mt-10"
       >
         About Rhetor
       </Link>
       <a
         href="#modes"
+        data-intro-wait
         className="group absolute right-6 bottom-4 flex items-center gap-4 bg-paper pl-3 text-xl font-bold outline-offset-4 sm:right-12 lg:right-24"
       >
         <span className="max-md:sr-only">Choose a mode</span>
