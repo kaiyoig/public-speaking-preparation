@@ -16,6 +16,7 @@ import ExpressionRecordList from '../components/ExpressionRecordList'
 import GestureCapture from '../components/GestureCapture'
 import GestureMetricRecordList from '../components/GestureMetricRecordList'
 import FacialExpressionLoader from '../components/FacialExpressionLoader'
+import OpenCvScript from '../components/OpenCvScript'
 import WebcamViewer from '../components/WebcamViewer'
 
 export default function Page() {
@@ -76,6 +77,7 @@ export default function Page() {
 
   return (
     <PageTransition>
+      <OpenCvScript />
       <Shell
         dense
         wordmarkLinksHome={false}

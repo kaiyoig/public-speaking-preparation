@@ -328,11 +328,11 @@ export async function generateHostReflection(
     `${contextSection}\n\n` +
     `Delivery Transcript:\n"${input.delivery.transcript}"\n\n` +
     `Measured Vocal Delivery & Acoustic Telemetry (from ElevenLabs STT + Microphone Audio):\n${vocalTelemetryBlock}\n\n` +
-    `Measured Camera & Body Language Telemetry (from OpenCV YuNet Gaze + MobileFaceNet Facial Expressions):\n${bodyLanguageBlock}` +
+    `Measured Camera & Body Language Telemetry (OpenCV YuNet Gaze + MobileFaceNet Expressions + MediaPipe Hand Gestures):\n${bodyLanguageBlock}` +
     `${webBlock}` +
     `${priorHistoryBlock}\n\n` +
     `Provide a structured coaching reflection evaluating how well the speaker met their audience, purpose, time limit, and notes/speaking points. ` +
-    `In "bodyLanguage" (and the spoken "summary"), specifically ground your strengths and improvements in the OpenCV camera telemetry above: evaluate their eye contact and gaze direction (e.g., percentage of time looking straight at the camera vs. looking down at notes or away to the side), facial expression warmth/variety (e.g., Happy, Neutral, Surprised), camera framing/presence, and any timestamped shifts in gaze or expression. ` +
+    `In "bodyLanguage" (and the spoken "summary"), specifically ground your strengths and improvements in the camera and gesture telemetry above: evaluate their eye contact and gaze direction (percentage of time looking straight at the camera vs. looking down at notes or away), facial expression warmth/variety (e.g., Happy, Neutral, Surprised), hand gesture usage and visibility (e.g., Open Palm vs. Closed Fist/Pointing, deliberate gesture movement rate per minute, and whether hands were clasped/held close together or kept out of frame), and any timestamped shifts. ` +
     `In "voiceAndDelivery" (and the spoken "summary"), specifically reflect on their vocal inflection (${input.delivery.vocalMetrics?.inflectionVariety ?? "pitch variety"}), ` +
     `volume projection (${input.delivery.vocalMetrics?.volumeLevel ?? "volume"} / ${input.delivery.vocalMetrics?.volumeDynamics ?? "dynamics"}), ` +
     `speaking pace (${input.delivery.vocalMetrics?.wordsPerMinute ?? "WPM"} WPM, ${input.delivery.vocalMetrics?.pauseCount ?? 0} pauses), and filler words` +
@@ -362,8 +362,8 @@ export async function generateHostReflection(
   const generationConfig = {
     systemInstruction:
       "You are a supportive, insightful public speaking coach. " +
-      "Analyze the speech transcript, the OpenCV camera telemetry (YuNet gaze direction/eye contact, MobileFaceNet facial expressions, and camera presence), and the vocal delivery data (plus attached audio when provided) for vocal inflection, tone, volume dynamics, speaking pace, pauses, and filler words. " +
-      "In the `bodyLanguage` section, cite specific observations from the OpenCV camera telemetry (such as eye-contact percentage, looking down or away, facial expressions, and timeline shifts) rather than generic body-language advice when camera data is present. " +
+      "Analyze the speech transcript, the camera & gesture telemetry (OpenCV YuNet gaze direction/eye contact, MobileFaceNet facial expressions, and MediaPipe hand gesture classifications, movement frequency, and hand proximity/clasping), and the vocal delivery data (plus attached audio when provided) for vocal inflection, tone, volume dynamics, speaking pace, pauses, and filler words. " +
+      "In the `bodyLanguage` section, cite specific observations from both the OpenCV facial/gaze telemetry and the parsed hand-gesture metrics (such as eye-contact percentage, facial expressions, hand visibility, open-palm vs. closed-fist gestures, gesture movement pacing, and hand clasping) rather than generic advice when camera data is present. " +
       "Return a structured JSON reflection with a spoken `summary` (2-3 natural sentences suitable for text-to-speech, with no numeric grades/scores) " +
       `and, for each of \`bodyLanguage\`, \`voiceAndDelivery\`, and \`content\`, between ${REFLECTION_POINTS.min} and ${REFLECTION_POINTS.max} strengths and between ${REFLECTION_POINTS.min} and ${REFLECTION_POINTS.max} improvements. ` +
       "Give as many points as the speech genuinely warrants: each one distinct and specific, never padded or repeated to fill a count. " +

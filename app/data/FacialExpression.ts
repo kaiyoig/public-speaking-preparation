@@ -141,12 +141,16 @@ export async function createMobileFaceNetExpressionProxy(cv: any) {
   }
 
   try {
-    cv.FS_unlink(`/${MOBILEFACENET_FILE}`)
+    cv.FS?.unlink?.(`/${MOBILEFACENET_FILE}`)
   } catch {
     // The model is not present on the first load.
   }
 
-  cv.FS_createDataFile('/', MOBILEFACENET_FILE, model, true, false, false)
+  if (typeof cv.FS?.writeFile === 'function') {
+    cv.FS.writeFile(`/${MOBILEFACENET_FILE}`, model)
+  } else {
+    cv.FS_createDataFile('/', MOBILEFACENET_FILE, model, true, false, false)
+  }
   const network = cv.readNetFromONNX(MOBILEFACENET_FILE)
   return new MobileFaceNetFacialExpression(cv, network)
 }

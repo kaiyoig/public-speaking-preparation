@@ -10,14 +10,15 @@ const WASM_ROOT = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAP
 const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task'
 
 /** Loads the MediaPipe recognizer once and returns it when ready. */
-export function useGestureRecognizer() {
+export function useGestureRecognizer(enabled = true) {
   const [recognizer, setRecognizer] = useState<GestureRecognizer>()
 
   useEffect(() => {
+    if (!enabled) return
     let cancelled = false
     FilesetResolver.forVisionTasks(WASM_ROOT)
       .then((fileset) => GestureRecognizer.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: MODEL_URL },
+        baseOptions: { modelAssetPath: MODEL_URL, delegate: 'GPU' },
         runningMode: 'VIDEO',
         numHands: 2,
         minHandDetectionConfidence: 0.55,
@@ -28,7 +29,7 @@ export function useGestureRecognizer() {
       .catch((error) => { if (!cancelled) console.error('Gesture recognizer initialization failed', error) })
 
     return () => { cancelled = true }
-  }, [])
+  }, [enabled])
 
   return recognizer
 }
