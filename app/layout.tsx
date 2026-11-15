@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Archivo, Space_Grotesk } from 'next/font/google'
 import { INTRO_SCRIPT } from '@/components/intro'
-import OpenCvScript from './components/OpenCvScript'
 import './globals.css'
 
 const archivo = Archivo({
@@ -35,7 +34,6 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: INTRO_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-paper font-sans text-ink antialiased">
-        <OpenCvScript />
         {children}
       </body>
     </html>

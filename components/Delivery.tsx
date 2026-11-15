@@ -5,14 +5,10 @@ import { ErrorView, errorMessage } from "@/components/AsyncView";
 import { Host, useHost } from "@/components/Host";
 import { QuitButton } from "@/components/QuitButton";
 import WebcamViewer from "@/app/components/WebcamViewer";
-import type { YuNetDetector } from "@/app/components/YuNetLoader";
-import { ExpressionRecord, summarizeExpressionRecord } from "@/app/data/ExpressionRecord";
-import {
-  createMobileFaceNetExpressionProxy,
-  type FacialExpressionProxy,
-} from "@/app/data/FacialExpression";
+import GestureCapture from "@/app/components/GestureCapture";
+import { GestureMetricRecord, summarizeGestureRecord } from "@/app/data/GestureMetricRecord";
+import { useGestureRecognizer } from "@/app/data/GestureRecognizer";
 import type { WebcamData } from "@/app/data/WebcamData";
-import { useOpenCv } from "@/app/hooks/useOpenCv";
 import { useSpeechCapture } from "@/components/useSpeechCapture";
 import { OVERTIME_GRACE_SECONDS } from "@/domain/config";
 import type { Mode, Recording } from "@/domain/types";
@@ -49,63 +45,46 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   const [cameraShown, setCameraShown] = useState(true);
   const ending = useRef(false);
 
-  // OpenCV YuNet gaze & MobileFaceNet facial expression tracking during Delivery
-  const cv = useOpenCv();
+  // MediaPipe hand-gesture tracking during Delivery (facial recognition / OpenCV disabled).
+  // Defer MediaPipe WASM initialization until the ElevenLabs greeting has finished so TTS and
+  // vision models don't compete for main-thread CPU or network bandwidth on mount.
   const [webcamData, setWebcamData] = useState<WebcamData | undefined>(undefined);
-  const [detector, setDetector] = useState<YuNetDetector | undefined>(undefined);
-  const [emotionProxy, setEmotionProxy] = useState<FacialExpressionProxy | undefined>(undefined);
-  const expressionRecordRef = useRef<ExpressionRecord | null>(null);
-  if (!expressionRecordRef.current) {
-    expressionRecordRef.current = new ExpressionRecord(1500);
+  const gestureRecognizer = useGestureRecognizer(greeting.status !== "pending" && !isSpeaking);
+  const gestureRecordRef = useRef<GestureMetricRecord | null>(null);
+  if (!gestureRecordRef.current) {
+    gestureRecordRef.current = new GestureMetricRecord(250);
   }
 
   const handleWebcamData = useCallback((data: WebcamData) => {
     setWebcamData(data);
   }, []);
 
-  const handleDetector = useCallback((nextDetector: YuNetDetector | undefined) => {
-    setDetector(nextDetector);
-  }, []);
+  const handleGestures = useCallback(
+    (result: Parameters<GestureMetricRecord["add"]>[0], timestamp: number) => {
+      gestureRecordRef.current?.add(result, timestamp);
+    },
+    [],
+  );
 
   useEffect(() => {
-    if (!cv) return;
-    let cancelled = false;
-    createMobileFaceNetExpressionProxy(cv)
-      .then((proxy) => {
-        if (!cancelled) {
-          setEmotionProxy(proxy);
-          expressionRecordRef.current?.setEmotionProxy(proxy);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) console.warn("MobileFaceNet expression model failed to load:", err);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [cv]);
-
-  useEffect(() => {
-    const record = expressionRecordRef.current;
-    if (!record) return;
+    const gestureRecord = gestureRecordRef.current;
+    if (!gestureRecord) return;
     if (state.status !== "speaking") {
-      if (record.isRecording()) record.stop();
+      if (gestureRecord.isRecording()) gestureRecord.stop();
       return;
     }
-    if (!cv || !webcamData || !detector) return;
-    if (!record.isRecording()) {
-      record.start({
-        cv,
+    if (!webcamData || !gestureRecognizer) return;
+    if (!gestureRecord.isRecording()) {
+      gestureRecord.start({
         video: webcamData.video,
-        detector,
-        emotionProxy,
+        recognizer: gestureRecognizer,
       });
     }
-  }, [state.status, cv, webcamData, detector, emotionProxy]);
+  }, [state.status, webcamData, gestureRecognizer]);
 
   useEffect(() => {
     return () => {
-      expressionRecordRef.current?.stop();
+      gestureRecordRef.current?.stop();
     };
   }, []);
 
@@ -131,7 +110,7 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   const startSpeech = async () => {
     setStartError(null);
     setState({ status: "starting" });
-    expressionRecordRef.current?.clear();
+    gestureRecordRef.current?.clear();
     try {
       await capture.start();
       const startedAt = Date.now();
@@ -145,16 +124,17 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
 
   const stopCapture = useCallback(async () => {
     setStopError(null);
-    expressionRecordRef.current?.stop();
+    gestureRecordRef.current?.stop();
     try {
       const recording = await capture.stop();
-      const openCvObservations = summarizeExpressionRecord(
-        expressionRecordRef.current?.getEntries() ?? [],
+      const gestureObservations = summarizeGestureRecord(
+        gestureRecordRef.current?.getEntries() ?? [],
+        recording.vocalMetrics?.durationSeconds,
       );
-      if (openCvObservations.length > 0) {
+      if (gestureObservations.length > 0) {
         recording.bodyLanguageObservations = [
           ...recording.bodyLanguageObservations,
-          ...openCvObservations,
+          ...gestureObservations,
         ];
       }
       onFinished(recording);
@@ -226,10 +206,17 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
         <div className="flex flex-col gap-4 lg:col-span-2">
           <WebcamViewer
             onWebcamData={handleWebcamData}
-            onDetector={handleDetector}
             hidden={!cameraShown}
             className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,45vh,34rem)]"
           />
+          {state.status === "speaking" && webcamData && gestureRecognizer && (
+            <GestureCapture
+              video={webcamData.video}
+              recognizer={gestureRecognizer}
+              minIntervalMs={400}
+              onGestures={handleGestures}
+            />
+          )}
 
           <div className="flex flex-wrap items-center gap-3">
             {(state.status === "ready" || state.status === "starting") && (

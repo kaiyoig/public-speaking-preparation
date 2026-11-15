@@ -40,12 +40,16 @@ export default function YuNetLoader({ children, onDetector }: YuNetLoaderProps) 
       }
 
       try {
-        cv.FS_unlink(`/${YUNET_MODEL_FILE}`)
+        cv.FS?.unlink?.(`/${YUNET_MODEL_FILE}`)
       } catch {
         // The model is not present on the first load.
       }
 
-      cv.FS_createDataFile('/', YUNET_MODEL_FILE, model, true, false, false)
+      if (typeof cv.FS?.writeFile === 'function') {
+        cv.FS.writeFile(`/${YUNET_MODEL_FILE}`, model)
+      } else {
+        cv.FS_createDataFile('/', YUNET_MODEL_FILE, model, true, false, false)
+      }
 
       const loadedDetector = new cv.FaceDetectorYN(
         YUNET_MODEL_FILE,

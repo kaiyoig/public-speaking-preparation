@@ -349,7 +349,7 @@ function BodyLanguageMetricsRow({ observations }: { observations: string[] }) {
   return (
     <section aria-label="Camera Telemetry" className="pt-3 hang-row">
       <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">
-        OpenCV Camera
+        Camera &amp; Gestures
       </h3>
       <dl className="hang-body mt-2 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:mt-0">
         {parsed.map((stat, idx) => (
