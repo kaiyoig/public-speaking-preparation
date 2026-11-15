@@ -131,7 +131,7 @@ export function ReflectionView({
           {slide.id === "summary" && (
             <>
               <div className="grid gap-8 lg:grid-cols-9">
-                <section aria-labelledby="reflection-summary" className="rule-top lg:col-span-6">
+                <section aria-labelledby="reflection-summary" className="pt-3 lg:col-span-6">
                   <h2 id="reflection-summary" className="text-lg font-bold">
                     Reflection
                   </h2>
@@ -148,7 +148,7 @@ export function ReflectionView({
           {SECTIONS.map(
             (section) =>
               slide.id === section.key && (
-                <section key={section.key} aria-labelledby={`slide-${section.key}`} className="rule-top">
+                <section key={section.key} aria-labelledby={`slide-${section.key}`} className="pt-3">
                   <h2
                     id={`slide-${section.key}`}
                     className="text-5xl font-bold leading-[0.95] tracking-tight font-display sm:text-6xl"
@@ -260,7 +260,7 @@ function OverallSummary({
   return (
     <>
       <div className="grid gap-8 lg:grid-cols-9">
-        <section aria-labelledby="overall-summary" className="rule-top lg:col-span-6">
+        <section aria-labelledby="overall-summary" className="pt-3 lg:col-span-6">
           <h2 id="overall-summary" className="text-lg font-bold">
             Overall
           </h2>
@@ -276,7 +276,7 @@ function OverallSummary({
 
       <div className="flex flex-col gap-10">
         {SECTIONS.map((section) => (
-          <section key={section.key} aria-label={section.title} className="rule-top hang-row">
+          <section key={section.key} aria-label={section.title} className="pt-3 hang-row">
             <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">
               {section.title}
             </h3>
@@ -289,7 +289,7 @@ function OverallSummary({
       </div>
 
       {reflection.sources && reflection.sources.length > 0 && (
-        <section aria-label="Helpful Sources" className="rule-top hang-row">
+        <section aria-label="Helpful Sources" className="pt-3 hang-row">
           <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">Sources</h3>
           <div className="hang-body mt-2 lg:mt-0">
             <p className="text-lg">Helpful for your next draft.</p>
@@ -319,7 +319,7 @@ function VocalMetricsRow({ metrics }: { metrics: VocalDeliveryMetrics }) {
     { label: "Pauses & Fillers", value: `${metrics.pauseCount} pauses · ${metrics.fillerWordCount} fillers` },
   ];
   return (
-    <section aria-label="Vocal Delivery" className="rule-top hang-row">
+    <section aria-label="Vocal Delivery" className="pt-3 hang-row">
       <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">Your Voice</h3>
       <dl className="hang-body mt-2 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:mt-0 xl:grid-cols-4">
         {stats.map((stat) => (
@@ -347,7 +347,7 @@ function BodyLanguageMetricsRow({ observations }: { observations: string[] }) {
   });
 
   return (
-    <section aria-label="Camera Telemetry" className="rule-top hang-row">
+    <section aria-label="Camera Telemetry" className="pt-3 hang-row">
       <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">
         OpenCV Camera
       </h3>
@@ -384,7 +384,7 @@ function ReflectionList({
 }) {
   const style = LIST_KINDS[kind];
   return (
-    <div className={compact ? "" : "rule-top"}>
+    <div className={compact ? "" : "pt-3"}>
       <h4 className={`font-bold ${compact ? "" : "text-lg"}`}>{style.title}</h4>
       <ul className={`mt-3 flex flex-col leading-snug ${compact ? "gap-2.5 text-lg" : "gap-4 text-xl sm:text-2xl"}`}>
         {items.map((item) => (

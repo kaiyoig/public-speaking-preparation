@@ -50,7 +50,7 @@ interface HostProps {
 /** The Host as type: its state line, the red live mark while it speaks, and its caption. */
 export function Host({ caption, isSpeaking, placeholder = "…" }: HostProps) {
   return (
-    <section aria-label="Host" className="rule-top">
+    <section aria-label="Host" className="pt-3">
       <p className="flex items-center gap-3 text-lg font-bold">
         Host
         <span className={`flex items-center gap-2 font-normal ${isSpeaking ? "text-ink" : "text-mute"}`}>

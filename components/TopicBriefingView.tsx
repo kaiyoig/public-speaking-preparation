@@ -41,7 +41,7 @@ export function TopicBriefingView({ kind, onStart, onChangeKind }: TopicBriefing
       errorActions={changeKind}
     >
       {(topicBriefing) => (
-        <div className="rule-top flex flex-col gap-9">
+        <div className="pt-3 flex flex-col gap-9">
           <div className="hang-row lg:items-baseline">
             <p className="hang-label">{TOPIC_LABEL[kind]}</p>
             <h2 className="hang-body text-5xl font-bold leading-[0.95] tracking-tight font-display sm:text-6xl">

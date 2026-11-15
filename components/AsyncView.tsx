@@ -66,7 +66,7 @@ export function AsyncView<T>({ run, label, errorActions, children }: AsyncViewPr
 
 export function LoadingView({ label }: { label: string }) {
   return (
-    <div role="status" className="rule-top flex flex-col gap-4">
+    <div role="status" className="pt-3 flex flex-col gap-4">
       <span className="text-lg">{label}</span>
       <span aria-hidden className="relative block h-1 w-full max-w-md overflow-hidden bg-field">
         <span className="absolute inset-y-0 left-0 w-1/3 animate-indeterminate bg-ink motion-reduce:animate-none" />
@@ -91,7 +91,7 @@ export function ErrorView({ message, onRetry, compact = false, actions }: ErrorV
       className={
         compact
           ? "flex flex-wrap items-center justify-between gap-3 border-2 border-ink px-4 py-3"
-          : "rule-top flex flex-col items-start gap-5"
+          : "pt-3 flex flex-col items-start gap-5"
       }
     >
       <p className={compact ? "font-semibold" : "max-w-[52ch] text-lg font-semibold"}>{message}</p>

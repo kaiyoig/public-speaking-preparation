@@ -157,7 +157,7 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
         <div className="flex flex-col gap-4 lg:col-span-2">
           <WebcamViewer className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,42vh,34rem)]" />
 
-          <section aria-label="Your answer transcript" className="rule-top flex flex-col gap-2">
+          <section aria-label="Your answer transcript" className="pt-3 flex flex-col gap-2">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-bold">Your answer</h2>
               {step.kind === "answering" && (
@@ -234,7 +234,7 @@ function QuestionProgress({ current, total }: { current: number; total: number }
   return (
     <section
       aria-label="Question progress"
-      className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t-2 border-ink py-3"
+      className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 py-3"
     >
       <p className="text-5xl font-bold leading-none tracking-[-0.03em] font-display">{label}</p>
       {/* Filled up to and including the Question being asked. */}
@@ -250,7 +250,7 @@ function QuestionProgress({ current, total }: { current: number; total: number }
 /** Every Question in order beside the Host: answered ones struck through, the current one set bold. */
 function QuestionList({ current, questions }: { current: number; questions: Question[] }) {
   return (
-    <section aria-label="Questions" className="rule-top">
+    <section aria-label="Questions" className="pt-3">
       <h2 className="text-lg font-bold">Questions</h2>
       <ol className="mt-2 flex flex-col gap-2">
         {questions.map((question, index) => {

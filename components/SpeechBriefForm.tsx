@@ -128,7 +128,7 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
 
   return (
     <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-10">
-      <header className="rule-top">
+      <header className="pt-3">
         <h2 className="text-5xl font-bold leading-none tracking-tight font-display sm:text-6xl">
           Speech Brief
         </h2>
@@ -226,7 +226,7 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
             </button>
             {prepError && <p className="mt-3 font-bold">{prepError}</p>}
             {prepResult && (
-              <div className="mt-5 rule-top">
+              <div className="mt-5 pt-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-3">
                   <p className="font-bold">Audience &amp; Evidence Prep</p>
                   <button type="button" onClick={insertInsightsIntoNotes} className="text-link">
