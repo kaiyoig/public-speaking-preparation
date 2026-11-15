@@ -1,7 +1,6 @@
 /**
  * The fold the app's yellow sheets make: closing down to a rule level with a period, then running
- * along it into the period itself. Home's intro folds the whole screen this way once; the
- * loading view folds a highlight over its line this way over and over.
+ * along it into the period itself. Home's intro folds the whole screen this way.
  */
 
 /** The app's travel ease: what moves across the screen. */
@@ -50,13 +49,9 @@ export function sheetClip(): string {
   return "inset(0px 0px 0px 0px round 0px)";
 }
 
-/**
- * The sheet closed to a rule as tall as the period and level with it, from its left edge across
- * its full width, or only as far as the period when given the sheet's `width`.
- */
-export function ruleClip(dot: Box, height: number, width?: number): string {
-  const right = width === undefined ? 0 : width - dot.right;
-  return `inset(${dot.top}px ${right}px ${height - dot.bottom}px 0px round 0px)`;
+/** The sheet closed to a rule as tall as the period and level with it, across its full width. */
+export function ruleClip(dot: Box, height: number): string {
+  return `inset(${dot.top}px 0px ${height - dot.bottom}px 0px round 0px)`;
 }
 
 /** The sheet closed to exactly the period, rounded to a dot. */

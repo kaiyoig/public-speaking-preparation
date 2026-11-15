@@ -1,11 +1,11 @@
-import { LoadingView } from "@/components/LoadingView";
+import { LoadingHold } from "@/components/LoadingScreen";
 import { RecordShell } from "@/components/RecordShell";
 
-/** Shown in the record's place while the session loads after it's opened from History. */
+/** Holds the loading screen while the session loads after it's opened from History. */
 export default function HistoryDetailLoading() {
   return (
     <RecordShell>
-      <LoadingView label="Opening your reflection…" />
+      <LoadingHold label="Opening your reflection…" />
     </RecordShell>
   );
 }

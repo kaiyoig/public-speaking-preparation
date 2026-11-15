@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { LoadingView } from "@/components/LoadingView";
+import { useLoadingScreen } from "@/components/LoadingScreen";
 
 type AsyncState<T> =
   | { status: "pending" }
@@ -11,14 +11,14 @@ type AsyncState<T> =
 interface AsyncViewProps<T> {
   /** The promise-returning call. It runs on mount and again on each "Try again". */
   run: () => Promise<T>;
-  /** Shown as the loading line while the call is pending. */
+  /** What the loading screen says it is waiting for while the call is pending. */
   label: string;
   /** Extra buttons shown beside "Try again" when the call fails. */
   errorActions?: ReactNode;
   children: (value: T) => ReactNode;
 }
 
-/** Wraps an async call with a loading view and an error-with-retry view. */
+/** Wraps an async call with the loading screen and an error-with-retry view. */
 export function AsyncView<T>({ run, label, errorActions, children }: AsyncViewProps<T>) {
   const [state, setState] = useState<AsyncState<T>>({ status: "pending" });
   const [attempt, setAttempt] = useState(0);
@@ -56,7 +56,10 @@ export function AsyncView<T>({ run, label, errorActions, children }: AsyncViewPr
     };
   }, [attempt]);
 
-  if (state.status === "pending") return <LoadingView label={label} />;
+  useLoadingScreen(label, state.status === "pending");
+
+  // The loading screen covers the page meanwhile, and plays its way out over what comes next.
+  if (state.status === "pending") return null;
 
   if (state.status === "error") {
     return <ErrorView message={state.message} onRetry={() => setAttempt((n) => n + 1)} actions={errorActions} />;

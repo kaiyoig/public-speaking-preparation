@@ -87,11 +87,6 @@
     overscroll-behavior: none;
   }
 
-  /* The loading view's highlight swings out past the edges of the page; that must not make the page scrollable. */
-  html:has([data-loading-line][data-looping]) {
-    overflow: clip;
-  }
-
   /* Nothing scrolls under the loading screen. */
   html:has([data-loading-screen]) {
     overflow: hidden;
