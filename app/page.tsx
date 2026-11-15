@@ -118,7 +118,7 @@ function ModeEntry({ mode }: { mode: Mode }) {
   const included = PHASE_COLUMNS.filter((phase) => mode.phases[phase]);
 
   return (
-    <li className="group relative flex flex-col border-t-2 border-ink pt-4 pb-10 outline-offset-4 outline-ink has-[a:focus-visible]:outline-2 lg:pb-12">
+    <li className="group relative flex flex-col pt-4 pb-10 outline-offset-4 outline-ink has-[a:focus-visible]:outline-2 lg:pb-12">
       <div className="flex items-start justify-between gap-6">
         <h2 className="text-[clamp(2rem,min(5vw,10vh),5rem)] font-bold leading-[0.9] tracking-[-0.04em] font-display">
           <Link
