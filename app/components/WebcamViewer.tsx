@@ -3,16 +3,22 @@
 import { useRef, useState } from 'react'
 import WebCam from 'react-webcam'
 import type { WebcamData } from '../data/WebcamData'
-import FaceCapture from './FaceCapture'
 import YuNetLoader from './YuNetLoader'
 import type { YuNetDetector } from './YuNetLoader'
 
 interface WebcamViewerProps {
   onWebcamData?: (data: WebcamData) => void
   onDetector?: (detector: YuNetDetector | undefined) => void
+  hidden?: boolean
+  className?: string
 }
 
-export default function WebcamViewer({ onWebcamData, onDetector }: WebcamViewerProps) {
+export default function WebcamViewer({
+  onWebcamData,
+  onDetector,
+  hidden = false,
+  className = 'aspect-video',
+}: WebcamViewerProps) {
   const webcamRef = useRef<WebCam>(null)
   const [webcamData, setWebcamData] = useState<WebcamData>()
 
@@ -25,7 +31,7 @@ export default function WebcamViewer({ onWebcamData, onDetector }: WebcamViewerP
   }
 
   return (
-    <div>
+    <div className={`relative w-full overflow-hidden bg-field ${className}`}>
       <WebCam
         audio={false}
         ref={webcamRef}
@@ -39,16 +45,15 @@ export default function WebcamViewer({ onWebcamData, onDetector }: WebcamViewerP
           facingMode: 'user',
         }}
         style={{
-          position: 'absolute',
-          width: 640,
-          height: 480,
-          opacity: 0,
-          pointerEvents: 'none',
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          visibility: hidden ? 'hidden' : 'visible',
         }}
       />
-      {webcamData && (
+      {webcamData && onDetector && (
         <YuNetLoader onDetector={onDetector}>
-          {(detector) => <FaceCapture video={webcamData.video} detector={detector} />}
+          {() => null}
         </YuNetLoader>
       )}
     </div>

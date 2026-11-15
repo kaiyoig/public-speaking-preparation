@@ -1,0 +1,75 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Recording } from "@/domain/types";
+import { services } from "@/services";
+
+type CaptureStatus = "idle" | "starting" | "running" | "stopping";
+
+export interface SpeechCaptureControls {
+  start: () => Promise<void>;
+  stop: () => Promise<Recording>;
+  /** Whether capture is currently running (started and not yet stopped). */
+  isRunning: () => boolean;
+  /** Live, streaming transcript of what the Speaker is saying right now. */
+  liveTranscript: string;
+}
+
+/**
+ * Wraps `SpeechCapture` for a component. If the component unmounts while
+ * capture is running (Quit, browser back), capture is stopped and the
+ * Recording discarded, since Sessions are not saved.
+ */
+export function useSpeechCapture(): SpeechCaptureControls {
+  const status = useRef<CaptureStatus>("idle");
+  const pendingStart = useRef<Promise<void> | null>(null);
+  const [liveTranscript, setLiveTranscript] = useState("");
+
+  const start = useCallback(async () => {
+    status.current = "starting";
+    setLiveTranscript("");
+    const starting = services.speechCapture.start({
+      onTranscript: (text) => setLiveTranscript(text),
+    });
+    pendingStart.current = starting;
+    try {
+      await starting;
+      status.current = "running";
+    } catch (error) {
+      status.current = "idle";
+      throw error;
+    } finally {
+      pendingStart.current = null;
+    }
+  }, []);
+
+  const stop = useCallback(async () => {
+    status.current = "stopping";
+    try {
+      const recording = await services.speechCapture.stop();
+      status.current = "idle";
+      return recording;
+    } catch (error) {
+      status.current = "running";
+      throw error;
+    }
+  }, []);
+
+  const isRunning = useCallback(() => status.current === "running", []);
+
+  useEffect(() => {
+    return () => {
+      const discard = () => services.speechCapture.stop().then(() => undefined);
+      if (status.current === "running") {
+        discard().catch(() => {});
+      } else if (status.current === "starting") {
+        pendingStart.current?.then(discard).catch(() => {});
+      }
+    };
+  }, []);
+
+  return useMemo(
+    () => ({ start, stop, isRunning, liveTranscript }),
+    [start, stop, isRunning, liveTranscript]
+  );
+}
