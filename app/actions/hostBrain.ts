@@ -23,6 +23,7 @@ import {
   generateHostReflection,
 } from "@/src/gemini";
 import { mastra } from "@/src/mastra";
+import { getSpeakerId } from "@/src/speaker";
 
 function hasValidGeminiKey(): boolean {
   const { geminiApiKey } = getConfig();
@@ -141,7 +142,7 @@ export async function generateReflectionAction(
     const workflow = mastra.getWorkflow("reflectionWorkflow");
     const run = await workflow.createRun();
     const runResult = await run.start({
-      inputData: { input },
+      inputData: { speakerId: await getSpeakerId(), input },
     });
     if (runResult.status === "success") {
       return runResult.result.reflection;

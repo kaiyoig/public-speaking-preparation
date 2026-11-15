@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { HistoryDetailClient } from "@/components/HistoryDetailClient";
 import { RecordShell } from "@/components/RecordShell";
 import { getPracticeSessionById } from "@/src/db";
+import { getSpeakerId } from "@/src/speaker";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function HistoryDetailPage({
     notFound();
   }
 
-  const session = await getPracticeSessionById(sessionId);
+  const session = await getPracticeSessionById(await getSpeakerId(), sessionId);
   if (!session) {
     notFound();
   }
