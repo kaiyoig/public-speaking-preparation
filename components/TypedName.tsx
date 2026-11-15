@@ -13,13 +13,11 @@ const NAME_HTML = `Rhetor<span class="text-highlight">.</span>`;
 /** The slide onto the Title panel is most of the way in before the first letter lands. */
 const START_DELAY_MS = 350;
 
-/** How long the cursor stays after the last letter. */
-const CURSOR_LINGER_MS = 1200;
-
 /**
  * The name on the Title panel. It is typed out once each time the panel comes on
  * screen: on arrival, and again after sliding back up from a panel below.
- * It is simply there for reduced motion.
+ * It is simply there for reduced motion. Unlike the speeches behind it, it types
+ * without a cursor, so nothing stands in front of the name as it arrives.
  *
  * The letters are typed into a box already the width of the whole name, so the
  * ones on screen don't shuffle sideways as the rest arrive.
@@ -36,9 +34,7 @@ export function TypedName() {
       return;
     }
 
-    let lingering: number | undefined;
     el.textContent = "";
-    el.classList.add("type-cursor");
     const typed = new Typed(el, {
       strings: [NAME_HTML],
       typeSpeed: 110,
@@ -46,17 +42,12 @@ export function TypedName() {
       showCursor: false,
       autoInsertCss: false,
       contentType: "html",
-      onComplete: () => {
-        lingering = window.setTimeout(() => el.classList.remove("type-cursor"), CURSOR_LINGER_MS);
-      },
     });
 
     return () => {
-      window.clearTimeout(lingering);
       typed.stop();
       typed.destroy();
       // Leave the whole name in place while the panel slides away.
-      el.classList.remove("type-cursor");
       el.innerHTML = NAME_HTML;
     };
   }, [showing]);
