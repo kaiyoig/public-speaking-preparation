@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useReducer, ViewTransition } from "react";
 import { Delivery } from "@/components/Delivery";
+import { MediaAccessGate } from "@/components/MediaAccessGate";
 import { PageTransition } from "@/components/PageTransition";
 import { PhaseSteps } from "@/components/PhaseSteps";
 import { SessionRail, Shell } from "@/components/Shell";
@@ -64,37 +65,39 @@ export default function NormalModePage() {
           </SessionRail>
         }
       >
-        {/* Keyed by Phase, so each Phase change is one leaving and one arriving. */}
-        <ViewTransition key={state.phase} enter={PHASE_MOTION} exit={PHASE_MOTION} default="none">
-          {state.phase === "setup" && (
-            <SpeechBriefForm initial={state.brief} onSubmit={(brief) => forward({ type: "briefSubmitted", brief })} />
-          )}
+        <MediaAccessGate>
+          {/* Keyed by Phase, so each Phase change is one leaving and one arriving. */}
+          <ViewTransition key={state.phase} enter={PHASE_MOTION} exit={PHASE_MOTION} default="none">
+            {state.phase === "setup" && (
+              <SpeechBriefForm initial={state.brief} onSubmit={(brief) => forward({ type: "briefSubmitted", brief })} />
+            )}
 
-          {state.phase === "delivery" && (
-            <Delivery
-              mode="normal"
-              timeLimitSeconds={state.brief.timeLimitMinutes * 60}
-              onFinished={(delivery) => forward({ type: "deliveryFinished", delivery })}
-              onQuit={quit}
-            />
-          )}
+            {state.phase === "delivery" && (
+              <Delivery
+                mode="normal"
+                timeLimitSeconds={state.brief.timeLimitMinutes * 60}
+                onFinished={(delivery) => forward({ type: "deliveryFinished", delivery })}
+                onQuit={quit}
+              />
+            )}
 
-          {state.phase === "qa" && (
-            <QandA
-              brief={state.brief}
-              delivery={state.delivery}
-              onFinished={(answers) => forward({ type: "qandaFinished", answers })}
-              onQuit={quit}
-            />
-          )}
+            {state.phase === "qa" && (
+              <QandA
+                brief={state.brief}
+                delivery={state.delivery}
+                onFinished={(answers) => forward({ type: "qandaFinished", answers })}
+                onQuit={quit}
+              />
+            )}
 
-          {state.phase === "reflection" && (
-            <Reflection
-              input={{ mode: "normal", brief: state.brief, delivery: state.delivery, answers: state.answers }}
-              onPracticeAgain={() => changePhase("back", () => dispatch({ type: "practiceAgain" }))}
-            />
-          )}
-        </ViewTransition>
+            {state.phase === "reflection" && (
+              <Reflection
+                input={{ mode: "normal", brief: state.brief, delivery: state.delivery, answers: state.answers }}
+                onPracticeAgain={() => changePhase("back", () => dispatch({ type: "practiceAgain" }))}
+              />
+            )}
+          </ViewTransition>
+        </MediaAccessGate>
       </Shell>
     </PageTransition>
   );

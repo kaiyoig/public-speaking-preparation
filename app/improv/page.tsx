@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useReducer, ViewTransition } from "react";
 import { Delivery } from "@/components/Delivery";
+import { MediaAccessGate } from "@/components/MediaAccessGate";
 import { PageTransition } from "@/components/PageTransition";
 import { PhaseSteps } from "@/components/PhaseSteps";
 import { SessionRail, Shell } from "@/components/Shell";
@@ -69,45 +70,47 @@ export default function ImprovModePage() {
           </SessionRail>
         }
       >
-        {/* Keyed by Phase, so each Phase change is one leaving and one arriving. */}
-        <ViewTransition key={state.phase} enter={PHASE_MOTION} exit={PHASE_MOTION} default="none">
-          {state.phase === "setup" && (
-            <TopicKindPicker onChoose={(kind) => forward({ type: "kindChosen", kind })} />
-          )}
+        <MediaAccessGate>
+          {/* Keyed by Phase, so each Phase change is one leaving and one arriving. */}
+          <ViewTransition key={state.phase} enter={PHASE_MOTION} exit={PHASE_MOTION} default="none">
+            {state.phase === "setup" && (
+              <TopicKindPicker onChoose={(kind) => forward({ type: "kindChosen", kind })} />
+            )}
 
-          {state.phase === "briefing" && (
-            <TopicBriefingView
-              kind={state.kind}
-              onStart={(topicBriefing) => forward({ type: "started", topicBriefing })}
-              onChangeKind={() => changePhase("back", () => dispatch({ type: "changeKind" }))}
-            />
-          )}
+            {state.phase === "briefing" && (
+              <TopicBriefingView
+                kind={state.kind}
+                onStart={(topicBriefing) => forward({ type: "started", topicBriefing })}
+                onChangeKind={() => changePhase("back", () => dispatch({ type: "changeKind" }))}
+              />
+            )}
 
-          {state.phase === "delivery" && (
-            <Delivery
-              mode="improv"
-              timeLimitSeconds={IMPROV_TIME_LIMIT_SECONDS}
-              sidePanel={
-                <section aria-label="Topic Briefing" className="pt-3">
-                  <h2 className="text-2xl font-bold leading-tight tracking-tight font-display">
-                    {state.topicBriefing.topic}
-                  </h2>
-                  <h3 className="mt-5 font-bold">Speaking Points</h3>
-                  <SpeakingPointsList speakingPoints={state.topicBriefing.speakingPoints} className="mt-2" />
-                </section>
-              }
-              onFinished={(delivery) => forward({ type: "deliveryFinished", delivery })}
-              onQuit={quit}
-            />
-          )}
+            {state.phase === "delivery" && (
+              <Delivery
+                mode="improv"
+                timeLimitSeconds={IMPROV_TIME_LIMIT_SECONDS}
+                sidePanel={
+                  <section aria-label="Topic Briefing" className="pt-3">
+                    <h2 className="text-2xl font-bold leading-tight tracking-tight font-display">
+                      {state.topicBriefing.topic}
+                    </h2>
+                    <h3 className="mt-5 font-bold">Speaking Points</h3>
+                    <SpeakingPointsList speakingPoints={state.topicBriefing.speakingPoints} className="mt-2" />
+                  </section>
+                }
+                onFinished={(delivery) => forward({ type: "deliveryFinished", delivery })}
+                onQuit={quit}
+              />
+            )}
 
-          {state.phase === "reflection" && (
-            <Reflection
-              input={{ mode: "improv", topicBriefing: state.topicBriefing, delivery: state.delivery }}
-              onPracticeAgain={() => changePhase("back", () => dispatch({ type: "practiceAgain" }))}
-            />
-          )}
-        </ViewTransition>
+            {state.phase === "reflection" && (
+              <Reflection
+                input={{ mode: "improv", topicBriefing: state.topicBriefing, delivery: state.delivery }}
+                onPracticeAgain={() => changePhase("back", () => dispatch({ type: "practiceAgain" }))}
+              />
+            )}
+          </ViewTransition>
+        </MediaAccessGate>
       </Shell>
     </PageTransition>
   );
