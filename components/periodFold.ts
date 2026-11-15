@@ -30,18 +30,31 @@ export function inkBox(glyph: HTMLElement, origin: { top: number; left: number }
   const style = getComputedStyle(glyph);
   context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
   const metrics = context.measureText(glyph.textContent ?? "");
-  const box = glyph.getBoundingClientRect();
-  // The font's ascent and descent sit centered in the box: an inline box is exactly as tall as
-  // they are, and an inline-block as tall as its line, with the leading split above and below.
-  const leading = box.height - metrics.fontBoundingBoxAscent - metrics.fontBoundingBoxDescent;
-  const baseline = box.top + leading / 2 + metrics.fontBoundingBoxAscent - origin.top;
-  const left = box.left - origin.left;
+  const left = glyph.getBoundingClientRect().left - origin.left;
+  const baseline = baselineOf(glyph) - origin.top;
   return {
     top: baseline - metrics.actualBoundingBoxAscent,
     right: left + metrics.actualBoundingBoxRight,
     bottom: baseline + metrics.actualBoundingBoxDescent,
     left: left - metrics.actualBoundingBoxLeft,
   };
+}
+
+/**
+ * Where the text in `element` is drawn, in the viewport. An empty inline-block rests its bottom on
+ * the baseline, in an inline box or an inline-block alike, so one is put in and read. Working it
+ * out from the box and the font's ascent instead goes wrong by half a pixel wherever the browser
+ * rounds the box's height differently from the font's metrics. Browsers draw text on the nearest
+ * device pixel to its baseline, so the baseline is snapped there too.
+ */
+function baselineOf(element: HTMLElement): number {
+  const probe = document.createElement("span");
+  probe.style.cssText = "display: inline-block; width: 0; height: 0;";
+  element.append(probe);
+  const laidOut = probe.getBoundingClientRect().bottom;
+  probe.remove();
+  const scale = window.devicePixelRatio;
+  return Math.round(laidOut * scale) / scale;
 }
 
 /** The sheet's outline, as a clip-path, while it covers all of itself. */
