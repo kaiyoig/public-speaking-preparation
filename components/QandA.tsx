@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AsyncView, ErrorView, errorMessage } from "@/components/AsyncView";
-import { CameraPlaceholder } from "@/components/CameraPlaceholder";
+import WebcamViewer from "@/app/components/WebcamViewer";
 import { Host, useHost } from "@/components/Host";
 import { QuitButton } from "@/components/QuitButton";
 import { useSpeechCapture } from "@/components/useSpeechCapture";
@@ -155,10 +155,7 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
-          <CameraPlaceholder
-            live={step.kind === "answering"}
-            className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,42vh,34rem)]"
-          />
+          <WebcamViewer className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,42vh,34rem)]" />
 
           <section aria-label="Your answer transcript" className="rule-top flex flex-col gap-2">
             <div className="flex items-center justify-between gap-4">

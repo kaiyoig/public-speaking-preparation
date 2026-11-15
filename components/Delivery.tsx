@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ErrorView, errorMessage } from "@/components/AsyncView";
-import { CameraPlaceholder } from "@/components/CameraPlaceholder";
 import { Host, useHost } from "@/components/Host";
 import { QuitButton } from "@/components/QuitButton";
+import WebcamViewer from "@/app/components/WebcamViewer";
 import { useSpeechCapture } from "@/components/useSpeechCapture";
 import { OVERTIME_GRACE_SECONDS } from "@/domain/config";
 import type { Mode, Recording } from "@/domain/types";
@@ -144,12 +144,10 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
-          {cameraShown && (
-            <CameraPlaceholder
-              live={state.status === "speaking"}
-              className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,45vh,34rem)]"
-            />
-          )}
+          <WebcamViewer
+            hidden={!cameraShown}
+            className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,45vh,34rem)]"
+          />
 
           <div className="flex flex-wrap items-center gap-3">
             {(state.status === "ready" || state.status === "starting") && (
