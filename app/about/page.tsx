@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Arrow } from "@/components/Arrow";
+import { HomePanelLink } from "@/components/HomePager";
 import { MapGestures } from "@/components/MapGestures";
 import { PageTransition } from "@/components/PageTransition";
 import { TRANSITION } from "@/components/transitions";
@@ -28,13 +30,13 @@ const OFFERINGS = [
 
 /**
  * What the app is in the rail, and what a Speaker can do with it two by two in the content field,
- * on the same 3 + 9 columns as the Modes panel on Home.
+ * on the same 3 + 9 columns as the Modes panel on Home. The foot of the rail leads down to the Modes.
  */
 export default function AboutPage() {
   return (
     <PageTransition>
       <MapGestures place="about" />
-      <div className="mx-auto grid min-h-screen w-full max-w-[1280px] grid-cols-4 gap-x-6 px-6 max-lg:grid-rows-[auto_auto_1fr] sm:px-12 lg:grid-cols-12 lg:gap-x-8 lg:px-24">
+      <div className="mx-auto grid min-h-screen w-full max-w-[1280px] grid-cols-4 gap-x-6 px-6 max-lg:grid-rows-[auto_auto_auto_1fr] sm:px-12 lg:grid-cols-12 lg:gap-x-8 lg:px-24">
         {/* On small screens the rail dissolves into the page, above the offerings. */}
         <div className="max-lg:contents lg:sticky lg:top-0 lg:col-span-3 lg:flex lg:h-screen lg:flex-col lg:py-20">
           <Link
@@ -49,6 +51,14 @@ export default function AboutPage() {
             A practice room for speeches. Give one you’ve prepared, or improvise on a random topic, to an AI host, and
             find out what to work on before the real thing.
           </p>
+          <HomePanelLink
+            panel="modes"
+            transitionTypes={[TRANSITION.aboutToModes]}
+            className="group col-span-4 mt-8 flex items-center gap-4 self-start text-xl font-bold outline-offset-4 lg:mt-auto"
+          >
+            Choose a mode
+            <Arrow angle={135} className="size-10 p-2 sm:size-11 sm:p-2.5" />
+          </HomePanelLink>
         </div>
 
         <ul className="col-span-4 grid auto-rows-fr grid-cols-2 gap-x-6 py-8 lg:col-span-9 lg:gap-x-8 lg:py-20">
