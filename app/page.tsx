@@ -59,7 +59,7 @@ export default function Home() {
 
 /**
  * The top panel: the name, centered, with famous speeches typing themselves out behind it.
- * About is linked from the top corner, and the arrow at the foot shows the Modes are below.
+ * About is linked just under the name, and the arrow at the foot shows the Modes are below.
  */
 function Title() {
   return (
@@ -68,6 +68,7 @@ function Title() {
       <h1 className="relative text-[clamp(3.5rem,min(17vw,26vh),13rem)] font-bold leading-[0.8] tracking-[-0.045em] font-display">
         <TypedName />
       </h1>
+<<<<<<< HEAD
       <div className="absolute top-5 right-6 flex items-center gap-6 bg-paper text-lg sm:top-9 sm:right-12 lg:right-24">
         <Link href="/history" className="text-link">
           History
@@ -80,6 +81,15 @@ function Title() {
           About Rhetor
         </Link>
       </div>
+=======
+      <Link
+        href="/about"
+        transitionTypes={[TRANSITION.toAbout]}
+        className="text-link relative mt-8 bg-paper text-lg sm:mt-10"
+      >
+        About Rhetor
+      </Link>
+>>>>>>> 7e79f4bf025c75849f92f09d2d9b1f86b5626b84
       <a
         href="#modes"
         className="group absolute right-6 bottom-4 flex items-center gap-4 bg-paper pl-3 text-xl font-bold outline-offset-4 sm:right-12 lg:right-24"
@@ -98,6 +108,7 @@ function Modes() {
   return (
     <Shell
       rail={
+<<<<<<< HEAD
         <nav aria-label="Primary navigation" className="flex flex-wrap gap-x-6 gap-y-2 lg:flex-col">
           <Link href="/history" className="text-link self-start text-lg">
             History
@@ -106,6 +117,11 @@ function Modes() {
             About Rhetor
           </Link>
         </nav>
+=======
+        <Link href="/about" transitionTypes={[TRANSITION.modesToAbout]} className="text-link self-start text-lg">
+          About Rhetor
+        </Link>
+>>>>>>> 7e79f4bf025c75849f92f09d2d9b1f86b5626b84
       }
     >
       <h1 className="sr-only">Choose a mode</h1>

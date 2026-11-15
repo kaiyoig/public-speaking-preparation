@@ -42,10 +42,11 @@ export default function AboutPage() {
           </p>
           <HomePanelLink
             panel="modes"
-            transitionTypes={[TRANSITION.fromAbout]}
+            transitionTypes={[TRANSITION.aboutToModes]}
             className="group col-span-4 flex items-center gap-4 self-start pb-6 text-xl font-bold outline-offset-4 max-lg:order-last lg:mt-auto lg:pb-0"
           >
-            <Arrow className="size-10 p-2 sm:size-11 sm:p-2.5" />
+            {/* Modes sits below and to the left of About. */}
+            <Arrow angle={135} className="size-10 p-2 sm:size-11 sm:p-2.5" />
             Choose a mode
           </HomePanelLink>
         </div>

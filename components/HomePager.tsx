@@ -57,15 +57,27 @@ interface HomePanelLinkProps {
   children: ReactNode;
 }
 
+/** Within Home, brings a panel on screen and records it in the URL as a new history entry. */
+const GoToPanel = createContext<((view: View) => void) | null>(null);
+
 /**
- * A link from another page to one of Home's panels. Home opens straight on that panel, so a
- * page transition into Home pictures the panel the Speaker asked for.
+ * A link to one of Home's panels. From another page, Home opens straight on that panel, so a
+ * page transition into Home pictures the panel the Speaker asked for. From Home itself, it slides
+ * to the panel: a navigation within Home doesn't remount it, and the URL changing alone wouldn't move it.
  */
 export function HomePanelLink({ panel, ...props }: HomePanelLinkProps) {
+  const goToPanel = useContext(GoToPanel);
+
   return (
     <Link
       {...props}
       href={`/${HASHES[panel] ?? ""}`}
+      onClick={(event) => {
+        // Leave modified clicks alone, so they can still open Home in a new tab.
+        if (!goToPanel || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        goToPanel(panel);
+      }}
       onNavigate={() => {
         requestedView = panel;
       }}
@@ -111,6 +123,15 @@ export function HomePager(panels: HomePagerProps) {
     setAnimated(true);
     setView(next);
   }, []);
+
+  const goToPanel = useCallback(
+    (next: View) => {
+      if (viewRef.current === next) return;
+      window.history.pushState(window.history.state, "", HASHES[next] ?? window.location.pathname);
+      show(next);
+    },
+    [show],
+  );
 
   // Focus follows the panel once it stops being inert, so the keyboard scrolls it and Tab starts inside it.
   useEffect(() => {
@@ -248,7 +269,9 @@ export function HomePager(panels: HomePagerProps) {
             inert={view !== name}
             className="h-1/2 overflow-y-auto overscroll-contain outline-none"
           >
-            <PanelShowing value={view === name}>{panels[name]}</PanelShowing>
+            <GoToPanel value={goToPanel}>
+              <PanelShowing value={view === name}>{panels[name]}</PanelShowing>
+            </GoToPanel>
           </div>
         ))}
       </div>

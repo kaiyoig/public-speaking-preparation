@@ -226,6 +226,7 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
               placeholder="Key points, an outline, or your full script"
               className="block w-full resize-y border border-ink bg-transparent p-3 text-lg placeholder:text-mute focus:shadow-[inset_0_0_0_1px_var(--color-ink)] focus-visible:outline-none"
             />
+<<<<<<< HEAD
             {prepError && <p className="mt-3 font-bold">{prepError}</p>}
             {prepResult && (
               <div className="mt-4 border-t-4 border-ink bg-field p-4 text-sm">
@@ -243,11 +244,35 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
                   {prepResult.insights.map((insight) => (
                     <li key={insight} className="flex items-baseline gap-3">
                       <span aria-hidden className="size-1.5 shrink-0 -translate-y-0.5 bg-ink" />
+=======
+            <button
+              type="button"
+              onClick={() => void handleResearchAudience()}
+              disabled={prepLoading}
+              className="text-link mt-3 disabled:cursor-not-allowed disabled:text-mute disabled:hover:bg-transparent"
+            >
+              {prepLoading ? "Researching audience & topic…" : "Research audience & topic"}
+            </button>
+            {prepError && <p className="mt-3 font-bold">{prepError}</p>}
+            {prepResult && (
+              <div className="mt-5 rule-top">
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
+                  <p className="font-bold">Audience &amp; Evidence Prep</p>
+                  <button type="button" onClick={insertInsightsIntoNotes} className="text-link">
+                    Insert into Notes
+                  </button>
+                </div>
+                <ul className="mt-3 flex flex-col gap-2.5 text-lg leading-snug">
+                  {prepResult.insights.map((insight) => (
+                    <li key={insight} className="flex items-baseline gap-3">
+                      <span aria-hidden className="size-2 shrink-0 -translate-y-0.5 bg-ink" />
+>>>>>>> 7e79f4bf025c75849f92f09d2d9b1f86b5626b84
                       <span>{insight}</span>
                     </li>
                   ))}
                 </ul>
                 {prepResult.sources.length > 0 && (
+<<<<<<< HEAD
                   <div className="mt-4 border-t border-ink/25 pt-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-mute">Sources</p>
                     <ul className="mt-1.5 flex flex-col gap-1 text-sm">
@@ -259,6 +284,14 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
                             rel="noreferrer"
                             className="underline underline-offset-4 hover:bg-highlight hover:text-on-highlight"
                           >
+=======
+                  <div className="mt-4">
+                    <p className="font-bold">Sources</p>
+                    <ul className="mt-1 flex flex-col gap-1">
+                      {prepResult.sources.map((source) => (
+                        <li key={source.url} className="truncate">
+                          <a href={source.url} target="_blank" rel="noreferrer" className="text-link">
+>>>>>>> 7e79f4bf025c75849f92f09d2d9b1f86b5626b84
                             {source.title}
                           </a>
                         </li>

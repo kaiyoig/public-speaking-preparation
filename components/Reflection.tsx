@@ -36,6 +36,7 @@ const SECTIONS = [
   { key: "content", title: "Content" },
 ] as const;
 
+<<<<<<< HEAD
 export function ReflectionView({
   reflection,
   vocalMetrics,
@@ -46,6 +47,16 @@ export function ReflectionView({
   vocalMetrics?: VocalDeliveryMetrics | undefined;
   onPracticeAgain?: (() => void) | undefined;
   showHistoryLink?: boolean;
+=======
+function ReflectionView({
+  reflection,
+  vocalMetrics,
+  onPracticeAgain,
+}: {
+  reflection: ReflectionData;
+  vocalMetrics?: VocalDeliveryMetrics | undefined;
+  onPracticeAgain: () => void;
+>>>>>>> 7e79f4bf025c75849f92f09d2d9b1f86b5626b84
 }) {
   const { caption, isSpeaking, say } = useHost();
 
@@ -71,6 +82,7 @@ export function ReflectionView({
         </div>
       </div>
 
+<<<<<<< HEAD
       {vocalMetrics && (
         <section aria-label="Vocal Delivery Analysis" className="rule-top hang-row">
           <h3 className="hang-label">Vocal Delivery</h3>
@@ -102,6 +114,9 @@ export function ReflectionView({
           </div>
         </section>
       )}
+=======
+      {vocalMetrics && <VocalMetricsRow metrics={vocalMetrics} />}
+>>>>>>> 7e79f4bf025c75849f92f09d2d9b1f86b5626b84
 
       <div className="flex flex-col gap-10">
         {SECTIONS.map((section) => (
@@ -111,6 +126,7 @@ export function ReflectionView({
 
       {reflection.sources && reflection.sources.length > 0 && (
         <section aria-label="Helpful Sources" className="rule-top hang-row">
+<<<<<<< HEAD
           <h3 className="hang-label">Helpful Sources</h3>
           <ul className="hang-body flex max-w-2xl flex-col gap-2 text-lg">
             {reflection.sources.map((source) => (
@@ -126,10 +142,26 @@ export function ReflectionView({
               </li>
             ))}
           </ul>
+=======
+          <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">Sources</h3>
+          <div className="hang-body mt-2 lg:mt-0">
+            <p className="text-lg">Helpful for your next draft.</p>
+            <ul className="mt-3 flex max-w-2xl flex-col gap-1 text-lg">
+              {reflection.sources.map((source) => (
+                <li key={source.url} className="truncate">
+                  <a href={source.url} target="_blank" rel="noreferrer" className="text-link">
+                    {source.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+>>>>>>> 7e79f4bf025c75849f92f09d2d9b1f86b5626b84
         </section>
       )}
 
       <div className="flex flex-wrap gap-3">
+<<<<<<< HEAD
         {onPracticeAgain ? (
           <button type="button" onClick={onPracticeAgain} className="btn-primary">
             Practice again
@@ -144,11 +176,39 @@ export function ReflectionView({
             History
           </Link>
         )}
+=======
+        <button type="button" onClick={onPracticeAgain} className="btn-primary">
+          Practice again
+        </button>
+>>>>>>> 7e79f4bf025c75849f92f09d2d9b1f86b5626b84
         <Link href="/" className="btn-secondary">
           Home
         </Link>
       </div>
     </div>
+  );
+}
+
+/** Pace, inflection, volume and pauses measured from the Speaker's voice during Delivery. */
+function VocalMetricsRow({ metrics }: { metrics: VocalDeliveryMetrics }) {
+  const stats = [
+    { label: "Pace", value: `${metrics.wordsPerMinute} WPM · ${metrics.paceLabel}` },
+    { label: "Inflection", value: `${metrics.inflectionVariety} (±${metrics.pitchRangeHz} Hz)` },
+    { label: "Volume", value: `${metrics.volumeLevel} · ${metrics.volumeDynamics}` },
+    { label: "Pauses & Fillers", value: `${metrics.pauseCount} pauses · ${metrics.fillerWordCount} fillers` },
+  ];
+  return (
+    <section aria-label="Vocal Delivery" className="rule-top hang-row">
+      <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">Your Voice</h3>
+      <dl className="hang-body mt-2 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:mt-0 xl:grid-cols-4">
+        {stats.map((stat) => (
+          <div key={stat.label}>
+            <dt className="font-bold">{stat.label}</dt>
+            <dd className="mt-1 text-xl first-letter:uppercase tabular-nums">{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 
