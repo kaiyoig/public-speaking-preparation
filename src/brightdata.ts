@@ -13,7 +13,7 @@ export interface ResearchResponse {
   sources: SearchResult[];
 }
 
-// Structure of a Bright Data result.
+// Bright Data search result structure.
 interface BrightDataResult {
   title?: string;
   description?: string;
@@ -24,7 +24,7 @@ interface BrightDataResponse {
   organic?: BrightDataResult[];
 }
 
-// Check whether a URL is valid.
+// Check whether a source URL is usable.
 function isValidUrl(link: string): boolean {
   try {
     const url = new URL(link);
@@ -36,7 +36,7 @@ function isValidUrl(link: string): boolean {
       return false;
     }
 
-    // Exclude Google redirect links.
+    // Exclude Google's redirect links.
     if (
       (url.hostname === "google.com" ||
         url.hostname.endsWith(".google.com")) &&
@@ -52,14 +52,17 @@ function isValidUrl(link: string): boolean {
   }
 }
 
-/**
- * Executes a Bright Data Google SERP search for an arbitrary query string
- * and returns up to 5 validated organic results.
- */
-export async function searchWebContext(
-  query: string,
-  timeoutMs: number = 60000
-): Promise<SearchResult[]> {
+// Wait before retrying a failed request.
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Research an improv speaking topic.
+export async function researchTopic(
+  topic: string
+): Promise<ResearchResponse> {
+
+  // Step 1: Load API credentials.
   const apiKey = process.env.BRIGHTDATA_API_KEY;
   const zone = process.env.BRIGHTDATA_SERP_ZONE;
 
@@ -67,66 +70,137 @@ export async function searchWebContext(
     throw new Error("Missing Bright Data credentials!");
   }
 
-  const searchUrl = new URL("https://www.google.com/search");
-  searchUrl.searchParams.set("q", query);
+  // Step 2: Build our Google search.
+  const searchUrl = new URL(
+    "https://www.google.com/search"
+  );
+
+  searchUrl.searchParams.set(
+    "q",
+    `${topic} arguments for and against pros cons`
+  );
+
   searchUrl.searchParams.set("hl", "en");
   searchUrl.searchParams.set("gl", "us");
   searchUrl.searchParams.set("brd_json", "1");
 
-  const response = await fetch("https://api.brightdata.com/request", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      zone,
-      url: searchUrl.toString(),
-      format: "raw",
-    }),
-    signal: AbortSignal.timeout(timeoutMs),
-  });
+  // Step 3: Attempt the request up to 2 times.
+  const maxAttempts = 2;
 
-  if (!response.ok) {
-    const errorCode = response.headers.get("x-brd-error-code") ?? "unknown";
-    throw new Error(`Bright Data error: ${response.status}, code: ${errorCode}`);
-  }
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 
-  const responseText = await response.text();
-  if (!responseText.trim()) {
-    throw new Error(`Bright Data returned an empty response (HTTP ${response.status}).`);
-  }
-
-  let data: BrightDataResponse;
-  try {
-    data = JSON.parse(responseText);
-  } catch {
-    throw new Error(
-      `Bright Data returned invalid JSON (HTTP ${response.status}, length: ${responseText.length}).`
+    console.log(
+      `Bright Data research attempt ${attempt}/${maxAttempts}`
     );
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        "https://api.brightdata.com/request",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            zone,
+            url: searchUrl.toString(),
+            format: "raw"
+          }),
+          signal: AbortSignal.timeout(30000)
+        }
+      );
+    } catch (error) {
+      if (attempt < maxAttempts) {
+        console.warn("Network request failed. Retrying...");
+        await wait(1500);
+        continue;
+      }
+
+      throw error;
+    }
+
+    // Do not retry quota or authentication errors.
+    if (response.status === 429) {
+      throw new Error(
+        "Bright Data rate limit reached."
+      );
+    }
+
+    // Retry temporary server errors.
+    if (!response.ok) {
+      const temporaryError =
+        [502, 503, 504].includes(response.status);
+
+      if (temporaryError && attempt < maxAttempts) {
+        console.warn("Temporary server error. Retrying...");
+        await wait(1500);
+        continue;
+      }
+
+      throw new Error(
+        `Bright Data error: HTTP ${response.status}`
+      );
+    }
+
+    // Step 4: Read the response.
+    const responseText = await response.text();
+
+    // Retry if Bright Data returned an empty response.
+    if (!responseText.trim()) {
+
+      if (attempt < maxAttempts) {
+        console.warn(
+          "Bright Data returned empty data. Retrying..."
+        );
+
+        await wait(1500);
+        continue;
+      }
+
+      throw new Error(
+        "Bright Data returned an empty response after retry."
+      );
+    }
+
+    // Step 5: Parse the response JSON.
+    let data: BrightDataResponse;
+
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(
+        "Bright Data returned invalid JSON."
+      );
+    }
+
+    if (!Array.isArray(data.organic)) {
+      throw new Error(
+        "Bright Data did not return organic search results."
+      );
+    }
+
+    // Step 6: Extract and clean results.
+    const sources: SearchResult[] = data.organic
+      .map(result => ({
+        title: result.title ?? "",
+        description: result.description ?? "",
+        url: result.link ?? ""
+      }))
+      .filter(result =>
+        result.title.length > 0 &&
+        isValidUrl(result.url)
+      )
+      .slice(0, 5);
+
+    // Step 7: Return the research.
+    return {
+      topic,
+      sources
+    };
   }
 
-  if (!Array.isArray(data.organic)) {
-    throw new Error("Bright Data did not return organic search results.");
-  }
-
-  return data.organic
-    .map((result) => ({
-      title: result.title ?? "",
-      description: result.description ?? "",
-      url: result.link ?? "",
-    }))
-    .filter((result) => result.title.length > 0 && isValidUrl(result.url))
-    .slice(0, 5);
-}
-
-// Search the web for an improv speaking topic.
-export async function researchTopic(
-  topic: string
-): Promise<ResearchResponse> {
-  const sources = await searchWebContext(`${topic} facts benefits challenges`);
-  return {
-    topic,
-    sources,
-  };
+  throw new Error("Bright Data request failed.");
 }

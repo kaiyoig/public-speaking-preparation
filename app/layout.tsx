@@ -1,10 +1,25 @@
 import type { Metadata } from "next";
+import { Archivo, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
+// Body text and everything at reading size.
+const archivo = Archivo({
+  subsets: ["latin"],
+  variable: "--font-archivo",
+  display: "swap",
+});
+
+// Display type: the name, Mode titles, headings and the big numerals.
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Public Speaking Preparation",
+  title: "Rhetor.",
   description:
-    "Rehearse a speech in front of an AI Host that listens, watches, asks Questions and gives a spoken Reflection.",
+    "Rehearse a speech in front of an AI host that listens, watches, asks questions and gives spoken feedback.",
 };
 
 export default function RootLayout({
@@ -13,10 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-neutral-50 font-sans text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
-        <main className="mx-auto w-full max-w-6xl px-6 py-10 md:px-10">{children}</main>
-      </body>
+    <html lang="en" className={`${archivo.variable} ${spaceGrotesk.variable}`}>
+      <body className="min-h-screen bg-paper font-sans text-ink antialiased">{children}</body>
     </html>
   );
 }

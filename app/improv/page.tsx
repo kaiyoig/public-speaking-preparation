@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useReducer } from "react";
+import { useReducer, ViewTransition } from "react";
 import { Delivery } from "@/components/Delivery";
+import { PageTransition } from "@/components/PageTransition";
 import { PhaseSteps } from "@/components/PhaseSteps";
+import { SessionRail, Shell } from "@/components/Shell";
+import { changePhase, PHASE_MOTION, TRANSITION } from "@/components/transitions";
 import { Reflection } from "@/components/Reflection";
 import { SpeakingPointsList, TopicBriefingView } from "@/components/TopicBriefingView";
 import { IMPROV_TIME_LIMIT_SECONDS } from "@/domain/config";
@@ -18,7 +20,7 @@ type State =
 type Action =
   | { type: "started"; topicBriefing: TopicBriefing }
   | { type: "deliveryFinished"; delivery: Recording }
-  | { type: "practiseAgain" };
+  | { type: "practiceAgain" };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -28,7 +30,7 @@ function reducer(state: State, action: Action): State {
       return state.phase === "delivery"
         ? { phase: "reflection", topicBriefing: state.topicBriefing, delivery: action.delivery }
         : state;
-    case "practiseAgain":
+    case "practiceAgain":
       // Setup fetches a fresh Topic Briefing when it mounts.
       return state.phase === "reflection" ? { phase: "setup" } : state;
   }
@@ -44,47 +46,52 @@ const PHASES = [
 export default function ImprovModePage() {
   const [state, dispatch] = useReducer(reducer, { phase: "setup" });
   const router = useRouter();
-  const quit = () => router.push("/");
+  const quit = () => router.push("/", { transitionTypes: [TRANSITION.leaveSession] });
+  const forward = (action: Action) => changePhase("forward", () => dispatch(action));
 
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Improv Mode</h1>
-        <PhaseSteps phases={PHASES} current={state.phase} />
-      </header>
+    <PageTransition>
+      <Shell
+        wordmarkLinksHome={state.phase !== "delivery"}
+        dense={state.phase === "delivery"}
+        rail={
+          <SessionRail mode="Improv Mode">
+            <PhaseSteps phases={PHASES} current={state.phase} />
+          </SessionRail>
+        }
+      >
+        {/* Keyed by Phase, so each Phase change is one leaving and one arriving. */}
+        <ViewTransition key={state.phase} enter={PHASE_MOTION} exit={PHASE_MOTION} default="none">
+          {state.phase === "setup" && (
+            <TopicBriefingView onStart={(topicBriefing) => forward({ type: "started", topicBriefing })} />
+          )}
 
-      {state.phase === "setup" && (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-          <TopicBriefingView onStart={(topicBriefing) => dispatch({ type: "started", topicBriefing })} />
-          <Link href="/" className="self-start text-sm text-neutral-600 hover:underline dark:text-neutral-400">
-            ← Back to Home
-          </Link>
-        </div>
-      )}
+          {state.phase === "delivery" && (
+            <Delivery
+              mode="improv"
+              timeLimitSeconds={IMPROV_TIME_LIMIT_SECONDS}
+              sidePanel={
+                <section aria-label="Topic Briefing" className="rule-top">
+                  <h2 className="text-2xl font-bold leading-tight tracking-tight font-display">
+                    {state.topicBriefing.topic}
+                  </h2>
+                  <h3 className="mt-5 font-bold">Speaking Points</h3>
+                  <SpeakingPointsList speakingPoints={state.topicBriefing.speakingPoints} className="mt-2" />
+                </section>
+              }
+              onFinished={(delivery) => forward({ type: "deliveryFinished", delivery })}
+              onQuit={quit}
+            />
+          )}
 
-      {state.phase === "delivery" && (
-        <Delivery
-          mode="improv"
-          timeLimitSeconds={IMPROV_TIME_LIMIT_SECONDS}
-          sidePanel={
-            <section aria-label="Topic Briefing" className="card">
-              <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Topic</p>
-              <h2 className="mt-1 text-lg font-semibold">{state.topicBriefing.topic}</h2>
-              <h3 className="mt-4 text-sm font-medium text-neutral-500 dark:text-neutral-400">Speaking Points</h3>
-              <SpeakingPointsList speakingPoints={state.topicBriefing.speakingPoints} className="mt-2 text-sm" />
-            </section>
-          }
-          onFinished={(delivery) => dispatch({ type: "deliveryFinished", delivery })}
-          onQuit={quit}
-        />
-      )}
-
-      {state.phase === "reflection" && (
-        <Reflection
-          input={{ mode: "improv", topicBriefing: state.topicBriefing, delivery: state.delivery }}
-          onPractiseAgain={() => dispatch({ type: "practiseAgain" })}
-        />
-      )}
-    </div>
+          {state.phase === "reflection" && (
+            <Reflection
+              input={{ mode: "improv", topicBriefing: state.topicBriefing, delivery: state.delivery }}
+              onPracticeAgain={() => changePhase("back", () => dispatch({ type: "practiceAgain" }))}
+            />
+          )}
+        </ViewTransition>
+      </Shell>
+    </PageTransition>
   );
 }

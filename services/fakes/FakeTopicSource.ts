@@ -7,7 +7,7 @@ const CANNED_TOPIC_BRIEFINGS: readonly TopicBriefing[] = [
     topic: "The history of the bicycle",
     speakingPoints: [
       "The first two-wheeled 'running machine' was built by Karl Drais in 1817 and had no pedals.",
-      "Pneumatic tyres, popularised by John Boyd Dunlop in 1888, made cycling far more comfortable.",
+      "Pneumatic tires, popularized by John Boyd Dunlop in 1888, made cycling far more comfortable.",
       "Bicycles gave many women in the 1890s new independence and influenced dress reform.",
       "Today there are estimated to be over a billion bicycles in the world.",
     ],

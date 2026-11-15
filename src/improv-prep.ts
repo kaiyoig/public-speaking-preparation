@@ -1,59 +1,114 @@
+
 import { getRandomTopic } from "./improv-topics.ts";
+import { getTrendingTopic } from "./trending-topics.ts";
 import { researchTopic } from "./brightdata.ts";
 
-// Define one piece of background information.
+import {
+  generateSpeakingPoints,
+  type SpeakingPoint
+} from "./improv-summary.ts";
+
+// The two available topic-generation modes.
+export type ImprovMode = "classic" | "trending";
+
+// Background information retrieved from Bright Data.
 interface BackgroundInfo {
   title: string;
   description: string;
   url: string;
 }
 
-// Define the complete preparation session.
+// Everything the frontend receives.
 interface ImprovPrep {
   topic: string;
+  topicMode: ImprovMode;
   preparationSeconds: number;
   backgroundInfo: BackgroundInfo[];
+  speakingPoints: string[];
+  sourceBackedPoints: SpeakingPoint[];
   researchAvailable: boolean;
+  summaryAvailable: boolean;
 }
 
-// Create an improv preparation session.
-export async function createImprovPrep(): Promise<ImprovPrep> {
+// Create an Improv Mode preparation session.
+export async function createImprovPrep(
+  mode: ImprovMode = "classic"
+): Promise<ImprovPrep> {
 
-  // Step 1: Choose a random speaking topic.
-  const topic = getRandomTopic();
+  // Step 1: Generate a topic based on the selected mode.
+  let topic: string;
+  let topicMode: ImprovMode = mode;
 
-  // Step 2: Retrieve research about the topic.
+  if (mode === "trending") {
+    try {
+      topic = await getTrendingTopic();
+    } catch (error) {
+      console.warn(
+        "Trending topic unavailable. Using classic topic.",
+        error
+      );
+
+      topic = getRandomTopic();
+      topicMode = "classic";
+    }
+  } else {
+    topic = getRandomTopic();
+  }
+
+  // Step 2: Create a fallback session.
+  const fallback: ImprovPrep = {
+    topic,
+    topicMode,
+    preparationSeconds: 60,
+    backgroundInfo: [],
+    speakingPoints: [],
+    sourceBackedPoints: [],
+    researchAvailable: false,
+    summaryAvailable: false
+  };
+
+  // Step 3: Retrieve background research.
+  let backgroundInfo: BackgroundInfo[];
+
   try {
     const research = await researchTopic(topic);
 
-    // Step 3: Keep up to three usable research snippets.
-    const backgroundInfo = research.sources
-      .filter(source => source.description.trim().length > 0)
-      .slice(0, 3)
-      .map(source => ({
-        title: source.title,
-        description: source.description,
-        url: source.url
-      }));
-
-    // Step 4: Return information for the frontend.
-    return {
-      topic: topic,
-      preparationSeconds: 60,
-      backgroundInfo: backgroundInfo,
-      researchAvailable: backgroundInfo.length > 0
-    };
+    backgroundInfo = research.sources
+      .filter(source => source.description.trim())
+      .slice(0, 3);
 
   } catch (error) {
-
-    // If Bright Data fails, Improv Mode can still work.
-    console.error("Research unavailable:", error);
-
-    return {
-      topic: topic,
-      preparationSeconds: 60,
-      backgroundInfo: [],
-      researchAvailable: false
-    };
+    console.error("Bright Data research failed:", error);
+    return fallback;
   }
+
+  if (backgroundInfo.length === 0) {
+    return fallback;
+  }
+
+  // Step 4: Ask Gemini to create speaking points.
+  let sourceBackedPoints: SpeakingPoint[] = [];
+
+  try {
+    sourceBackedPoints = await generateSpeakingPoints(
+      topic,
+      backgroundInfo
+    );
+  } catch (error) {
+    console.error("Gemini summary failed:", error);
+  }
+
+  // Step 5: Return the preparation session.
+  return {
+    topic,
+    topicMode,
+    preparationSeconds: 60,
+    backgroundInfo,
+    speakingPoints: sourceBackedPoints.map(
+      point => point.text
+    ),
+    sourceBackedPoints,
+    researchAvailable: true,
+    summaryAvailable: sourceBackedPoints.length > 0
+  };
 }

@@ -2,31 +2,50 @@ import { createImprovPrep } from "./improv-prep.ts";
 
 async function main() {
 
-  const session = await createImprovPrep();
+  const session = await createImprovPrep("trending");
+  console.log("Topic Mode:", session.topicMode);
 
   console.log("=== IMPROV MODE ===");
 
-  console.log("Topic:", session.topic);
+  console.log("\nTopic:", session.topic);
 
   console.log(
-    "Preparation time:",
+    "Preparation Time:",
     session.preparationSeconds,
     "seconds"
   );
 
-  if (!session.researchAvailable) {
-    console.log("Background research unavailable.");
-    return;
+  // Display AI-generated speaking points.
+  if (session.summaryAvailable) {
+
+    console.log("\n=== AI SPEAKING POINTS ===");
+
+    session.sourceBackedPoints.forEach((point, index) => {
+      console.log(`\nPoint ${index + 1}:`);
+      console.log(point.text);
+      console.log("Source:", point.sourceTitle);
+      console.log("URL:", point.sourceUrl);
+    });
+
+  } else {
+    console.log("\nAI speaking points unavailable.");
   }
 
-  console.log("\nBackground Information:");
+  // Display original research snippets.
+  if (session.researchAvailable) {
 
-  session.backgroundInfo.forEach((info, index) => {
-    console.log(`\nSource ${index + 1}`);
-    console.log("Title:", info.title);
-    console.log("Description:", info.description);
-    console.log("URL:", info.url);
-  });
+    console.log("\n=== ORIGINAL RESEARCH ===");
+
+    session.backgroundInfo.forEach((source, index) => {
+      console.log(`\nSource ${index + 1}:`);
+      console.log("Title:", source.title);
+      console.log("Description:", source.description);
+      console.log("URL:", source.url);
+    });
+
+  } else {
+    console.log("\nBackground research unavailable.");
+  }
 }
 
 main().catch(console.error);

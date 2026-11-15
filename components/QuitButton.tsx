@@ -13,8 +13,8 @@ export function QuitButton({ onQuit, disabled = false }: { onQuit: () => void; d
       </button>
       <ConfirmDialog
         open={confirming}
-        title="Quit this Session?"
-        message="Quit this Session? Nothing will be saved."
+        title="Quit this session?"
+        message="Quit this session? Nothing will be saved."
         confirmLabel="Quit"
         cancelLabel="Keep going"
         onCancel={() => setConfirming(false)}

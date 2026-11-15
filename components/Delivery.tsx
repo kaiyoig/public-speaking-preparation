@@ -37,24 +37,26 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   const [greetingAttempt, setGreetingAttempt] = useState(0);
   const [startError, setStartError] = useState<string | null>(null);
   const [stopError, setStopError] = useState<string | null>(null);
+  const [timerShown, setTimerShown] = useState(true);
+  const [cameraShown, setCameraShown] = useState(true);
   const ending = useRef(false);
 
   // ready: fetch the greeting Formality and have the Host say it.
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     setGreeting({ status: "pending" });
     services.hostBrain.getFormality("greeting", mode).then(
       (line) => {
-        if (cancelled) return;
+        if (canceled) return;
         setGreeting({ status: "done" });
         void say(line);
       },
       (error: unknown) => {
-        if (!cancelled) setGreeting({ status: "error", message: errorMessage(error) });
+        if (!canceled) setGreeting({ status: "error", message: errorMessage(error) });
       },
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [mode, say, greetingAttempt]);
 
@@ -115,123 +117,160 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   }, [state, overtimeSeconds, endSpeech]);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-      <div className="flex flex-col gap-4">
-        <CameraPlaceholder live={state.status === "speaking"} />
+    <div className="flex flex-col gap-5">
+      <Timer
+        shown={timerShown}
+        label={inOvertime ? "Overtime" : state.status === "ready" || state.status === "starting" ? "Time Limit" : "Time left"}
+        value={inOvertime ? `+${formatClock(overtimeSeconds, "floor")}` : formatClock(remainingSeconds, "ceil")}
+        warning={inOvertime}
+        note={
+          inOvertime && state.status === "speaking" ? (
+            <p role="status" className="text-lg font-semibold">
+              You're over the Time Limit. Delivery will end automatically in {graceLeftSeconds}s.
+            </p>
+          ) : null
+        }
+        toggles={
+          <>
+            <ToggleButton shown={timerShown} onToggle={setTimerShown}>
+              timer
+            </ToggleButton>
+            <ToggleButton shown={cameraShown} onToggle={setCameraShown}>
+              camera
+            </ToggleButton>
+          </>
+        }
+      />
 
-        <section
-          aria-label="Live Transcript"
-          className="card flex flex-col gap-2"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Live Transcript
-            </h2>
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          {cameraShown && (
+            <CameraPlaceholder
+              live={state.status === "speaking"}
+              className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,45vh,34rem)]"
+            />
+          )}
+
+          <div className="flex flex-wrap items-center gap-3">
+            {(state.status === "ready" || state.status === "starting") && (
+              <button
+                type="button"
+                onClick={startSpeech}
+                disabled={state.status === "starting" || isSpeaking || greeting.status === "pending"}
+                className="btn-primary"
+              >
+                {state.status === "starting" ? "Starting…" : "Start speech"}
+              </button>
+            )}
             {state.status === "speaking" && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                <span className="size-2 animate-pulse rounded-full bg-indigo-600 dark:bg-indigo-400" />
-                Listening…
+              <button type="button" onClick={() => endSpeech(state.startedAt)} className="btn-primary">
+                End speech
+              </button>
+            )}
+            {state.status === "ending" && !stopError && (
+              <span role="status" className="text-lg">
+                Wrapping up…
+              </span>
+            )}
+            {state.status !== "ending" && (
+              <span className="ml-auto">
+                <QuitButton onQuit={onQuit} />
               </span>
             )}
           </div>
-          <p
-            aria-live="polite"
-            className="max-h-40 min-h-16 overflow-y-auto whitespace-pre-wrap text-base leading-relaxed text-neutral-800 dark:text-neutral-200"
-          >
-            {capture.liveTranscript || (
-              <span className="text-neutral-400 dark:text-neutral-500">
-                {state.status === "speaking"
-                  ? "Speak into your microphone — your words will stream here in real time…"
-                  : 'Press "Start speech" to begin capturing your microphone.'}
-              </span>
-            )}
-          </p>
-        </section>
 
-        {inOvertime && state.status === "speaking" && (
-          <div
-            role="status"
-            className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 font-medium text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
-          >
-            You're over the Time Limit. Delivery will end automatically in {graceLeftSeconds}s.
-          </div>
-        )}
+          {startError && <ErrorView compact message={startError} onRetry={startSpeech} />}
+          {stopError && <ErrorView compact message={stopError} onRetry={stopCapture} />}
 
-        {startError && <ErrorView compact message={startError} onRetry={startSpeech} />}
-        {stopError && <ErrorView compact message={stopError} onRetry={stopCapture} />}
-
-        <div className="flex flex-wrap items-center gap-3">
-          {(state.status === "ready" || state.status === "starting") && (
-            <button
-              type="button"
-              onClick={startSpeech}
-              disabled={state.status === "starting" || isSpeaking || greeting.status === "pending"}
-              className="btn-primary"
-            >
-              {state.status === "starting" ? "Starting…" : "Start speech"}
-            </button>
-          )}
-          {state.status === "speaking" && (
-            <button type="button" onClick={() => endSpeech(state.startedAt)} className="btn-primary">
-              End speech
-            </button>
-          )}
-          {state.status === "ending" && !stopError && (
-            <span role="status" className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
-              <span
-                aria-hidden
-                className="size-4 animate-spin rounded-full border-2 border-neutral-300 border-t-indigo-600 dark:border-neutral-700 dark:border-t-indigo-400"
-              />
-              Wrapping up…
-            </span>
-          )}
-          {state.status !== "ending" && (
-            <span className="ml-auto">
-              <QuitButton onQuit={onQuit} />
-            </span>
-          )}
+          <section aria-label="Live Transcript" className="rule-top flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-bold">Live Transcript</h2>
+              {state.status === "speaking" && (
+                <span className="inline-flex items-center gap-2 font-semibold">
+                  <span aria-hidden className="live-mark" />
+                  Listening…
+                </span>
+              )}
+            </div>
+            <p aria-live="polite" className="max-h-40 min-h-16 overflow-y-auto whitespace-pre-wrap text-lg">
+              {capture.liveTranscript || (
+                <span className="text-mute">
+                  {state.status === "speaking"
+                    ? "Speak into your microphone — your words will stream here in real time…"
+                    : 'Press "Start speech" to begin capturing your microphone.'}
+                </span>
+              )}
+            </p>
+          </section>
         </div>
-      </div>
 
-      <aside className="flex flex-col gap-4">
-        <Timer
-          label={inOvertime ? "Overtime" : state.status === "ready" || state.status === "starting" ? "Time Limit" : "Time left"}
-          value={inOvertime ? `+${formatClock(overtimeSeconds, "floor")}` : formatClock(remainingSeconds, "ceil")}
-          warning={inOvertime}
-        />
-        <Host caption={caption} isSpeaking={isSpeaking} />
-        {greeting.status === "error" && (
-          <ErrorView compact message={greeting.message} onRetry={() => setGreetingAttempt((n) => n + 1)} />
-        )}
-        {sidePanel}
-      </aside>
+        <aside className="flex flex-col gap-8">
+          <Host caption={caption} isSpeaking={isSpeaking} />
+          {greeting.status === "error" && (
+            <ErrorView compact message={greeting.message} onRetry={() => setGreetingAttempt((n) => n + 1)} />
+          )}
+          {sidePanel}
+        </aside>
+      </div>
     </div>
   );
 }
 
-function Timer({ label, value, warning }: { label: string; value: string; warning: boolean }) {
+interface TimerProps {
+  /** False when the Speaker has hidden it. The bar stays for its toggles and the Overtime warning. */
+  shown: boolean;
+  label: string;
+  value: string;
+  /** Overtime: the whole bar turns signal red, hidden or not. */
+  warning: boolean;
+  note: ReactNode;
+  toggles: ReactNode;
+}
+
+/** A bar across the top of Delivery: the time on the left, the show and hide toggles on the right. */
+function Timer({ shown, label, value, warning, note, toggles }: TimerProps) {
   return (
     <section
       aria-label="Timer"
-      className={`card text-center transition-colors ${
-        warning ? "border-amber-400 bg-amber-50 dark:border-amber-600 dark:bg-amber-950" : ""
+      className={`flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t-2 pt-3 pb-3 ${
+        // In Overtime the red bleeds into the gutter so the numerals don't move.
+        warning ? "-mx-4 border-signal bg-signal px-4 text-white sm:-mx-5 sm:px-5" : "border-ink"
       }`}
     >
-      <p
-        className={`text-sm font-medium ${
-          warning ? "text-amber-800 dark:text-amber-300" : "text-neutral-500 dark:text-neutral-400"
-        }`}
-      >
-        {label}
-      </p>
-      <p
-        className={`mt-1 text-5xl font-semibold tabular-nums tracking-tight ${
-          warning ? "text-amber-600 dark:text-amber-400" : ""
-        }`}
-      >
-        {value}
-      </p>
+      <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+        {shown && (
+          <p className="flex items-baseline gap-4">
+            <span className="text-lg font-bold">{label}</span>
+            <span className="text-5xl font-bold leading-none tracking-[-0.03em] tabular-nums font-display">
+              {value}
+            </span>
+          </p>
+        )}
+        {note}
+      </div>
+      <div className="flex flex-wrap gap-x-5 gap-y-1">{toggles}</div>
     </section>
+  );
+}
+
+/** "Hide timer" / "Show timer" and the like: names what pressing it will do. */
+function ToggleButton({
+  shown,
+  onToggle,
+  children,
+}: {
+  shown: boolean;
+  onToggle: (shown: boolean) => void;
+  children: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(!shown)}
+      className="min-h-10 text-lg font-semibold underline decoration-2 underline-offset-4 hover:bg-highlight hover:text-on-highlight"
+    >
+      {shown ? "Hide" : "Show"} {children}
+    </button>
   );
 }
 

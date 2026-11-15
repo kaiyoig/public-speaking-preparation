@@ -12,12 +12,13 @@ import { services, type ReflectionInput } from "@/services";
 
 interface ReflectionProps {
   input: ReflectionInput;
-  onPractiseAgain: () => void;
+  onPracticeAgain: () => void;
 }
 
 /** The Reflection Phase, shared by both Modes: what the Speaker can improve. No numeric scores. */
-export function Reflection({ input, onPractiseAgain }: ReflectionProps) {
+export function Reflection({ input, onPracticeAgain }: ReflectionProps) {
   return (
+<<<<<<< HEAD
     <AsyncView run={() => services.hostBrain.getReflection(input)} label="The Host is writing your Reflection…">
       {(reflection) => (
         <ReflectionView
@@ -26,6 +27,10 @@ export function Reflection({ input, onPractiseAgain }: ReflectionProps) {
           onPractiseAgain={onPractiseAgain}
         />
       )}
+=======
+    <AsyncView run={() => services.hostBrain.getReflection(input)} label="The host is writing your reflection…">
+      {(reflection) => <ReflectionView reflection={reflection} onPracticeAgain={onPracticeAgain} />}
+>>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
     </AsyncView>
   );
 }
@@ -36,6 +41,7 @@ const SECTIONS = [
   { key: "content", title: "Content" },
 ] as const;
 
+<<<<<<< HEAD
 function ReflectionView({
   reflection,
   vocalMetrics,
@@ -45,33 +51,34 @@ function ReflectionView({
   vocalMetrics?: VocalDeliveryMetrics | undefined;
   onPractiseAgain: () => void;
 }) {
+=======
+function ReflectionView({ reflection, onPracticeAgain }: { reflection: ReflectionData; onPracticeAgain: () => void }) {
+>>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
   const { caption, isSpeaking, say } = useHost();
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <section aria-labelledby="reflection-summary" className="card p-8">
-          <h2 id="reflection-summary" className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+    <div className="flex flex-col gap-14">
+      <div className="grid gap-8 lg:grid-cols-9">
+        <section aria-labelledby="reflection-summary" className="rule-top lg:col-span-6">
+          <h2 id="reflection-summary" className="text-lg font-bold">
             Reflection
           </h2>
-          <p className="mt-2 text-xl leading-relaxed">{reflection.summary}</p>
+          <p className="mt-4 max-w-[38ch] text-2xl leading-snug sm:text-3xl sm:leading-tight">{reflection.summary}</p>
         </section>
-        <div className="flex flex-col gap-4">
-          <Host caption={caption} isSpeaking={isSpeaking} placeholder='Press "Play Reflection" to hear it.' />
+        <div className="flex flex-col gap-5 lg:col-span-3">
+          <Host caption={caption} isSpeaking={isSpeaking} placeholder='Press "Play reflection" to hear it.' />
           <button
             type="button"
             onClick={() => void say(reflection.summary).catch(() => {})}
             disabled={isSpeaking}
-            className="btn-secondary"
+            className="btn-secondary self-start"
           >
-            <svg aria-hidden viewBox="0 0 24 24" fill="currentColor" className="size-4">
-              <path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.1-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z" />
-            </svg>
-            {isSpeaking ? "Playing…" : "Play Reflection"}
+            {isSpeaking ? "Playing…" : "Play reflection"}
           </button>
         </div>
       </div>
 
+<<<<<<< HEAD
       {vocalMetrics && (
         <section aria-label="Vocal Delivery Analysis" className="card">
           <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
@@ -107,11 +114,15 @@ function ReflectionView({
       )}
 
       <div className="grid gap-6 md:grid-cols-3">
+=======
+      <div className="flex flex-col gap-10">
+>>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
         {SECTIONS.map((section) => (
-          <ReflectionSectionCard key={section.key} title={section.title} section={reflection[section.key]} />
+          <ReflectionSectionRow key={section.key} title={section.title} section={reflection[section.key]} />
         ))}
       </div>
 
+<<<<<<< HEAD
       {reflection.sources && reflection.sources.length > 0 && (
         <section aria-label="Helpful Sources" className="card">
           <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
@@ -135,55 +146,62 @@ function ReflectionView({
       )}
 
       <div className="flex flex-wrap justify-end gap-3">
+=======
+      <div className="flex flex-wrap gap-3">
+        <button type="button" onClick={onPracticeAgain} className="btn-primary">
+          Practice again
+        </button>
+>>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
         <Link href="/" className="btn-secondary">
           Home
         </Link>
-        <button type="button" onClick={onPractiseAgain} className="btn-primary">
-          Practise again
-        </button>
       </div>
     </div>
   );
 }
 
-function ReflectionSectionCard({ title, section }: { title: string; section: ReflectionSection }) {
+/**
+ * One Reflection section: its title hanging left, Strengths and Improvements side by side.
+ * Strengths are always green and Improvements always blue, so each kind reads the same down the page.
+ */
+function ReflectionSectionRow({ title, section }: { title: string; section: ReflectionSection }) {
   return (
-    <section aria-label={title} className="card flex flex-col gap-5">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <div>
-        <h4 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Strengths</h4>
-        <ul className="mt-2 flex flex-col gap-2">
-          {section.strengths.map((item) => (
-            <li key={item} className="flex gap-2.5 text-neutral-700 dark:text-neutral-300">
-              <svg aria-hidden viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 size-5 shrink-0 text-indigo-600 dark:text-indigo-400">
-                <path
-                  fillRule="evenodd"
-                  d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.58l7.3-7.3a1 1 0 0 1 1.4 0Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div>
-        <h4 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Improvements</h4>
-        <ul className="mt-2 flex flex-col gap-2">
-          {section.improvements.map((item) => (
-            <li key={item} className="flex gap-2.5 text-neutral-700 dark:text-neutral-300">
-              <svg aria-hidden viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 size-5 shrink-0 text-neutral-400 dark:text-neutral-500">
-                <path
-                  fillRule="evenodd"
-                  d="M3 10a1 1 0 0 1 1-1h9.59l-3.3-3.3a1 1 0 1 1 1.42-1.4l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.42-1.4l3.3-3.3H4a1 1 0 0 1-1-1Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
+    <section aria-label={title} className="rule-top hang-row">
+      <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">
+        {title}
+      </h3>
+      <div className="hang-body mt-2 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:mt-0">
+        <ReflectionList kind="strengths" items={section.strengths} />
+        <ReflectionList kind="improvements" items={section.improvements} />
       </div>
     </section>
+  );
+}
+
+const LIST_STYLES = {
+  strengths: { title: "Strengths", block: "border-strength bg-strength-tint", mark: "bg-strength", heading: "text-strength" },
+  improvements: {
+    title: "Improvements",
+    block: "border-improvement bg-improvement-tint",
+    mark: "bg-improvement",
+    heading: "text-improvement",
+  },
+} as const;
+
+/** A tinted block under a heavy rule in its kind's color, each point marked with a small square of it. */
+function ReflectionList({ kind, items }: { kind: keyof typeof LIST_STYLES; items: string[] }) {
+  const style = LIST_STYLES[kind];
+  return (
+    <div className={`border-t-4 px-4 pt-3 pb-5 sm:px-5 ${style.block}`}>
+      <h4 className={`font-bold ${style.heading}`}>{style.title}</h4>
+      <ul className="mt-3 flex flex-col gap-2.5 text-lg leading-snug">
+        {items.map((item) => (
+          <li key={item} className="flex items-baseline gap-3">
+            <span aria-hidden className={`size-2 shrink-0 -translate-y-0.5 ${style.mark}`} />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

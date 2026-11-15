@@ -32,7 +32,7 @@ export function QandA({ brief, delivery, onFinished, onQuit }: QandAProps) {
   };
 
   return (
-    <AsyncView run={loadScript} label="The Host is preparing Questions…">
+    <AsyncView run={loadScript} label="The host is preparing questions…">
       {(script) => <QandASession script={script} onFinished={onFinished} onQuit={onQuit} />}
     </AsyncView>
   );
@@ -89,15 +89,15 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
   // Each Question is spoken by ElevenLabs when its "asking" step begins;
   // once ElevenLabs finishes speaking, microphone capture starts so the user can respond.
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     const sayThen = (text: string, next: () => void) => {
       setError(null);
       say(text).then(
         () => {
-          if (!cancelled) next();
+          if (!canceled) next();
         },
         (speakError: unknown) => {
-          if (!cancelled) setError({ message: errorMessage(speakError), retry: () => setStep({ ...step }) });
+          if (!canceled) setError({ message: errorMessage(speakError), retry: () => setStep({ ...step }) });
         },
       );
     };
@@ -114,7 +114,7 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
     }
 
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [step, questions, closing, say, beginAnswer, finish]);
 
@@ -150,64 +150,66 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
   const busy = step.kind === "starting" || step.kind === "stopping" || step.kind === "finished";
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-      <div className="flex flex-col gap-4">
-        <CameraPlaceholder live={step.kind === "answering"} />
+    <div className="flex flex-col gap-5">
+      <QuestionProgress current={questionIndex} total={questions.length} />
 
-        <section aria-label="Your Answer Transcript" className="card flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Your Response (Live Transcript)
-            </h2>
-            {step.kind === "answering" && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                <span className="size-2 animate-pulse rounded-full bg-indigo-600 dark:bg-indigo-400" />
-                Listening to your answer…
-              </span>
-            )}
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <CameraPlaceholder
+            live={step.kind === "answering"}
+            className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,42vh,34rem)]"
+          />
+
+          <section aria-label="Your answer transcript" className="rule-top flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-bold">Your answer</h2>
+              {step.kind === "answering" && (
+                <span className="inline-flex items-center gap-2 font-semibold">
+                  <span aria-hidden className="live-mark" />
+                  Listening…
+                </span>
+              )}
+            </div>
+            <p aria-live="polite" className="max-h-36 min-h-14 overflow-y-auto whitespace-pre-wrap text-lg">
+              {liveTranscript || (
+                <span className="text-mute">
+                  {step.kind === "asking"
+                    ? "The host is asking the question…"
+                    : step.kind === "answering"
+                      ? 'Speak your answer, then press "Done answering" for the next question…'
+                      : "Waiting for the next step…"}
+                </span>
+              )}
+            </p>
+          </section>
+
+          {error && <ErrorView compact message={error.message} onRetry={error.retry} />}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => step.kind === "answering" && void doneAnswering(step.index)}
+              disabled={step.kind !== "answering" || isSpeaking}
+              className="btn-primary"
+            >
+              {step.kind === "stopping" ? "Saving answer…" : "Done answering"}
+            </button>
+            <button type="button" onClick={skipToReflection} disabled={busy} className="btn-secondary">
+              Skip to Reflection
+            </button>
+            <span className="ml-auto">
+              <QuitButton onQuit={onQuit} disabled={step.kind === "finished"} />
+            </span>
           </div>
-          <p
-            aria-live="polite"
-            className="max-h-36 min-h-14 overflow-y-auto whitespace-pre-wrap text-base leading-relaxed text-neutral-800 dark:text-neutral-200"
-          >
-            {liveTranscript || (
-              <span className="text-neutral-400 dark:text-neutral-500">
-                {step.kind === "asking"
-                  ? "ElevenLabs is speaking the question…"
-                  : step.kind === "answering"
-                    ? 'Speak your answer into the microphone, then click "Done answering" for the next question…'
-                    : "Waiting for the next step…"}
-              </span>
-            )}
-          </p>
-        </section>
 
-        {error && <ErrorView compact message={error.message} onRetry={error.retry} />}
-
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => step.kind === "answering" && void doneAnswering(step.index)}
-            disabled={step.kind !== "answering" || isSpeaking}
-            className="btn-primary"
-          >
-            {step.kind === "stopping" ? "Saving answer…" : "Done answering"}
-          </button>
-          <button type="button" onClick={skipToReflection} disabled={busy} className="btn-secondary">
-            Skip to Reflection
-          </button>
-          <span className="ml-auto">
-            <QuitButton onQuit={onQuit} disabled={step.kind === "finished"} />
-          </span>
+          <p className="text-mute">{statusText(step)}</p>
         </div>
 
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">{statusText(step)}</p>
+        <aside className="flex flex-col gap-8">
+          <Host caption={caption} isSpeaking={isSpeaking} />
+          <QuestionList current={questionIndex} questions={questions} />
+        </aside>
       </div>
-
-      <aside className="flex flex-col gap-4">
-        <QuestionProgress current={questionIndex} total={questions.length} questions={questions} />
-        <Host caption={caption} isSpeaking={isSpeaking} />
-      </aside>
     </div>
   );
 }
@@ -215,7 +217,7 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
 function statusText(step: Step): string {
   switch (step.kind) {
     case "asking":
-      return "Listen as the Host asks the question.";
+      return "Listen as the host asks the question.";
     case "starting":
       return "Starting microphone for your answer…";
     case "answering":
@@ -224,53 +226,44 @@ function statusText(step: Step): string {
       return "Saving your answer…";
     case "closing":
     case "finished":
-      return "Q&A is over. Your Reflection is next.";
+      return "Q&A is over. Your reflection is next.";
   }
 }
 
-function QuestionProgress({
-  current,
-  total,
-  questions,
-}: {
-  current: number;
-  total: number;
-  questions: Question[];
-}) {
+/** A bar across the top of Q&A, like the Delivery timer: which Question this is, and a segment per Question. */
+function QuestionProgress({ current, total }: { current: number; total: number }) {
   const label =
-    current < 0 ? "Q&A is starting" : current >= total ? "All Questions answered" : `Question ${current + 1} of ${total}`;
+    current < 0 ? "Q&A is starting" : current >= total ? "All questions answered" : `Question ${current + 1} of ${total}`;
   return (
-    <section aria-label="Question progress" className="card">
-      <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Q&amp;A</p>
-      <p className="mt-1 text-2xl font-semibold">{label}</p>
-      <div aria-hidden className="mt-4 flex gap-2">
+    <section
+      aria-label="Question progress"
+      className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t-2 border-ink py-3"
+    >
+      <p className="text-5xl font-bold leading-none tracking-[-0.03em] font-display">{label}</p>
+      {/* Filled up to and including the Question being asked. */}
+      <div aria-hidden className="flex w-full max-w-xs gap-1">
         {Array.from({ length: total }, (_, index) => (
-          <span
-            key={index}
-            className={`h-1.5 flex-1 rounded-full ${
-              index < current
-                ? "bg-indigo-600 dark:bg-indigo-500"
-                : index === current
-                  ? "bg-indigo-300 dark:bg-indigo-800"
-                  : "bg-neutral-200 dark:bg-neutral-800"
-            }`}
-          />
+          <span key={index} className={`h-2 flex-1 ${index <= current ? "bg-ink" : "bg-field"}`} />
         ))}
       </div>
-      <ol className="mt-4 flex flex-col gap-2 text-sm">
+    </section>
+  );
+}
+
+/** Every Question in order beside the Host: answered ones struck through, the current one set bold. */
+function QuestionList({ current, questions }: { current: number; questions: Question[] }) {
+  return (
+    <section aria-label="Questions" className="rule-top">
+      <h2 className="text-lg font-bold">Questions</h2>
+      <ol className="mt-2 flex flex-col gap-2">
         {questions.map((question, index) => {
           const isCurrent = index === current;
           const isDone = index < current;
           return (
             <li
               key={question.id}
-              className={`rounded-md px-2.5 py-1.5 ${
-                isCurrent
-                  ? "bg-indigo-50 font-medium text-indigo-950 dark:bg-indigo-950/60 dark:text-indigo-100"
-                  : isDone
-                    ? "text-neutral-400 line-through dark:text-neutral-500"
-                    : "text-neutral-600 dark:text-neutral-400"
-              }`}
+              aria-current={isCurrent ? "step" : undefined}
+              className={isCurrent ? "font-semibold" : isDone ? "text-mute line-through" : "text-mute"}
             >
               {index + 1}. {question.text}
             </li>
