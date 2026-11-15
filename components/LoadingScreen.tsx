@@ -70,6 +70,13 @@ const OPEN_MS = 700;
 /** How far past the screen's corners the full-grown dot reaches, so its edge is never seen. */
 const OVERREACH = 1.2;
 
+/** The loading bar drawing in from the left and clearing away to the right, once round. */
+const BAR_MS = 1800;
+
+/** The share of a round spent drawing in, and by which it has cleared, the rest a pause. */
+const BAR_DRAWN_AT = 0.45;
+const BAR_CLEARED_AT = 0.9;
+
 /** The fade for reduced motion, in and out, in place of everything that travels. */
 const FADE_MS = 200;
 
@@ -169,7 +176,8 @@ function center(element: Element): { x: number; y: number } {
  * In, a dot of ink appears on the baseline for each letter, left to right, and stretches up into
  * a block, all of them the same size; the period comes last, a yellow dot that stays a dot. The
  * blocks then melt into the letters, their corners rounding off and holes opening where the
- * counters will be, and the name stays just as it is until the last hold is released. Out, the dot swells and stretches back along the line, eating the letters right to
+ * counters will be, and the name stays just as it is until the last hold is released, while a
+ * loading bar beneath it draws in from the left and clears away to the right, over and over. Out, the dot swells and stretches back along the line, eating the letters right to
  * left, then compresses back down to a dot where the middle of the name was. From there it
  * travels to the middle of the screen, growing past every edge, and a hole opens in it onto the
  * page that has loaded.
@@ -198,6 +206,8 @@ export function LoadingScreen() {
   const inkRef = useRef<HTMLSpanElement>(null);
   const blurRef = useRef<SVGFEGaussianBlurElement>(null);
   const captionRef = useRef<HTMLParagraphElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const sweepRef = useRef<HTMLDivElement>(null);
   const discRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -210,10 +220,12 @@ export function LoadingScreen() {
     const screen = screenRef.current;
     const name = nameRef.current;
     const captionBox = captionRef.current;
+    const bar = barRef.current;
+    const sweep = sweepRef.current;
     const disc = discRef.current;
     const ink = inkRef.current;
     const blur = blurRef.current;
-    if (!shown || !screen || !name || !captionBox || !disc || !ink || !blur) return;
+    if (!shown || !screen || !name || !captionBox || !bar || !sweep || !disc || !ink || !blur) return;
 
     const letters = [...name.querySelectorAll<HTMLElement>("[data-letter]")];
     const period = name.querySelector<HTMLElement>("[data-period]");
@@ -230,13 +242,19 @@ export function LoadingScreen() {
       return animation;
     };
 
-    // The blocks sit over the letters' ink and the dot over the period's, and the caption lines
-    // up with the R's ink rather than its box, measured afresh whenever the name resizes.
+    // The blocks sit over the letters' ink and the dot over the period's, the caption lines up
+    // with the R's ink rather than its box, and the bar runs under the whole name, from the R's
+    // ink to the period's, all measured afresh whenever the name resizes.
     const fit = () => {
-      const inks = letters.map((letter) => inkBox(letter, ink.getBoundingClientRect()));
+      const origin = ink.getBoundingClientRect();
+      const inks = letters.map((letter) => inkBox(letter, origin));
+      const end = inkBox(period, origin);
       if (inks.every((box) => box !== undefined)) {
-        blockCells(inks).forEach((cell, index) => place(blocks[index]!, cell));
+        const cells = blockCells(inks);
+        cells.forEach((cell, index) => place(blocks[index]!, cell));
         captionBox.style.marginLeft = `${inks[0]!.left}px`;
+        bar.style.marginLeft = `${cells[0]!.left}px`;
+        bar.style.width = `${(end ?? cells.at(-1)!).right - cells[0]!.left}px`;
       }
       const periodInk = inkBox(period, name.getBoundingClientRect());
       if (periodInk) place(dot, dotSquare(periodInk));
@@ -295,6 +313,9 @@ export function LoadingScreen() {
         dot.style.clipPath = "inset(0% round 50%)";
         play(name, [{ opacity: 0 }, { opacity: 1 }], { duration: FADE_MS });
         play(captionBox, [{ opacity: 0 }, { opacity: 1 }], { duration: FADE_MS });
+        // The bar only pulses in place, with nothing traveling along it.
+        sweep.style.clipPath = "none";
+        play(bar, [{ opacity: 0.25 }, { opacity: 1 }], { duration: BAR_MS / 2, direction: "alternate", iterations: Infinity, easing: "ease-in-out" });
         return;
       }
       name.style.opacity = "1";
@@ -326,6 +347,18 @@ export function LoadingScreen() {
         delay: MORPH_MS * 0.5,
         easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
       });
+      // The bar comes in with the caption and keeps going round until the screen goes out.
+      bar.style.opacity = "1";
+      play(
+        sweep,
+        [
+          { clipPath: "inset(0% 100% 0% 0%)", easing: TRAVEL },
+          { clipPath: "inset(0% 0% 0% 0%)", offset: BAR_DRAWN_AT, easing: TRAVEL },
+          { clipPath: "inset(0% 0% 0% 100%)", offset: BAR_CLEARED_AT },
+          { clipPath: "inset(0% 0% 0% 100%)" },
+        ],
+        { duration: BAR_MS, delay: MORPH_MS * 0.5, iterations: Infinity },
+      );
       await melt();
       if (canceled) return;
       await wait(READ_MS);
@@ -341,6 +374,7 @@ export function LoadingScreen() {
       }
 
       play(captionBox, [{ opacity: 1 }, { opacity: 0 }], { duration: 150 });
+      play(bar, [{ opacity: 1 }, { opacity: 0 }], { duration: 150 });
 
       // The dot swells to the letters' height and stretches back along them, a pill with the
       // period's round ends, eating each letter as its leading edge passes over. It is drawn over
@@ -421,7 +455,7 @@ export function LoadingScreen() {
       cancelAnimationFrame(meltFrame);
       observer.disconnect();
       for (const animation of animations) animation.cancel();
-      for (const element of [screen, name, ink, captionBox, disc, dot, ...letters, ...blocks]) element.removeAttribute("style");
+      for (const element of [screen, name, ink, captionBox, bar, sweep, disc, dot, ...letters, ...blocks]) element.removeAttribute("style");
       blur.setAttribute("stdDeviation", "0");
     };
   }, [shown]);
@@ -464,6 +498,10 @@ export function LoadingScreen() {
             </span>
             <span data-dot className="pointer-events-none absolute z-10 bg-highlight [clip-path:inset(50%_50%_50%_50%)]" />
           </p>
+          {/* The loading bar under the name: an ink rule as heavy as the one leading the screen up. */}
+          <div ref={barRef} aria-hidden="true" className="h-1 opacity-0">
+            <div ref={sweepRef} className="size-full bg-ink [clip-path:inset(0%_100%_0%_0%)]" />
+          </div>
           <p ref={captionRef} className="text-base font-semibold text-mute opacity-0 sm:text-lg">
             <span className="sr-only">Loading: </span>
             {caption}
