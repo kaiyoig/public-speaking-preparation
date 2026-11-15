@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HomePanelLink } from "@/components/HomePager";
+import { MapGestures } from "@/components/MapGestures";
 import { PageTransition } from "@/components/PageTransition";
 import { Shell } from "@/components/Shell";
 import { TRANSITION } from "@/components/transitions";
@@ -37,6 +38,7 @@ export default async function HistoryPage() {
 
   return (
     <PageTransition>
+      <MapGestures place="history" />
       <Shell
         wordmarkTransition={TRANSITION.historyToTitle}
         rail={

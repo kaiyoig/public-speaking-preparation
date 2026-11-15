@@ -152,6 +152,16 @@
 }
 
 /* History and About: a stack, About on top, slid a full screen height. */
+::view-transition-old(.about-to-history) {
+  animation: var(--vt-travel) both vt-slide-out;
+  --vt-x: 0;
+  --vt-y: -100vh;
+}
+::view-transition-new(.about-to-history) {
+  animation: var(--vt-travel) both vt-slide-in;
+  --vt-x: 0;
+  --vt-y: 100vh;
+}
 ::view-transition-old(.history-to-about) {
   animation: var(--vt-travel) both vt-slide-out;
   --vt-x: 0;
