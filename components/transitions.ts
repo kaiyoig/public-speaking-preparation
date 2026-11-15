@@ -23,6 +23,10 @@ export const TRANSITION = {
   phaseForward: "phase-forward",
   /** Practice again: everything runs the other way. */
   phaseBack: "phase-back",
+  /** On to the next Reflection slide: the old one slides off to the left, the next comes in from the right. */
+  slideNext: "slide-next",
+  /** Back a Reflection slide: everything runs the other way. */
+  slidePrevious: "slide-previous",
 } as const;
 
 /**

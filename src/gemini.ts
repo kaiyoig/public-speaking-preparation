@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { QUESTION_COUNT } from "../domain/config.ts";
+import { QUESTION_COUNT, REFLECTION_POINTS } from "../domain/config.ts";
 import type {
   Question,
   Recording,
@@ -335,10 +335,14 @@ export async function generateHostReflection(
       strengths: {
         type: Type.ARRAY,
         items: { type: Type.STRING },
+        minItems: String(REFLECTION_POINTS.min),
+        maxItems: String(REFLECTION_POINTS.max),
       },
       improvements: {
         type: Type.ARRAY,
         items: { type: Type.STRING },
+        minItems: String(REFLECTION_POINTS.min),
+        maxItems: String(REFLECTION_POINTS.max),
       },
     },
     required: ["strengths", "improvements"],
@@ -349,7 +353,9 @@ export async function generateHostReflection(
       "You are a supportive, insightful public speaking coach. " +
       "Analyze both the transcript and the vocal delivery data (plus attached audio when provided) for vocal inflection, tone, volume dynamics, speaking pace, pauses, and filler words. " +
       "Return a structured JSON reflection with a spoken `summary` (2-3 natural sentences suitable for text-to-speech, with no numeric grades/scores) " +
-      "and 2 strengths + 2 improvements each for `bodyLanguage`, `voiceAndDelivery`, and `content`.",
+      `and, for each of \`bodyLanguage\`, \`voiceAndDelivery\`, and \`content\`, between ${REFLECTION_POINTS.min} and ${REFLECTION_POINTS.max} strengths and between ${REFLECTION_POINTS.min} and ${REFLECTION_POINTS.max} improvements. ` +
+      "Give as many points as the speech genuinely warrants: each one distinct and specific, never padded or repeated to fill a count. " +
+      "The number of strengths and improvements in a section need not match.",
     responseMimeType: "application/json",
     responseSchema: {
       type: Type.OBJECT,
