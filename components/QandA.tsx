@@ -150,12 +150,15 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
   const busy = step.kind === "starting" || step.kind === "stopping" || step.kind === "finished";
 
   return (
-    <div className="flex flex-col gap-8">
-      <QuestionProgress current={questionIndex} total={questions.length} questions={questions} />
+    <div className="flex flex-col gap-5">
+      <QuestionProgress current={questionIndex} total={questions.length} />
 
-      <div className="grid gap-8 lg:grid-cols-9">
-        <div className="flex flex-col gap-4 lg:col-span-6">
-          <CameraPlaceholder live={step.kind === "answering"} />
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <CameraPlaceholder
+            live={step.kind === "answering"}
+            className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,42vh,34rem)]"
+          />
 
           <section aria-label="Your answer transcript" className="rule-top flex flex-col gap-2">
             <div className="flex items-center justify-between gap-4">
@@ -202,8 +205,9 @@ function QandASession({ script, onFinished, onQuit }: QandASessionProps) {
           <p className="text-mute">{statusText(step)}</p>
         </div>
 
-        <aside className="lg:col-span-3">
+        <aside className="flex flex-col gap-8">
           <Host caption={caption} isSpeaking={isSpeaking} />
+          <QuestionList current={questionIndex} questions={questions} />
         </aside>
       </div>
     </div>
@@ -226,35 +230,39 @@ function statusText(step: Step): string {
   }
 }
 
-function QuestionProgress({
-  current,
-  total,
-  questions,
-}: {
-  current: number;
-  total: number;
-  questions: Question[];
-}) {
+/** A bar across the top of Q&A, like the Delivery timer: which Question this is, and a segment per Question. */
+function QuestionProgress({ current, total }: { current: number; total: number }) {
   const label =
     current < 0 ? "Q&A is starting" : current >= total ? "All questions answered" : `Question ${current + 1} of ${total}`;
   return (
-    <section aria-label="Question progress" className="rule-top">
-      <p className="text-[clamp(3rem,9vw,7rem)] font-bold leading-[0.9] tracking-[-0.025em] font-display">
-        {label}
-      </p>
+    <section
+      aria-label="Question progress"
+      className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t-2 border-ink py-3"
+    >
+      <p className="text-5xl font-bold leading-none tracking-[-0.03em] font-display">{label}</p>
       {/* Filled up to and including the Question being asked. */}
-      <div aria-hidden className="mt-5 flex max-w-2xl gap-1">
+      <div aria-hidden className="flex w-full max-w-xs gap-1">
         {Array.from({ length: total }, (_, index) => (
           <span key={index} className={`h-2 flex-1 ${index <= current ? "bg-ink" : "bg-field"}`} />
         ))}
       </div>
-      <ol className="mt-5 flex max-w-2xl flex-col gap-1 text-lg">
+    </section>
+  );
+}
+
+/** Every Question in order beside the Host: answered ones struck through, the current one set bold. */
+function QuestionList({ current, questions }: { current: number; questions: Question[] }) {
+  return (
+    <section aria-label="Questions" className="rule-top">
+      <h2 className="text-lg font-bold">Questions</h2>
+      <ol className="mt-2 flex flex-col gap-2">
         {questions.map((question, index) => {
           const isCurrent = index === current;
           const isDone = index < current;
           return (
             <li
               key={question.id}
+              aria-current={isCurrent ? "step" : undefined}
               className={isCurrent ? "font-semibold" : isDone ? "text-mute line-through" : "text-mute"}
             >
               {index + 1}. {question.text}

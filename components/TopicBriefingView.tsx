@@ -25,7 +25,7 @@ export function TopicBriefingView({ onStart }: TopicBriefingViewProps) {
           <div className="hang-row lg:items-baseline">
             <p className="hang-label">Your topic</p>
             <h2 className="hang-body text-5xl font-bold leading-[0.95] tracking-tight font-display sm:text-6xl">
-              <span className="bg-highlight box-decoration-clone px-[0.12em] text-on-highlight">{topicBriefing.topic}</span>
+              {topicBriefing.topic}
             </h2>
           </div>
 

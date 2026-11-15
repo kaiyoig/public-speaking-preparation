@@ -49,6 +49,7 @@ export default function ImprovModePage() {
   return (
     <Shell
       wordmarkLinksHome={state.phase !== "delivery"}
+      dense={state.phase === "delivery"}
       rail={
         <SessionRail mode="Improv Mode">
           <PhaseSteps phases={PHASES} current={state.phase} />
@@ -66,9 +67,7 @@ export default function ImprovModePage() {
           sidePanel={
             <section aria-label="Topic Briefing" className="rule-top">
               <h2 className="text-2xl font-bold leading-tight tracking-tight font-display">
-                <span className="bg-highlight box-decoration-clone px-[0.15em] text-on-highlight">
-                  {state.topicBriefing.topic}
-                </span>
+                {state.topicBriefing.topic}
               </h2>
               <h3 className="mt-5 font-bold">Speaking Points</h3>
               <SpeakingPointsList speakingPoints={state.topicBriefing.speakingPoints} className="mt-2" />

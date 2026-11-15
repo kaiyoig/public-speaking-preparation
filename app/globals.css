@@ -3,20 +3,26 @@
 /*
  * Swiss tokens. Paper and ink invert in dark mode; signal red and highlight yellow never change.
  * Red means "live" and nothing else: the mic capturing, the Host speaking, Overtime.
- * Paper and ink stop just short of pure white and black so body text doesn't glare.
+ * Paper is an off-white in light mode and ink stops just short of black, so body text doesn't glare.
  * Mute is for secondary text: about 65% of ink.
+ * Strength green and improvement blue sort Reflection feedback into what went well and what to
+ * work on. Each has a tint for the block behind its list.
  * Highlight is a marker-pen yellow, always a fill under dark text and never a text color,
  * save for the period in the Rhetor. wordmark.
  * It marks where to go and what is yours right now: the arrow into a Mode, the main
- * button under the pointer, the current Phase, a chosen option, the Improv topic.
+ * button under the pointer, the current Phase, a chosen option.
  */
 :root {
   color-scheme: light dark;
-  --paper: #fafafa;
+  --paper: #f2f2ef;
   --ink: #0a0a0a;
-  --mute: #666666;
-  --field: #ebebeb;
+  --mute: #63635f;
+  --field: #e2e2de;
   --signal: #b3001b;
+  --strength: #12703f;
+  --strength-tint: #dcebe0;
+  --improvement: #1f45b8;
+  --improvement-tint: #dfe4f3;
   --highlight: #ffd60a;
   --on-highlight: #0a0a0a;
 }
@@ -27,6 +33,10 @@
     --ink: #ededed;
     --mute: #9e9e9e;
     --field: #1c1c1c;
+    --strength: #5cc98f;
+    --strength-tint: #10241a;
+    --improvement: #8aa4ff;
+    --improvement-tint: #141b33;
   }
 }
 
@@ -40,9 +50,25 @@
   --color-signal: var(--signal);
   --color-highlight: var(--highlight);
   --color-on-highlight: var(--on-highlight);
+  --color-strength: var(--strength);
+  --color-strength-tint: var(--strength-tint);
+  --color-improvement: var(--improvement);
+  --color-improvement-tint: var(--improvement-tint);
 
   --animate-indeterminate: indeterminate 1.6s ease-in-out infinite;
   --animate-blink: blink 1s step-end infinite;
+  --animate-nudge: nudge 1.1s ease-in-out 1.8s 3;
+
+  /* A short drop and return, a few times over, to show there is more below. */
+  @keyframes nudge {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    45% {
+      transform: translateY(0.4rem);
+    }
+  }
 
   @keyframes blink {
     50% {
@@ -71,7 +97,7 @@
     outline-offset: 3px;
   }
 
-  /* Home pages between three full-screen panels itself, so the document must not scroll or pull to refresh. */
+  /* Home pages between its two full-screen panels itself, so the document must not scroll or pull to refresh. */
   html:has([data-pager]) {
     overflow: hidden;
     overscroll-behavior: none;
@@ -127,6 +153,11 @@
     background: currentColor;
     animation: var(--animate-blink);
   }
+}
+
+/* A text link: underlined, and highlight yellow under the pointer. */
+@utility text-link {
+  @apply font-bold underline decoration-2 underline-offset-4 hover:bg-highlight hover:text-on-highlight;
 }
 
 /* The small red square that means "live". */

@@ -69,7 +69,10 @@ function ReflectionView({ reflection, onPracticeAgain }: { reflection: Reflectio
   );
 }
 
-/** One Reflection section: its title hanging left, Strengths and Improvements side by side. */
+/**
+ * One Reflection section: its title hanging left, Strengths and Improvements side by side.
+ * Strengths are always green and Improvements always blue, so each kind reads the same down the page.
+ */
 function ReflectionSectionRow({ title, section }: { title: string; section: ReflectionSection }) {
   return (
     <section aria-label={title} className="rule-top hang-row">
@@ -77,20 +80,35 @@ function ReflectionSectionRow({ title, section }: { title: string; section: Refl
         {title}
       </h3>
       <div className="hang-body mt-2 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:mt-0">
-        <ReflectionList title="Strengths" items={section.strengths} />
-        <ReflectionList title="Improvements" items={section.improvements} />
+        <ReflectionList kind="strengths" items={section.strengths} />
+        <ReflectionList kind="improvements" items={section.improvements} />
       </div>
     </section>
   );
 }
 
-function ReflectionList({ title, items }: { title: string; items: string[] }) {
+const LIST_STYLES = {
+  strengths: { title: "Strengths", block: "border-strength bg-strength-tint", mark: "bg-strength", heading: "text-strength" },
+  improvements: {
+    title: "Improvements",
+    block: "border-improvement bg-improvement-tint",
+    mark: "bg-improvement",
+    heading: "text-improvement",
+  },
+} as const;
+
+/** A tinted block under a heavy rule in its kind's color, each point marked with a small square of it. */
+function ReflectionList({ kind, items }: { kind: keyof typeof LIST_STYLES; items: string[] }) {
+  const style = LIST_STYLES[kind];
   return (
-    <div>
-      <h4 className="font-bold">{title}</h4>
-      <ul className="mt-2 flex flex-col gap-2.5 text-lg leading-snug">
+    <div className={`border-t-4 px-4 pt-3 pb-5 sm:px-5 ${style.block}`}>
+      <h4 className={`font-bold ${style.heading}`}>{style.title}</h4>
+      <ul className="mt-3 flex flex-col gap-2.5 text-lg leading-snug">
         {items.map((item) => (
-          <li key={item}>{item}</li>
+          <li key={item} className="flex items-baseline gap-3">
+            <span aria-hidden className={`size-2 shrink-0 -translate-y-0.5 ${style.mark}`} />
+            <span>{item}</span>
+          </li>
         ))}
       </ul>
     </div>
