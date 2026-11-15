@@ -130,10 +130,7 @@ function VocalMetricsRow({ metrics }: { metrics: VocalDeliveryMetrics }) {
   );
 }
 
-/**
- * One Reflection section: its title hanging left, Strengths and Improvements side by side.
- * Strengths are always green and Improvements always blue, so each kind reads the same down the page.
- */
+/** One Reflection section: its title hanging left, Strengths and Improvements side by side. */
 function ReflectionSectionRow({ title, section }: { title: string; section: ReflectionSection }) {
   return (
     <section aria-label={title} className="rule-top hang-row">
@@ -148,22 +145,18 @@ function ReflectionSectionRow({ title, section }: { title: string; section: Refl
   );
 }
 
-const LIST_STYLES = {
-  strengths: { title: "Strengths", block: "border-strength bg-strength-tint", mark: "bg-strength", heading: "text-strength" },
-  improvements: {
-    title: "Improvements",
-    block: "border-improvement bg-improvement-tint",
-    mark: "bg-improvement",
-    heading: "text-improvement",
-  },
+/** Strengths are marked green and Improvements blue, so each kind reads the same down the page. */
+const LIST_KINDS = {
+  strengths: { title: "Strengths", mark: "bg-strength" },
+  improvements: { title: "Improvements", mark: "bg-improvement" },
 } as const;
 
-/** A tinted block under a heavy rule in its kind's color, each point marked with a small square of it. */
-function ReflectionList({ kind, items }: { kind: keyof typeof LIST_STYLES; items: string[] }) {
-  const style = LIST_STYLES[kind];
+/** A list under a heavy ink rule, each point marked with a small square in its kind's color. */
+function ReflectionList({ kind, items }: { kind: keyof typeof LIST_KINDS; items: string[] }) {
+  const style = LIST_KINDS[kind];
   return (
-    <div className={`border-t-4 px-4 pt-3 pb-5 sm:px-5 ${style.block}`}>
-      <h4 className={`font-bold ${style.heading}`}>{style.title}</h4>
+    <div className="rule-top">
+      <h4 className="font-bold">{style.title}</h4>
       <ul className="mt-3 flex flex-col gap-2.5 text-lg leading-snug">
         {items.map((item) => (
           <li key={item} className="flex items-baseline gap-3">

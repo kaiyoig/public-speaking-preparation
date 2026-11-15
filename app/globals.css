@@ -5,8 +5,8 @@
  * Red means "live" and nothing else: the mic capturing, the Host speaking, Overtime.
  * Paper is an off-white in light mode and ink stops just short of black, so body text doesn't glare.
  * Mute is for secondary text: about 65% of ink.
- * Strength green and improvement blue sort Reflection feedback into what went well and what to
- * work on. Each has a tint for the block behind its list.
+ * Strength green and improvement blue mark the points of Reflection feedback: what went well
+ * and what to work on. They color only the small square before each point.
  * Highlight is a marker-pen yellow, always a fill under dark text and never a text color,
  * save for the period in the Rhetor. wordmark.
  * It marks where to go and what is yours right now: the arrow into a Mode, the main
@@ -20,9 +20,7 @@
   --field: #e2e2de;
   --signal: #b3001b;
   --strength: #12703f;
-  --strength-tint: #dcebe0;
   --improvement: #1f45b8;
-  --improvement-tint: #dfe4f3;
   --highlight: #ffd60a;
   --on-highlight: #0a0a0a;
 }
@@ -34,9 +32,7 @@
     --mute: #9e9e9e;
     --field: #1c1c1c;
     --strength: #5cc98f;
-    --strength-tint: #10241a;
     --improvement: #8aa4ff;
-    --improvement-tint: #141b33;
   }
 }
 
@@ -51,9 +47,7 @@
   --color-highlight: var(--highlight);
   --color-on-highlight: var(--on-highlight);
   --color-strength: var(--strength);
-  --color-strength-tint: var(--strength-tint);
   --color-improvement: var(--improvement);
-  --color-improvement-tint: var(--improvement-tint);
 
   --animate-indeterminate: indeterminate 1.6s ease-in-out infinite;
   --animate-blink: blink 1s step-end infinite;
