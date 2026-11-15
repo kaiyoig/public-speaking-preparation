@@ -3,15 +3,15 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
 /** The panels, top to bottom. */
-const VIEWS = ["title", "about", "modes"] as const;
+const VIEWS = ["title", "modes"] as const;
 
 type View = (typeof VIEWS)[number];
 
 /** The URL hash each panel is kept under. The Title panel has none: any other hash shows it. */
-const HASHES: Partial<Record<View, string>> = { about: "#about", modes: "#modes" };
+const HASHES: Partial<Record<View, string>> = { modes: "#modes" };
 
 /** How far the stack of panels is shifted up to bring each one on screen. */
-const SHIFT: Record<View, string> = { title: "", about: "-translate-y-1/3", modes: "-translate-y-2/3" };
+const SHIFT: Record<View, string> = { title: "", modes: "-translate-y-1/2" };
 
 /** How long the slide between panels takes. Scroll input is ignored until it has finished. */
 const SLIDE_MS = 600;
@@ -32,15 +32,15 @@ const PanelShowing = createContext(false);
 export const usePanelShowing = () => useContext(PanelShowing);
 
 /**
- * Home as three full-screen panels, Title above About above Modes, with nothing in
- * between: scrolling down slides straight to the next panel, and scrolling up slides
- * straight back to the one before. The view never rests part-way.
+ * Home as two full-screen panels, Title above Modes, with nothing in between:
+ * scrolling down slides straight to Modes, and scrolling up slides straight back
+ * to Title. The view never rests part-way.
  *
  * A panel taller than the screen scrolls inside itself first, and only hands over
  * to its neighbor from its own edge.
  *
- * The showing panel is kept in the URL hash, so links to `#about` and `#modes`
- * change panel, and Back from a Session returns to Modes.
+ * The showing panel is kept in the URL hash, so links to `#modes` change panel,
+ * and Back from a Session returns to Modes.
  */
 export function HomePager(panels: HomePagerProps) {
   const [view, setView] = useState<View>("title");
@@ -179,7 +179,7 @@ export function HomePager(panels: HomePagerProps) {
   return (
     <div ref={containerRef} data-pager className="fixed inset-0 overflow-clip">
       <div
-        className={`h-[300%] ${SHIFT[view]} ${
+        className={`h-[200%] ${SHIFT[view]} ${
           animated ? "motion-safe:transition-transform motion-safe:duration-600 motion-safe:ease-[cubic-bezier(0.7,0,0.2,1)]" : ""
         }`}
       >
@@ -192,7 +192,7 @@ export function HomePager(panels: HomePagerProps) {
             }}
             tabIndex={-1}
             inert={view !== name}
-            className="h-1/3 overflow-y-auto overscroll-contain outline-none"
+            className="h-1/2 overflow-y-auto overscroll-contain outline-none"
           >
             <PanelShowing value={view === name}>{panels[name]}</PanelShowing>
           </div>

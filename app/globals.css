@@ -85,7 +85,7 @@
     outline-offset: 3px;
   }
 
-  /* Home pages between three full-screen panels itself, so the document must not scroll or pull to refresh. */
+  /* Home pages between its two full-screen panels itself, so the document must not scroll or pull to refresh. */
   html:has([data-pager]) {
     overflow: hidden;
     overscroll-behavior: none;
@@ -141,6 +141,11 @@
     background: currentColor;
     animation: var(--animate-blink);
   }
+}
+
+/* A text link: underlined, and highlight yellow under the pointer. */
+@utility text-link {
+  @apply font-bold underline decoration-2 underline-offset-4 hover:bg-highlight hover:text-on-highlight;
 }
 
 /* The small red square that means "live". */
