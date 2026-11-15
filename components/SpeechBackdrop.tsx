@@ -238,7 +238,8 @@ export function SpeechBackdrop() {
         />
       </div>
       {speech && (
-        <p className="absolute bottom-5 left-6 bg-paper pr-3 text-base font-medium text-mute sm:left-12 lg:left-24">
+        // It stops short of the "Choose a mode" link in the opposite corner.
+        <p className="absolute right-20 bottom-5 left-6 w-fit bg-paper pr-3 text-base font-medium text-mute sm:left-12 md:right-[22rem] lg:left-24 lg:right-[26rem]">
           {speech.orator}, {speech.occasion}
         </p>
       )}

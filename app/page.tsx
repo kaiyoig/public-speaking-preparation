@@ -52,7 +52,7 @@ export default function Home() {
 
 /**
  * The top panel: the name, centered, with famous speeches typing themselves out behind it.
- * About is linked from the top corner.
+ * About is linked from the top corner, and the arrow at the foot shows the Modes are below.
  */
 function Title() {
   return (
@@ -67,6 +67,15 @@ function Title() {
       >
         About Rhetor
       </Link>
+      <a
+        href="#modes"
+        className="group absolute right-6 bottom-4 flex items-center gap-4 bg-paper pl-3 text-xl font-bold outline-offset-4 sm:right-12 lg:right-24"
+      >
+        <span className="max-md:sr-only">Choose a mode</span>
+        <span className="motion-safe:animate-nudge">
+          <Arrow className="size-10 rotate-90 p-2 sm:size-11 sm:p-2.5" />
+        </span>
+      </a>
     </div>
   );
 }
