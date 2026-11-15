@@ -92,6 +92,11 @@
     overflow: clip;
   }
 
+  /* Nothing scrolls under the loading screen. */
+  html:has([data-loading-screen]) {
+    overflow: hidden;
+  }
+
   /*
    * A text caret only where there is something to type. Text elsewhere stays selectable, but a
    * click into it (with caret browsing, say) leaves no caret blinking there.
@@ -410,6 +415,19 @@ html[data-intro] [data-intro-wait] {
 }
 html[data-intro] [data-intro-wait] * {
   animation-play-state: paused;
+}
+
+/*
+ * The loading screen's dot, grown past every edge (components/LoadingScreen.tsx). A hole opens in
+ * its middle onto the page beneath, as wide as --hole is of its radius.
+ */
+@property --hole {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+.loading-disc {
+  mask-image: radial-gradient(circle closest-side, transparent calc(var(--hole) - 1px), #000 var(--hole));
 }
 
 /*
