@@ -2,18 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { endIntro, introFolded, introStage, onIntroChange } from "@/components/intro";
+import { FOLD_MS, RULE_AT, TRAVEL, inkBox, periodClip, ruleClip, sheetClip, type Box } from "@/components/periodFold";
 
 /** A beat of pure yellow once the page is live, so the fold reads as a choice rather than a glitch. */
 const HOLD_MS = 150;
-
-/** The fold down to a rule, then along it into the period. */
-const FOLD_MS = 1150;
-
-/** The share of the fold spent closing to a rule, before it runs along into the period. */
-const RULE_AT = 0.45;
-
-/** The app's travel ease: what moves across the screen. */
-const TRAVEL = "cubic-bezier(0.7, 0, 0.2, 1)";
 
 /** Measuring the period needs the display face; past this the fold goes ahead with what's there. */
 const FONT_WAIT_MS = 1500;
@@ -21,42 +13,14 @@ const FONT_WAIT_MS = 1500;
 /** Any of these skips straight to the finished panel. */
 const SKIP_INPUTS = ["keydown", "pointerdown", "wheel", "touchstart"] as const;
 
-interface Box {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-}
-
-/**
- * Where a glyph's ink sits on screen. Its element box is the whole em, with side bearings and
- * room for ascenders, so the ink is found from the font's own metrics, measured from the baseline.
- */
-function inkBox(glyph: HTMLElement): Box | undefined {
-  const context = document.createElement("canvas").getContext("2d");
-  if (!context) return undefined;
-  const style = getComputedStyle(glyph);
-  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-  const metrics = context.measureText(glyph.textContent ?? "");
-  const box = glyph.getBoundingClientRect();
-  const baseline = box.bottom - metrics.fontBoundingBoxDescent;
-  return {
-    top: baseline - metrics.actualBoundingBoxAscent,
-    right: box.left + metrics.actualBoundingBoxRight,
-    bottom: baseline + metrics.actualBoundingBoxDescent,
-    left: box.left - metrics.actualBoundingBoxLeft,
-  };
-}
-
 /** The sheet's outline at each stage: the whole screen, a rule level with the period, then the period. */
 function foldKeyframes(dot: Box): Keyframe[] {
   const width = window.innerWidth;
   const height = window.innerHeight;
-  const radius = (dot.right - dot.left) / 2;
   return [
-    { clipPath: "inset(0px 0px 0px 0px round 0px)", easing: TRAVEL },
-    { clipPath: `inset(${dot.top}px 0px ${height - dot.bottom}px 0px round 0px)`, offset: RULE_AT, easing: TRAVEL },
-    { clipPath: `inset(${dot.top}px ${width - dot.right}px ${height - dot.bottom}px ${dot.left}px round ${radius}px)` },
+    { clipPath: sheetClip(), easing: TRAVEL },
+    { clipPath: ruleClip(dot, height), offset: RULE_AT, easing: TRAVEL },
+    { clipPath: periodClip(dot, width, height) },
   ];
 }
 
