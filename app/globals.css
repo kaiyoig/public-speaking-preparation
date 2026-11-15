@@ -92,6 +92,19 @@
     overflow: clip;
   }
 
+  /*
+   * A text caret only where there is something to type. Text elsewhere stays selectable, but a
+   * click into it (with caret browsing, say) leaves no caret blinking there.
+   */
+  * {
+    caret-color: transparent;
+  }
+  input,
+  textarea,
+  [contenteditable]:not([contenteditable="false"]) {
+    caret-color: auto;
+  }
+
   /* No scrollbars anywhere. Pages and panels still scroll by wheel, touch and keyboard. */
   * {
     scrollbar-width: none;
