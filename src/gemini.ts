@@ -1,6 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { QUESTION_COUNT } from "../domain/config.ts";
-import type { Question, Recording, Reflection, SpeechBrief } from "../domain/types.ts";
+import type {
+  Question,
+  Recording,
+  Reflection,
+  SpeechBrief,
+  VocalDeliveryMetrics,
+} from "../domain/types.ts";
 import type { ReflectionInput } from "../services/HostBrain.ts";
 import { getConfig } from "./config.ts";
 
@@ -27,6 +33,27 @@ export function formatSpeechBriefContext(brief: SpeechBrief): string {
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Formats measured acoustic & ElevenLabs STT vocal delivery telemetry
+ * (pace/WPM, volume projection & dynamic range, pitch/inflection variation, pauses, and fillers)
+ * for the Gemini context window.
+ */
+export function formatVocalMetricsContext(metrics?: VocalDeliveryMetrics): string {
+  if (!metrics) return "Vocal Telemetry: Not captured.";
+  const fillerDetail =
+    metrics.detectedFillers.length > 0
+      ? ` (${metrics.detectedFillers.join(", ")})`
+      : "";
+  return [
+    `Duration: ${metrics.durationSeconds}s`,
+    `Speaking Pace: ${metrics.wordsPerMinute} WPM (${metrics.paceLabel} pace; ideal conversational range is 120-155 WPM)`,
+    `Volume Level & Projection: ${metrics.volumeLevel} (${metrics.volumeDynamics} volume dynamics)`,
+    `Vocal Inflection & Pitch Variety: ${metrics.inflectionVariety} (~${metrics.pitchRangeHz} Hz pitch variation across voiced frames)`,
+    `Pauses (>=0.6s): ${metrics.pauseCount}`,
+    `Filler Words: ${metrics.fillerWordCount}${fillerDetail}`,
+  ].join("\n");
 }
 
 function resolveContextString(briefOrContext: SpeechBrief | string): string {
@@ -90,13 +117,103 @@ export async function generateSpeechReflection(
   return generateText(prompt, systemInstruction);
 }
 
+function formatWebSourcesBlock(sources?: RawResearchSource[]): string {
+  if (!sources || sources.length === 0) return "";
+  const formatted = sources
+    .map((s, i) => `[${i + 1}] ${s.title}: ${s.description || "(No snippet)"}`)
+    .join("\n");
+  return `\n\nLive Web Research (from Bright Data):\n${formatted}`;
+}
+
+/**
+ * Extracts a focused 4-8 word Google search query from the SpeechBrief and transcript
+ * so Bright Data can retrieve real-world statistics, priorities, or counterarguments.
+ */
+export async function buildSearchQueryFromSpeech(
+  brief: SpeechBrief,
+  transcript: string
+): Promise<string> {
+  const contextBlock = formatSpeechBriefContext(brief);
+  const trimmedTranscript = transcript.trim();
+
+  const prompt =
+    `Speech Brief:\n${contextBlock}\n\n` +
+    (trimmedTranscript
+      ? `Spoken Transcript:\n"${trimmedTranscript}"\n\n`
+      : "") +
+    `Write a single concise Google search query (4 to 8 words, no quotes or operators) ` +
+    `to find real-world statistics, audience concerns, or counterarguments relevant to this speech.`;
+
+  const query = (
+    await generateText(
+      prompt,
+      "Return only the plain search query text, nothing else."
+    )
+  )
+    .replace(/["\n\r]/g, " ")
+    .trim();
+
+  if (query.length > 0) return query;
+  return `${brief.audience} ${brief.notes?.slice(0, 60) || brief.purpose} statistics`;
+}
+
+/**
+ * Distills Bright Data search results into 3-4 concise audience insights and supporting facts
+ * for the Normal Mode Setup assistant.
+ */
+export async function distillAudiencePrep(
+  audience: string,
+  purpose: string,
+  notes: string,
+  sources: RawResearchSource[]
+): Promise<string[]> {
+  if (sources.length === 0) return [];
+
+  const sourceList = sources
+    .map((s, i) => `[${i + 1}] ${s.title}\nSnippet: ${s.description || "(No snippet)"}`)
+    .join("\n\n");
+
+  const prompt =
+    `Audience: ${audience}\nPurpose: ${purpose}\n` +
+    (notes.trim() ? `Speaker's Current Notes:\n${notes.trim()}\n\n` : "\n") +
+    `Web Search Results:\n${sourceList}\n\n` +
+    `Provide 3 to 4 crisp, actionable bullets for the speaker before they begin: ` +
+    `what this audience cares most about, 1-2 useful facts or statistics they can cite, ` +
+    `and 1 likely question or objection to prepare for. Keep each bullet to 1 sentence.`;
+
+  const response = await ai.models.generateContent({
+    model: config.defaultGeminiModel,
+    contents: prompt,
+    config: {
+      systemInstruction:
+        "You are an executive speech coach helping a speaker tailor their talk to a specific audience using real web research.",
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          insights: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+          },
+        },
+        required: ["insights"],
+      },
+    },
+  });
+
+  const parsed = JSON.parse(response.text ?? "{}") as { insights?: string[] };
+  return (parsed.insights ?? []).map((item) => item.trim()).filter(Boolean).slice(0, 4);
+}
+
 /**
  * Generates the Q&A Questions array for the HostBrain service using the SpeechBrief
- * (Audience, Purpose, Time Limit, and optional Notes) and the Delivery Recording.
+ * (Audience, Purpose, Time Limit, and optional Notes), the Delivery Recording,
+ * and optional live Bright Data web research.
  */
 export async function generateHostQuestions(
   brief: SpeechBrief,
-  delivery: Recording
+  delivery: Recording,
+  webSources?: RawResearchSource[]
 ): Promise<Question[]> {
   const contextBlock = formatSpeechBriefContext(brief);
   const transcriptText = delivery.transcript.trim();
@@ -109,11 +226,15 @@ export async function generateHostQuestions(
       ? `\nBody Language Observations:\n- ${delivery.bodyLanguageObservations.join("\n- ")}`
       : "";
 
+  const webBlock = formatWebSourcesBlock(webSources);
+
   const prompt =
     `Speech Brief:\n${contextBlock}\n\n` +
     `${transcriptBlock}` +
-    `${bodyLanguageBlock}\n\n` +
-    `Return a JSON object with a "questions" array containing exactly ${QUESTION_COUNT} concise, natural-sounding follow-up questions tailored to the target audience, purpose, time limit${brief.notes?.trim() ? ", and the speaker's notes" : ""}.`;
+    `${bodyLanguageBlock}` +
+    `${webBlock}\n\n` +
+    `Return a JSON object with a "questions" array containing exactly ${QUESTION_COUNT} concise, natural-sounding follow-up questions tailored to the target audience, purpose, time limit${brief.notes?.trim() ? ", and the speaker's notes" : ""}` +
+    `${webSources && webSources.length > 0 ? ", grounded in the real-world facts or counterarguments from the live web research when relevant" : ""}.`;
 
   const response = await ai.models.generateContent({
     model: config.defaultGeminiModel,
@@ -153,10 +274,13 @@ export async function generateHostQuestions(
 
 /**
  * Generates the structured Reflection for the HostBrain service, incorporating
- * Audience, Purpose, Time Limit, and optional Notes (in Normal Mode) or Topic Briefing (in Improv Mode).
+ * Audience, Purpose, Time Limit, and optional Notes (in Normal Mode) or Topic Briefing (in Improv Mode),
+ * plus optional live Bright Data sources for content improvement suggestions.
  */
 export async function generateHostReflection(
-  input: ReflectionInput
+  input: ReflectionInput,
+  webSources?: RawResearchSource[],
+  priorSessionSummaries?: string[]
 ): Promise<Reflection> {
   let contextSection: string;
 
@@ -180,11 +304,30 @@ export async function generateHostReflection(
       ? input.delivery.bodyLanguageObservations.join("; ")
       : "No camera observations recorded.";
 
+  const vocalTelemetryBlock = formatVocalMetricsContext(input.delivery.vocalMetrics);
+  const hasAudioAttachment = Boolean(
+    input.delivery.audioBase64 && input.delivery.audioMimeType
+  );
+  const webBlock = formatWebSourcesBlock(webSources);
+  const priorHistoryBlock =
+    priorSessionSummaries && priorSessionSummaries.length > 0
+      ? `\n\nPrior Practice Sessions History (from Neon Postgres):\n- ${priorSessionSummaries.join("\n- ")}`
+      : "";
+
   const prompt =
     `${contextSection}\n\n` +
     `Delivery Transcript:\n"${input.delivery.transcript}"\n\n` +
-    `Body Language Observations: ${bodyLanguageNotes}\n\n` +
-    `Provide a structured coaching reflection evaluating how well the speaker met their audience, purpose, time limit, and notes/speaking points.`;
+    `Measured Vocal Delivery & Acoustic Telemetry (from ElevenLabs STT + Microphone Audio):\n${vocalTelemetryBlock}\n\n` +
+    `Body Language Observations: ${bodyLanguageNotes}` +
+    `${webBlock}` +
+    `${priorHistoryBlock}\n\n` +
+    `Provide a structured coaching reflection evaluating how well the speaker met their audience, purpose, time limit, and notes/speaking points. ` +
+    `In "voiceAndDelivery" (and the spoken "summary"), specifically reflect on their vocal inflection (${input.delivery.vocalMetrics?.inflectionVariety ?? "pitch variety"}), ` +
+    `volume projection (${input.delivery.vocalMetrics?.volumeLevel ?? "volume"} / ${input.delivery.vocalMetrics?.volumeDynamics ?? "dynamics"}), ` +
+    `speaking pace (${input.delivery.vocalMetrics?.wordsPerMinute ?? "WPM"} WPM, ${input.delivery.vocalMetrics?.pauseCount ?? 0} pauses), and filler words` +
+    `${hasAudioAttachment ? ", combining the measured telemetry with what you hear directly in the attached speech audio" : ""}.` +
+    `${webSources && webSources.length > 0 ? " When suggesting content improvements, reference relevant evidence or angles from the live web research." : ""}` +
+    `${priorSessionSummaries && priorSessionSummaries.length > 0 ? " Where relevant, acknowledge progress or recurring habits compared to their prior practice sessions." : ""}`;
 
   const sectionSchema = {
     type: Type.OBJECT,
@@ -201,29 +344,65 @@ export async function generateHostReflection(
     required: ["strengths", "improvements"],
   };
 
-  const response = await ai.models.generateContent({
-    model: config.defaultGeminiModel,
-    contents: prompt,
-    config: {
-      systemInstruction:
-        "You are a supportive, insightful public speaking coach. " +
-        "Return a structured JSON reflection with a spoken `summary` (2-3 natural sentences suitable for text-to-speech, with no numeric scores) " +
-        "and 2 strengths + 2 improvements each for `bodyLanguage`, `voiceAndDelivery`, and `content`.",
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          summary: { type: Type.STRING },
-          bodyLanguage: sectionSchema,
-          voiceAndDelivery: sectionSchema,
-          content: sectionSchema,
-        },
-        required: ["summary", "bodyLanguage", "voiceAndDelivery", "content"],
+  const generationConfig = {
+    systemInstruction:
+      "You are a supportive, insightful public speaking coach. " +
+      "Analyze both the transcript and the vocal delivery data (plus attached audio when provided) for vocal inflection, tone, volume dynamics, speaking pace, pauses, and filler words. " +
+      "Return a structured JSON reflection with a spoken `summary` (2-3 natural sentences suitable for text-to-speech, with no numeric grades/scores) " +
+      "and 2 strengths + 2 improvements each for `bodyLanguage`, `voiceAndDelivery`, and `content`.",
+    responseMimeType: "application/json",
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        summary: { type: Type.STRING },
+        bodyLanguage: sectionSchema,
+        voiceAndDelivery: sectionSchema,
+        content: sectionSchema,
       },
+      required: ["summary", "bodyLanguage", "voiceAndDelivery", "content"],
     },
-  });
+  };
 
-  return JSON.parse(response.text ?? "{}") as Reflection;
+  let responseText: string | undefined;
+
+  if (input.delivery.audioBase64 && input.delivery.audioMimeType) {
+    try {
+      const response = await ai.models.generateContent({
+        model: config.defaultGeminiModel,
+        contents: [
+          {
+            inlineData: {
+              data: input.delivery.audioBase64,
+              mimeType: input.delivery.audioMimeType,
+            },
+          },
+          prompt,
+        ],
+        config: generationConfig,
+      });
+      responseText = response.text;
+    } catch (audioErr) {
+      console.warn("Multimodal audio reflection fallback to text+telemetry:", audioErr);
+    }
+  }
+
+  if (!responseText) {
+    const response = await ai.models.generateContent({
+      model: config.defaultGeminiModel,
+      contents: prompt,
+      config: generationConfig,
+    });
+    responseText = response.text;
+  }
+
+  const reflection = JSON.parse(responseText ?? "{}") as Reflection;
+  if (webSources && webSources.length > 0) {
+    reflection.sources = webSources.slice(0, 3).map((s) => ({
+      title: s.title,
+      url: s.url,
+    }));
+  }
+  return reflection;
 }
 
 export interface RawResearchSource {

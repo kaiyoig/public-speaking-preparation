@@ -26,10 +26,26 @@ export interface TopicBriefing {
   sources?: TopicSourceLink[];
 }
 
+export interface VocalDeliveryMetrics {
+  durationSeconds: number;
+  wordsPerMinute: number;
+  paceLabel: "slow" | "conversational" | "fast";
+  volumeLevel: "quiet" | "balanced" | "loud";
+  volumeDynamics: "flat" | "moderate" | "dynamic";
+  inflectionVariety: "monotone" | "natural" | "expressive";
+  pitchRangeHz: number;
+  pauseCount: number;
+  fillerWordCount: number;
+  detectedFillers: string[];
+}
+
 /** What SpeechCapture returns when capture stops. */
 export interface Recording {
   transcript: string;
   bodyLanguageObservations: string[];
+  vocalMetrics?: VocalDeliveryMetrics;
+  audioBase64?: string;
+  audioMimeType?: string;
 }
 
 /** The Host's scripted lines that frame a Session. */
@@ -52,4 +68,5 @@ export interface Reflection {
   bodyLanguage: ReflectionSection;
   voiceAndDelivery: ReflectionSection;
   content: ReflectionSection;
+  sources?: TopicSourceLink[];
 }

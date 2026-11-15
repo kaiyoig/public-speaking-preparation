@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { AsyncView } from "@/components/AsyncView";
 import { Host, useHost } from "@/components/Host";
-import type { Reflection as ReflectionData, ReflectionSection } from "@/domain/types";
+import type {
+  Reflection as ReflectionData,
+  ReflectionSection,
+  VocalDeliveryMetrics,
+} from "@/domain/types";
 import { services, type ReflectionInput } from "@/services";
 
 interface ReflectionProps {
@@ -15,7 +19,13 @@ interface ReflectionProps {
 export function Reflection({ input, onPractiseAgain }: ReflectionProps) {
   return (
     <AsyncView run={() => services.hostBrain.getReflection(input)} label="The Host is writing your Reflection…">
-      {(reflection) => <ReflectionView reflection={reflection} onPractiseAgain={onPractiseAgain} />}
+      {(reflection) => (
+        <ReflectionView
+          reflection={reflection}
+          vocalMetrics={input.delivery.vocalMetrics}
+          onPractiseAgain={onPractiseAgain}
+        />
+      )}
     </AsyncView>
   );
 }
@@ -26,7 +36,15 @@ const SECTIONS = [
   { key: "content", title: "Content" },
 ] as const;
 
-function ReflectionView({ reflection, onPractiseAgain }: { reflection: ReflectionData; onPractiseAgain: () => void }) {
+function ReflectionView({
+  reflection,
+  vocalMetrics,
+  onPractiseAgain,
+}: {
+  reflection: ReflectionData;
+  vocalMetrics?: VocalDeliveryMetrics | undefined;
+  onPractiseAgain: () => void;
+}) {
   const { caption, isSpeaking, say } = useHost();
 
   return (
@@ -54,11 +72,67 @@ function ReflectionView({ reflection, onPractiseAgain }: { reflection: Reflectio
         </div>
       </div>
 
+      {vocalMetrics && (
+        <section aria-label="Vocal Delivery Analysis" className="card">
+          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+            Vocal Delivery Telemetry (ElevenLabs STT + Acoustic Analysis)
+          </h3>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">Pace</p>
+              <p className="mt-0.5 text-lg font-semibold capitalize">
+                {vocalMetrics.wordsPerMinute} WPM · {vocalMetrics.paceLabel}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">Vocal Inflection</p>
+              <p className="mt-0.5 text-lg font-semibold capitalize">
+                {vocalMetrics.inflectionVariety} (±{vocalMetrics.pitchRangeHz} Hz)
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">Volume &amp; Dynamics</p>
+              <p className="mt-0.5 text-lg font-semibold capitalize">
+                {vocalMetrics.volumeLevel} · {vocalMetrics.volumeDynamics}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">Pauses &amp; Fillers</p>
+              <p className="mt-0.5 text-lg font-semibold">
+                {vocalMetrics.pauseCount} pauses · {vocalMetrics.fillerWordCount} fillers
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
       <div className="grid gap-6 md:grid-cols-3">
         {SECTIONS.map((section) => (
           <ReflectionSectionCard key={section.key} title={section.title} section={reflection[section.key]} />
         ))}
       </div>
+
+      {reflection.sources && reflection.sources.length > 0 && (
+        <section aria-label="Helpful Sources" className="card">
+          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+            Helpful Sources for Your Next Draft
+          </h3>
+          <ul className="mt-2 flex flex-col gap-1.5 text-sm">
+            {reflection.sources.map((source) => (
+              <li key={source.url} className="truncate">
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-indigo-600 hover:underline dark:text-indigo-400"
+                >
+                  {source.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="flex flex-wrap justify-end gap-3">
         <Link href="/" className="btn-secondary">

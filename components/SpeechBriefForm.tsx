@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
+import { researchBriefAction, type AudiencePrepResult } from "@/app/actions/hostBrain";
 import type { Purpose, SpeechBrief } from "@/domain/types";
 
 const PURPOSES: readonly { value: Purpose; label: string }[] = [
@@ -63,6 +64,9 @@ interface SpeechBriefFormProps {
 export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
   const [fields, setFields] = useState<Fields>(() => toFields(initial));
   const [submitted, setSubmitted] = useState(false);
+  const [prepLoading, setPrepLoading] = useState(false);
+  const [prepError, setPrepError] = useState<string | null>(null);
+  const [prepResult, setPrepResult] = useState<AudiencePrepResult | null>(null);
   const id = useId();
 
   // Validate live only after the first submit attempt, so the form doesn't nag while empty.
@@ -77,6 +81,34 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
     setSubmitted(true);
     const result = validate(fields);
     if (result.brief) onSubmit(result.brief);
+  }
+
+  async function handleResearchAudience() {
+    if (!fields.audience.trim()) {
+      setPrepError("Enter an Audience first so we know who to research.");
+      return;
+    }
+    setPrepError(null);
+    setPrepLoading(true);
+    try {
+      const result = await researchBriefAction(fields.audience, fields.purpose, fields.notes);
+      if (!result) {
+        setPrepError("Live web research is unavailable (check Bright Data & Gemini API keys in .env).");
+      } else {
+        setPrepResult(result);
+      }
+    } catch (err) {
+      setPrepError(err instanceof Error ? err.message : "Failed to research audience.");
+    } finally {
+      setPrepLoading(false);
+    }
+  }
+
+  function insertInsightsIntoNotes() {
+    if (!prepResult) return;
+    const bullets = prepResult.insights.map((item) => `- ${item}`).join("\n");
+    const prefix = fields.notes.trim() ? `${fields.notes.trim()}\n\n` : "";
+    update("notes", `${prefix}Audience & Evidence Prep:\n${bullets}`);
   }
 
   const fieldId = (key: keyof Fields) => `${id}-${key}`;
@@ -168,9 +200,19 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
       </div>
 
       <div>
-        <label htmlFor={fieldId("notes")} className="font-medium">
-          Notes <span className="font-normal text-neutral-500">(optional)</span>
-        </label>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <label htmlFor={fieldId("notes")} className="font-medium">
+            Notes <span className="font-normal text-neutral-500">(optional)</span>
+          </label>
+          <button
+            type="button"
+            onClick={() => void handleResearchAudience()}
+            disabled={prepLoading}
+            className="text-sm font-medium text-indigo-600 hover:underline disabled:opacity-50 dark:text-indigo-400"
+          >
+            {prepLoading ? "Researching audience & topic…" : "Research audience & topic"}
+          </button>
+        </div>
         <textarea
           id={fieldId("notes")}
           rows={6}
@@ -179,6 +221,52 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
           placeholder="Key points, an outline, or your full script"
           className={inputClass("notes")}
         />
+        {prepError && (
+          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">{prepError}</p>
+        )}
+        {prepResult && (
+          <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/70 p-4 text-sm dark:border-indigo-900 dark:bg-indigo-950/40">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-medium text-indigo-950 dark:text-indigo-100">
+                Audience &amp; Evidence Prep (via Bright Data)
+              </p>
+              <button
+                type="button"
+                onClick={insertInsightsIntoNotes}
+                className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+              >
+                Insert into Notes
+              </button>
+            </div>
+            <ul className="mt-2 flex flex-col gap-1.5 text-neutral-700 dark:text-neutral-300">
+              {prepResult.insights.map((insight) => (
+                <li key={insight} className="flex gap-2">
+                  <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-indigo-500" />
+                  <span>{insight}</span>
+                </li>
+              ))}
+            </ul>
+            {prepResult.sources.length > 0 && (
+              <div className="mt-3 border-t border-indigo-200/80 pt-2 dark:border-indigo-900">
+                <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Sources</p>
+                <ul className="mt-1 flex flex-col gap-0.5 text-xs">
+                  {prepResult.sources.map((source) => (
+                    <li key={source.url} className="truncate">
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-indigo-600 hover:underline dark:text-indigo-400"
+                      >
+                        {source.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex justify-end">

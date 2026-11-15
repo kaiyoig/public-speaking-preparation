@@ -1,15 +1,14 @@
-
 import "dotenv/config";
 
 // Structure of one search result.
-interface SearchResult {
+export interface SearchResult {
   title: string;
   description: string;
   url: string;
 }
 
 // Structure returned to Improv Mode.
-interface ResearchResponse {
+export interface ResearchResponse {
   topic: string;
   sources: SearchResult[];
 }
@@ -53,12 +52,14 @@ function isValidUrl(link: string): boolean {
   }
 }
 
-// Search the web for an improv speaking topic.
-export async function researchTopic(
-  topic: string
-): Promise<ResearchResponse> {
-
-  // Step 1: Load API credentials.
+/**
+ * Executes a Bright Data Google SERP search for an arbitrary query string
+ * and returns up to 5 validated organic results.
+ */
+export async function searchWebContext(
+  query: string,
+  timeoutMs: number = 60000
+): Promise<SearchResult[]> {
   const apiKey = process.env.BRIGHTDATA_API_KEY;
   const zone = process.env.BRIGHTDATA_SERP_ZONE;
 
@@ -66,62 +67,37 @@ export async function researchTopic(
     throw new Error("Missing Bright Data credentials!");
   }
 
-  // Step 2: Build our search query.
-  const searchUrl = new URL(
-    "https://www.google.com/search"
-  );
-
-  searchUrl.searchParams.set(
-    "q",
-    `${topic} facts benefits challenges`
-  );
-
+  const searchUrl = new URL("https://www.google.com/search");
+  searchUrl.searchParams.set("q", query);
   searchUrl.searchParams.set("hl", "en");
   searchUrl.searchParams.set("gl", "us");
   searchUrl.searchParams.set("brd_json", "1");
 
-  // Step 3: Send request to Bright Data.
-  const response = await fetch(
-    "https://api.brightdata.com/request",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        zone: zone,
-        url: searchUrl.toString(),
-        format: "raw"
-      }),
-      signal: AbortSignal.timeout(60000)
-    }
-  );
+  const response = await fetch("https://api.brightdata.com/request", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      zone,
+      url: searchUrl.toString(),
+      format: "raw",
+    }),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
 
-  // Step 4: Check for HTTP errors.
   if (!response.ok) {
-    const errorCode =
-      response.headers.get("x-brd-error-code") ??
-      "unknown";
-
-    throw new Error(
-      `Bright Data error: ${response.status}, code: ${errorCode}`
-    );
+    const errorCode = response.headers.get("x-brd-error-code") ?? "unknown";
+    throw new Error(`Bright Data error: ${response.status}, code: ${errorCode}`);
   }
 
-  // Step 5: Read the response as text first.
   const responseText = await response.text();
-
-  // Detect an empty response.
   if (!responseText.trim()) {
-    throw new Error(
-      `Bright Data returned an empty response (HTTP ${response.status}).`
-    );
+    throw new Error(`Bright Data returned an empty response (HTTP ${response.status}).`);
   }
 
-  // Step 6: Convert response text into JSON.
   let data: BrightDataResponse;
-
   try {
     data = JSON.parse(responseText);
   } catch {
@@ -130,31 +106,27 @@ export async function researchTopic(
     );
   }
 
-  // Step 7: Verify that organic results exist.
   if (!Array.isArray(data.organic)) {
-    throw new Error(
-      "Bright Data did not return organic search results."
-    );
+    throw new Error("Bright Data did not return organic search results.");
   }
 
-  // Step 8: Extract valid search results.
-  const sources: SearchResult[] = data.organic
+  return data.organic
     .map((result) => ({
       title: result.title ?? "",
       description: result.description ?? "",
-      url: result.link ?? ""
+      url: result.link ?? "",
     }))
-    .filter((result) => {
-      return (
-        result.title.length > 0 &&
-        isValidUrl(result.url)
-      );
-    })
+    .filter((result) => result.title.length > 0 && isValidUrl(result.url))
     .slice(0, 5);
+}
 
-  // Step 9: Return information to Improv Mode.
+// Search the web for an improv speaking topic.
+export async function researchTopic(
+  topic: string
+): Promise<ResearchResponse> {
+  const sources = await searchWebContext(`${topic} facts benefits challenges`);
   return {
-    topic: topic,
-    sources: sources
+    topic,
+    sources,
   };
 }
