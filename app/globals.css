@@ -97,11 +97,11 @@
     overscroll-behavior: none;
   }
 
-  /* The Reflection pages through slides, so it shows no scrollbar. A long slide still scrolls by wheel or touch. */
-  html:has([data-reflection]) {
+  /* No scrollbars anywhere. Pages and panels still scroll by wheel, touch and keyboard. */
+  * {
     scrollbar-width: none;
   }
-  html:has([data-reflection])::-webkit-scrollbar {
+  *::-webkit-scrollbar {
     display: none;
   }
 }

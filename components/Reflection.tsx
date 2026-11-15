@@ -123,7 +123,7 @@ export function ReflectionView({
   );
 
   return (
-    <div data-reflection className="flex flex-1 flex-col gap-10">
+    <div className="flex flex-1 flex-col gap-10">
       <SlideSteps current={index} onSelect={goTo} />
 
       <ViewTransition key={slide.id} enter={SLIDE_MOTION} exit={SLIDE_MOTION} default="none">
