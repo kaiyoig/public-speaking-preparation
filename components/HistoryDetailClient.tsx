@@ -9,6 +9,7 @@ export function HistoryDetailClient({ session }: { session: PracticeSessionDetai
       <ReflectionView
         reflection={session.reflection}
         vocalMetrics={session.vocalMetrics ?? undefined}
+        bodyLanguageObservations={session.bodyLanguage}
         showHistoryLink={false}
       />
 

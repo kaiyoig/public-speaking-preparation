@@ -15,7 +15,7 @@ export function detectExpressions(
   cv: any,
   video: HTMLVideoElement,
   detector: any,
-  emotionProxy: FacialExpressionProxy,
+  emotionProxy: FacialExpressionProxy | undefined,
   sourceCanvas: HTMLCanvasElement,
 ): ExpressionDetection {
   const context = sourceCanvas.getContext('2d')
@@ -39,7 +39,9 @@ export function detectExpressions(
     for (let i = 0; i < detections.rows; i += 1) {
       const face: Face = faceFromYuNetRow(detections.data32F, i * 15)
       expressions.push(...gazeProxy.identify(face))
-      expressions.push(...emotionProxy.identify(face, frame))
+      if (emotionProxy) {
+        expressions.push(...emotionProxy.identify(face, frame))
+      }
     }
 
     return { expressions, faceDetected: detections.rows > 0 }

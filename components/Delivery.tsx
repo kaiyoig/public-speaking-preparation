@@ -5,6 +5,14 @@ import { ErrorView, errorMessage } from "@/components/AsyncView";
 import { Host, useHost } from "@/components/Host";
 import { QuitButton } from "@/components/QuitButton";
 import WebcamViewer from "@/app/components/WebcamViewer";
+import type { YuNetDetector } from "@/app/components/YuNetLoader";
+import { ExpressionRecord, summarizeExpressionRecord } from "@/app/data/ExpressionRecord";
+import {
+  createMobileFaceNetExpressionProxy,
+  type FacialExpressionProxy,
+} from "@/app/data/FacialExpression";
+import type { WebcamData } from "@/app/data/WebcamData";
+import { useOpenCv } from "@/app/hooks/useOpenCv";
 import { useSpeechCapture } from "@/components/useSpeechCapture";
 import { OVERTIME_GRACE_SECONDS } from "@/domain/config";
 import type { Mode, Recording } from "@/domain/types";
@@ -41,6 +49,66 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   const [cameraShown, setCameraShown] = useState(true);
   const ending = useRef(false);
 
+  // OpenCV YuNet gaze & MobileFaceNet facial expression tracking during Delivery
+  const cv = useOpenCv();
+  const [webcamData, setWebcamData] = useState<WebcamData | undefined>(undefined);
+  const [detector, setDetector] = useState<YuNetDetector | undefined>(undefined);
+  const [emotionProxy, setEmotionProxy] = useState<FacialExpressionProxy | undefined>(undefined);
+  const expressionRecordRef = useRef<ExpressionRecord | null>(null);
+  if (!expressionRecordRef.current) {
+    expressionRecordRef.current = new ExpressionRecord(250);
+  }
+
+  const handleWebcamData = useCallback((data: WebcamData) => {
+    setWebcamData(data);
+  }, []);
+
+  const handleDetector = useCallback((nextDetector: YuNetDetector | undefined) => {
+    setDetector(nextDetector);
+  }, []);
+
+  useEffect(() => {
+    if (!cv) return;
+    let cancelled = false;
+    createMobileFaceNetExpressionProxy(cv)
+      .then((proxy) => {
+        if (!cancelled) {
+          setEmotionProxy(proxy);
+          expressionRecordRef.current?.setEmotionProxy(proxy);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) console.warn("MobileFaceNet expression model failed to load:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cv]);
+
+  useEffect(() => {
+    const record = expressionRecordRef.current;
+    if (!record) return;
+    if (state.status !== "speaking") {
+      if (record.isRecording()) record.stop();
+      return;
+    }
+    if (!cv || !webcamData || !detector) return;
+    if (!record.isRecording()) {
+      record.start({
+        cv,
+        video: webcamData.video,
+        detector,
+        emotionProxy,
+      });
+    }
+  }, [state.status, cv, webcamData, detector, emotionProxy]);
+
+  useEffect(() => {
+    return () => {
+      expressionRecordRef.current?.stop();
+    };
+  }, []);
+
   // ready: fetch the greeting Formality and have the Host say it.
   useEffect(() => {
     let canceled = false;
@@ -63,6 +131,7 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   const startSpeech = async () => {
     setStartError(null);
     setState({ status: "starting" });
+    expressionRecordRef.current?.clear();
     try {
       await capture.start();
       const startedAt = Date.now();
@@ -76,8 +145,19 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
 
   const stopCapture = useCallback(async () => {
     setStopError(null);
+    expressionRecordRef.current?.stop();
     try {
-      onFinished(await capture.stop());
+      const recording = await capture.stop();
+      const openCvObservations = summarizeExpressionRecord(
+        expressionRecordRef.current?.getEntries() ?? [],
+      );
+      if (openCvObservations.length > 0) {
+        recording.bodyLanguageObservations = [
+          ...recording.bodyLanguageObservations,
+          ...openCvObservations,
+        ];
+      }
+      onFinished(recording);
     } catch (error) {
       setStopError(errorMessage(error));
     }
@@ -145,6 +225,8 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
           <WebcamViewer
+            onWebcamData={handleWebcamData}
+            onDetector={handleDetector}
             hidden={!cameraShown}
             className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,45vh,34rem)]"
           />

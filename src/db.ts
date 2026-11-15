@@ -9,6 +9,8 @@ import type {
 import type { ReflectionInput } from "../services/HostBrain.ts";
 
 let schemaInitialized = false;
+let lastSavedSignature: { key: string; timestampMs: number } | null = null;
+const DEDUP_WINDOW_MS = 60_000;
 
 function getSql() {
   const connectionString = process.env.DATABASE_URL;
@@ -59,6 +61,32 @@ export async function savePracticeSession(
       input.mode === "normal" ? input.brief.audience : input.topicBriefing.topic;
     const purpose = input.mode === "normal" ? input.brief.purpose : "improv";
     const deliveryTranscript = input.delivery.transcript;
+
+    // Guard against duplicate saves (e.g. React StrictMode double-invocation or rapid retries)
+    const signatureKey = `${mode}::${topicOrAudience}::${purpose}::${deliveryTranscript.trim()}`;
+    const nowMs = Date.now();
+    if (
+      lastSavedSignature &&
+      lastSavedSignature.key === signatureKey &&
+      nowMs - lastSavedSignature.timestampMs < DEDUP_WINDOW_MS
+    ) {
+      return;
+    }
+    lastSavedSignature = { key: signatureKey, timestampMs: nowMs };
+
+    const existing = await sql`
+      SELECT id
+      FROM practice_sessions
+      WHERE mode = ${mode}
+        AND topic_or_audience = ${topicOrAudience}
+        AND delivery_transcript = ${deliveryTranscript}
+        AND created_at >= NOW() - INTERVAL '60 seconds'
+      LIMIT 1
+    `;
+    if (existing.length > 0) {
+      return;
+    }
+
     const vocalMetricsJson = input.delivery.vocalMetrics
       ? JSON.stringify(input.delivery.vocalMetrics)
       : null;

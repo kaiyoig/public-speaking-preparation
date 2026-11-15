@@ -381,12 +381,18 @@ export class BrowserSpeechCapture implements SpeechCapture {
         if (msg.message_type === "partial_transcript") {
           this.partialText = msg.text ?? "";
           this.emitTranscript();
-        } else if (
-          msg.message_type === "committed_transcript" ||
-          msg.message_type === "committed_transcript_with_timestamps"
-        ) {
+        } else if (msg.message_type === "committed_transcript") {
           const text = (msg.text ?? "").trim();
-          if (text) this.committedParts.push(text);
+          if (text && this.committedParts[this.committedParts.length - 1] !== text) {
+            this.committedParts.push(text);
+          }
+          this.partialText = "";
+          this.emitTranscript();
+        } else if (msg.message_type === "committed_transcript_with_timestamps") {
+          const text = (msg.text ?? "").trim();
+          if (text && this.committedParts[this.committedParts.length - 1] !== text) {
+            this.committedParts.push(text);
+          }
           if (Array.isArray(msg.words)) {
             this.wordTimings.push(...msg.words);
           }

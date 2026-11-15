@@ -23,11 +23,21 @@ export function AsyncView<T>({ run, label, errorActions, children }: AsyncViewPr
   const [attempt, setAttempt] = useState(0);
   const runRef = useRef(run);
   runRef.current = run;
+  const inFlightRef = useRef<{ attempt: number; promise: Promise<T> } | null>(null);
 
   useEffect(() => {
     let canceled = false;
     setState({ status: "pending" });
-    runRef.current().then(
+
+    let promise: Promise<T>;
+    if (inFlightRef.current && inFlightRef.current.attempt === attempt) {
+      promise = inFlightRef.current.promise;
+    } else {
+      promise = runRef.current();
+      inFlightRef.current = { attempt, promise };
+    }
+
+    promise.then(
       (value) => {
         if (!canceled) setState({ status: "done", value });
       },

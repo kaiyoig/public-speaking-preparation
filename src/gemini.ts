@@ -56,6 +56,17 @@ export function formatVocalMetricsContext(metrics?: VocalDeliveryMetrics): strin
   ].join("\n");
 }
 
+/**
+ * Formats OpenCV camera telemetry (YuNet landmark gaze/eye-contact tracking
+ * and MobileFaceNet facial expression recognition) for the Gemini context window.
+ */
+export function formatBodyLanguageContext(observations?: string[]): string {
+  if (!observations || observations.length === 0) {
+    return "Camera Telemetry (OpenCV): No camera observations recorded.";
+  }
+  return observations.map((obs) => `- ${obs}`).join("\n");
+}
+
 function resolveContextString(briefOrContext: SpeechBrief | string): string {
   return typeof briefOrContext === "string"
     ? briefOrContext
@@ -89,7 +100,7 @@ export async function generateImpromptuQuestion(
   const contextBlock = resolveContextString(briefOrContext);
   const systemInstruction =
     "You are an attentive public speaking coach and audience member. " +
-    "Use the Speech Brief (Audience, Purpose, Time Limit, and any Speaker Notes) " +
+    "Use the Speech Brief (Audience (your POV), Purpose, Time Limit, and any Speaker Notes) " +
     "along with the speech transcript to ask a some concise, natural-sounding follow-up question (1-2 sentences). " +
     "Write it so it sounds natural when spoken aloud via text-to-speech.";
 
@@ -174,7 +185,7 @@ export async function distillAudiencePrep(
     .join("\n\n");
 
   const prompt =
-    `Audience: ${audience}\nPurpose: ${purpose}\n` +
+    `Audience (this is the POV you take): ${audience}\nPurpose: ${purpose}\n` +
     (notes.trim() ? `Speaker's Current Notes:\n${notes.trim()}\n\n` : "\n") +
     `Web Search Results:\n${sourceList}\n\n` +
     `Provide 3 to 4 crisp, actionable bullets for the speaker before they begin: ` +
@@ -299,10 +310,9 @@ export async function generateHostReflection(
       `Speaking Points:\n- ${input.topicBriefing.speakingPoints.join("\n- ")}`;
   }
 
-  const bodyLanguageNotes =
-    input.delivery.bodyLanguageObservations.length > 0
-      ? input.delivery.bodyLanguageObservations.join("; ")
-      : "No camera observations recorded.";
+  const bodyLanguageBlock = formatBodyLanguageContext(
+    input.delivery.bodyLanguageObservations
+  );
 
   const vocalTelemetryBlock = formatVocalMetricsContext(input.delivery.vocalMetrics);
   const hasAudioAttachment = Boolean(
@@ -318,10 +328,11 @@ export async function generateHostReflection(
     `${contextSection}\n\n` +
     `Delivery Transcript:\n"${input.delivery.transcript}"\n\n` +
     `Measured Vocal Delivery & Acoustic Telemetry (from ElevenLabs STT + Microphone Audio):\n${vocalTelemetryBlock}\n\n` +
-    `Body Language Observations: ${bodyLanguageNotes}` +
+    `Measured Camera & Body Language Telemetry (from OpenCV YuNet Gaze + MobileFaceNet Facial Expressions):\n${bodyLanguageBlock}` +
     `${webBlock}` +
     `${priorHistoryBlock}\n\n` +
     `Provide a structured coaching reflection evaluating how well the speaker met their audience, purpose, time limit, and notes/speaking points. ` +
+    `In "bodyLanguage" (and the spoken "summary"), specifically ground your strengths and improvements in the OpenCV camera telemetry above: evaluate their eye contact and gaze direction (e.g., percentage of time looking straight at the camera vs. looking down at notes or away to the side), facial expression warmth/variety (e.g., Happy, Neutral, Surprised), camera framing/presence, and any timestamped shifts in gaze or expression. ` +
     `In "voiceAndDelivery" (and the spoken "summary"), specifically reflect on their vocal inflection (${input.delivery.vocalMetrics?.inflectionVariety ?? "pitch variety"}), ` +
     `volume projection (${input.delivery.vocalMetrics?.volumeLevel ?? "volume"} / ${input.delivery.vocalMetrics?.volumeDynamics ?? "dynamics"}), ` +
     `speaking pace (${input.delivery.vocalMetrics?.wordsPerMinute ?? "WPM"} WPM, ${input.delivery.vocalMetrics?.pauseCount ?? 0} pauses), and filler words` +
@@ -351,7 +362,8 @@ export async function generateHostReflection(
   const generationConfig = {
     systemInstruction:
       "You are a supportive, insightful public speaking coach. " +
-      "Analyze both the transcript and the vocal delivery data (plus attached audio when provided) for vocal inflection, tone, volume dynamics, speaking pace, pauses, and filler words. " +
+      "Analyze the speech transcript, the OpenCV camera telemetry (YuNet gaze direction/eye contact, MobileFaceNet facial expressions, and camera presence), and the vocal delivery data (plus attached audio when provided) for vocal inflection, tone, volume dynamics, speaking pace, pauses, and filler words. " +
+      "In the `bodyLanguage` section, cite specific observations from the OpenCV camera telemetry (such as eye-contact percentage, looking down or away, facial expressions, and timeline shifts) rather than generic body-language advice when camera data is present. " +
       "Return a structured JSON reflection with a spoken `summary` (2-3 natural sentences suitable for text-to-speech, with no numeric grades/scores) " +
       `and, for each of \`bodyLanguage\`, \`voiceAndDelivery\`, and \`content\`, between ${REFLECTION_POINTS.min} and ${REFLECTION_POINTS.max} strengths and between ${REFLECTION_POINTS.min} and ${REFLECTION_POINTS.max} improvements. ` +
       "Give as many points as the speech genuinely warrants: each one distinct and specific, never padded or repeated to fill a count. " +

@@ -33,6 +33,7 @@ export function Reflection({ input, onPracticeAgain }: ReflectionProps) {
         <ReflectionView
           reflection={reflection}
           vocalMetrics={input.delivery.vocalMetrics}
+          bodyLanguageObservations={input.delivery.bodyLanguageObservations}
           onPracticeAgain={onPracticeAgain}
         />
       )}
@@ -64,11 +65,13 @@ const SLIDE_MOTION = {
 export function ReflectionView({
   reflection,
   vocalMetrics,
+  bodyLanguageObservations,
   onPracticeAgain,
   showHistoryLink = true,
 }: {
   reflection: ReflectionData;
   vocalMetrics?: VocalDeliveryMetrics | undefined;
+  bodyLanguageObservations?: string[] | undefined;
   onPracticeAgain?: (() => void) | undefined;
   showHistoryLink?: boolean;
 }) {
@@ -152,6 +155,13 @@ export function ReflectionView({
                   >
                     {section.title}
                   </h2>
+                  {section.key === "bodyLanguage" &&
+                    bodyLanguageObservations &&
+                    bodyLanguageObservations.length > 0 && (
+                      <div className="mt-8">
+                        <BodyLanguageMetricsRow observations={bodyLanguageObservations} />
+                      </div>
+                    )}
                   <div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2">
                     <ReflectionList kind="strengths" items={reflection[section.key].strengths} />
                     <ReflectionList kind="improvements" items={reflection[section.key].improvements} />
@@ -161,7 +171,12 @@ export function ReflectionView({
           )}
 
           {slide.id === "overall" && (
-            <OverallSummary reflection={reflection} vocalMetrics={vocalMetrics} host={host} />
+            <OverallSummary
+              reflection={reflection}
+              vocalMetrics={vocalMetrics}
+              bodyLanguageObservations={bodyLanguageObservations}
+              host={host}
+            />
           )}
         </div>
       </ViewTransition>
@@ -234,10 +249,12 @@ function SlideSteps({ current, onSelect }: { current: number; onSelect: (index: 
 function OverallSummary({
   reflection,
   vocalMetrics,
+  bodyLanguageObservations,
   host,
 }: {
   reflection: ReflectionData;
   vocalMetrics?: VocalDeliveryMetrics | undefined;
+  bodyLanguageObservations?: string[] | undefined;
   host: ReactNode;
 }) {
   return (
@@ -253,6 +270,9 @@ function OverallSummary({
       </div>
 
       {vocalMetrics && <VocalMetricsRow metrics={vocalMetrics} />}
+      {bodyLanguageObservations && bodyLanguageObservations.length > 0 && (
+        <BodyLanguageMetricsRow observations={bodyLanguageObservations} />
+      )}
 
       <div className="flex flex-col gap-10">
         {SECTIONS.map((section) => (
@@ -306,6 +326,36 @@ function VocalMetricsRow({ metrics }: { metrics: VocalDeliveryMetrics }) {
           <div key={stat.label}>
             <dt className="font-bold">{stat.label}</dt>
             <dd className="mt-1 text-xl first-letter:uppercase tabular-nums">{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+/** Gaze direction, facial expression and camera presence measured via OpenCV during Delivery. */
+function BodyLanguageMetricsRow({ observations }: { observations: string[] }) {
+  const parsed = observations.map((obs) => {
+    const colonIdx = obs.indexOf(":");
+    if (colonIdx > 0) {
+      return {
+        label: obs.slice(0, colonIdx).trim(),
+        value: obs.slice(colonIdx + 1).trim(),
+      };
+    }
+    return { label: "Camera Observation", value: obs };
+  });
+
+  return (
+    <section aria-label="Camera Telemetry" className="rule-top hang-row">
+      <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">
+        OpenCV Camera
+      </h3>
+      <dl className="hang-body mt-2 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:mt-0">
+        {parsed.map((stat, idx) => (
+          <div key={`${stat.label}-${idx}`}>
+            <dt className="font-bold">{stat.label}</dt>
+            <dd className="mt-1 text-lg leading-snug tabular-nums">{stat.value}</dd>
           </div>
         ))}
       </dl>
