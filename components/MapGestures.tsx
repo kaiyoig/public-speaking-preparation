@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useMapMove, type HomePanel } from "@/components/HomePager";
 import { MAP_MOVES, type MapPlace } from "@/components/mapMoves";
-import { arrowKey, attachScrollPaging, type Direction } from "@/components/scrollPaging";
+import { arrowKey, attachScrollPaging, pageTransitionRunning, type Direction } from "@/components/scrollPaging";
 
 /**
  * Lets a page that scrolls as a whole be left by scrolling or swiping toward a neighbor on the
@@ -40,7 +40,7 @@ export function MapGestures({ place }: { place: Exclude<MapPlace, HomePanel> }) 
     const onKeyDown = (event: KeyboardEvent) => {
       const direction = arrowKey(event);
       if (!direction) return;
-      if (leaving) {
+      if (leaving || pageTransitionRunning()) {
         event.preventDefault();
         return;
       }

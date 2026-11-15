@@ -27,13 +27,24 @@ export function arrowKey(event: KeyboardEvent): Direction | undefined {
   return ARROWS[event.key];
 }
 
+/**
+ * True while a page transition is still sliding. A move started now would be held back until it
+ * ends and then lose its transition type, so the next page would cut in rather than slide.
+ */
+export function pageTransitionRunning(): boolean {
+  return document.getAnimations().some((animation) => {
+    const { effect } = animation;
+    return effect instanceof KeyframeEffect && effect.pseudoElement?.startsWith("::view-transition") === true;
+  });
+}
+
 interface ScrollPagingOptions {
   /**
    * What moving in this direction does. Undefined where nothing lies that way, or where the page
    * still has scrolling to do before it reaches that edge.
    */
   leavesFor: (direction: Direction) => (() => void) | undefined;
-  /** True while a move is still playing out. Input is swallowed until it has finished. */
+  /** True while a move is still playing out. Input is swallowed until it has finished, and while a page transition runs. */
   locked: () => boolean;
 }
 
@@ -42,7 +53,9 @@ interface ScrollPagingOptions {
  * whichever way the gesture mostly goes. A gesture that was scrolling the page stops at its edge;
  * the next one crosses it. Returns a function that stops listening.
  */
-export function attachScrollPaging(target: HTMLElement | Window, { leavesFor, locked }: ScrollPagingOptions) {
+export function attachScrollPaging(target: HTMLElement | Window, options: ScrollPagingOptions) {
+  const { leavesFor } = options;
+  const locked = () => options.locked() || pageTransitionRunning();
   let lastInnerScroll = 0;
   const onWheel = (event: WheelEvent) => {
     if (event.ctrlKey) return;

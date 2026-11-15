@@ -13,7 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { MAP_MOVES, type MapMove } from "@/components/mapMoves";
-import { arrowKey, attachScrollPaging, type Direction } from "@/components/scrollPaging";
+import { arrowKey, attachScrollPaging, pageTransitionRunning, type Direction } from "@/components/scrollPaging";
 
 /** The panels, top to bottom. */
 const VIEWS = ["title", "modes"] as const;
@@ -213,7 +213,7 @@ export function HomePager(panels: HomePagerProps) {
       const arrow = arrowKey(event);
       const sideways = arrow === "left" || arrow === "right" ? arrow : undefined;
       if (!down && !up && !sideways) return;
-      if (performance.now() < lockedUntil.current) {
+      if (performance.now() < lockedUntil.current || pageTransitionRunning()) {
         event.preventDefault();
         return;
       }
