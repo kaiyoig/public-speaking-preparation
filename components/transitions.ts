@@ -1,8 +1,9 @@
-import type { ViewTransitionClassPerType } from "react";
+import { addTransitionType, startTransition, type ViewTransitionClassPerType } from "react";
 
 /**
- * The kinds of move the app makes, passed as transition types on each navigation.
- * The app is laid out as a map: About sits to the right of Home, and a Session sits beneath it.
+ * The kinds of move the app makes, passed as transition types on each navigation or Phase change.
+ * The app is laid out as a map: About sits to the right of Home, a Session sits beneath it,
+ * and a Session's Phases run downward in the rail.
  */
 export const TRANSITION = {
   /** Home slides off to the left and About slides in from the right. */
@@ -13,6 +14,10 @@ export const TRANSITION = {
   enterSession: "enter-session",
   /** Back to Home from a Session: the Session sinks away. */
   leaveSession: "leave-session",
+  /** On to the next Phase: the old one lifts away, the next rises in, the marker moves down the rail. */
+  phaseForward: "phase-forward",
+  /** Practice again: everything runs the other way. */
+  phaseBack: "phase-back",
 } as const;
 
 /**
@@ -26,3 +31,28 @@ export const PAGE_MOTION: ViewTransitionClassPerType = {
   [TRANSITION.leaveSession]: TRANSITION.leaveSession,
   default: "none",
 };
+
+/** How a Phase's content enters and leaves when the Session moves between Phases. */
+export const PHASE_MOTION: ViewTransitionClassPerType = {
+  [TRANSITION.phaseForward]: TRANSITION.phaseForward,
+  [TRANSITION.phaseBack]: TRANSITION.phaseBack,
+  default: "none",
+};
+
+/** The rail glides to its new place when Delivery's denser layout comes and goes. */
+export const RAIL_GLIDE: ViewTransitionClassPerType = {
+  [TRANSITION.phaseForward]: "glide",
+  [TRANSITION.phaseBack]: "glide",
+  default: "none",
+};
+
+/**
+ * Applies a Phase change as a transition, so the Phase content, the rail and the marker animate.
+ * A plain state update would swap the Phase without any motion.
+ */
+export function changePhase(direction: "forward" | "back", update: () => void) {
+  startTransition(() => {
+    addTransitionType(direction === "forward" ? TRANSITION.phaseForward : TRANSITION.phaseBack);
+    update();
+  });
+}

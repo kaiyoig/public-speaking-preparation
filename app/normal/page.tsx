@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useReducer } from "react";
+import { useReducer, ViewTransition } from "react";
 import { Delivery } from "@/components/Delivery";
 import { PageTransition } from "@/components/PageTransition";
 import { PhaseSteps } from "@/components/PhaseSteps";
 import { SessionRail, Shell } from "@/components/Shell";
-import { TRANSITION } from "@/components/transitions";
+import { changePhase, PHASE_MOTION, TRANSITION } from "@/components/transitions";
 import { Reflection } from "@/components/Reflection";
 import { QandA } from "@/components/QandA";
 import { SpeechBriefForm } from "@/components/SpeechBriefForm";
@@ -51,6 +51,7 @@ export default function NormalModePage() {
   const [state, dispatch] = useReducer(reducer, { phase: "setup" });
   const router = useRouter();
   const quit = () => router.push("/", { transitionTypes: [TRANSITION.leaveSession] });
+  const forward = (action: Action) => changePhase("forward", () => dispatch(action));
 
   return (
     <PageTransition>
@@ -63,34 +64,37 @@ export default function NormalModePage() {
           </SessionRail>
         }
       >
-        {state.phase === "setup" && (
-          <SpeechBriefForm initial={state.brief} onSubmit={(brief) => dispatch({ type: "briefSubmitted", brief })} />
-        )}
+        {/* Keyed by Phase, so each Phase change is one leaving and one arriving. */}
+        <ViewTransition key={state.phase} enter={PHASE_MOTION} exit={PHASE_MOTION} default="none">
+          {state.phase === "setup" && (
+            <SpeechBriefForm initial={state.brief} onSubmit={(brief) => forward({ type: "briefSubmitted", brief })} />
+          )}
 
-        {state.phase === "delivery" && (
-          <Delivery
-            mode="normal"
-            timeLimitSeconds={state.brief.timeLimitMinutes * 60}
-            onFinished={(delivery) => dispatch({ type: "deliveryFinished", delivery })}
-            onQuit={quit}
-          />
-        )}
+          {state.phase === "delivery" && (
+            <Delivery
+              mode="normal"
+              timeLimitSeconds={state.brief.timeLimitMinutes * 60}
+              onFinished={(delivery) => forward({ type: "deliveryFinished", delivery })}
+              onQuit={quit}
+            />
+          )}
 
-        {state.phase === "qa" && (
-          <QandA
-            brief={state.brief}
-            delivery={state.delivery}
-            onFinished={(answers) => dispatch({ type: "qandaFinished", answers })}
-            onQuit={quit}
-          />
-        )}
+          {state.phase === "qa" && (
+            <QandA
+              brief={state.brief}
+              delivery={state.delivery}
+              onFinished={(answers) => forward({ type: "qandaFinished", answers })}
+              onQuit={quit}
+            />
+          )}
 
-        {state.phase === "reflection" && (
-          <Reflection
-            input={{ mode: "normal", brief: state.brief, delivery: state.delivery, answers: state.answers }}
-            onPracticeAgain={() => dispatch({ type: "practiceAgain" })}
-          />
-        )}
+          {state.phase === "reflection" && (
+            <Reflection
+              input={{ mode: "normal", brief: state.brief, delivery: state.delivery, answers: state.answers }}
+              onPracticeAgain={() => changePhase("back", () => dispatch({ type: "practiceAgain" }))}
+            />
+          )}
+        </ViewTransition>
       </Shell>
     </PageTransition>
   );

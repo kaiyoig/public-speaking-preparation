@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ViewTransition, type ReactNode } from "react";
 import { ModeTitle } from "@/components/ModeTitle";
-import { TRANSITION } from "@/components/transitions";
+import { RAIL_GLIDE, TRANSITION } from "@/components/transitions";
 import { Wordmark } from "@/components/Wordmark";
 
 interface ShellProps {
@@ -34,10 +34,11 @@ export function Shell({ rail, wordmarkLinksHome = true, dense = false, children 
           dense ? "lg:col-span-2 lg:gap-10 lg:py-10" : "lg:col-span-3 lg:gap-14 lg:py-20"
         }`}
       >
-        {/* The wordmark holds still going from Home into a Session. */}
+        {/* The wordmark holds still going from Home into a Session, and glides with the rail between Phases. */}
         <ViewTransition
           name="wordmark"
           share={{ [TRANSITION.enterSession]: "anchor", default: "none" }}
+          update={RAIL_GLIDE}
           default="none"
         >
           {wordmarkLinksHome ? (

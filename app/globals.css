@@ -110,7 +110,7 @@
  * The app is laid out as a map. About sits to the right of Home, so the two slide sideways
  * as one strip, with the same ease and length as Home's own slide between its panels.
  * A Session sits beneath Home: going in, the Mode's title flies into the rail and the Session
- * rises; leaving, it sinks away.
+ * rises; leaving, it sinks away. Phases run down the rail, so each one rises in as the last lifts away.
  * What travels takes the long ease; what leaves goes quickly; what arrives settles in after.
  */
 :root {
@@ -173,6 +173,54 @@
 }
 ::view-transition-new(.leave-session) {
   animation: 360ms ease-out 180ms both vt-fade-in;
+}
+
+/* Between Phases: the old Phase lifts away and the next rises in. Practice again runs it downward. */
+::view-transition-old(.phase-forward) {
+  animation: var(--vt-leave) both vt-leave;
+  --vt-y: -2.5rem;
+}
+::view-transition-new(.phase-forward) {
+  animation: 500ms var(--vt-arrive-ease) 150ms both vt-arrive;
+  --vt-y: 3.5rem;
+}
+::view-transition-old(.phase-back) {
+  animation: var(--vt-leave) both vt-leave;
+  --vt-y: 2.5rem;
+}
+::view-transition-new(.phase-back) {
+  animation: 500ms var(--vt-arrive-ease) 150ms both vt-arrive;
+  --vt-y: -3.5rem;
+}
+
+/* The highlight travels from the old Phase number to the new one, its number turning over on the way. */
+::view-transition-group(.marker) {
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+/*
+ * The rail glides as Delivery's denser layout comes and goes. Its parts keep their own size
+ * rather than stretching to the changing width of the rail. The new layout shows at once and
+ * the old one fades fast, so a title that rewraps to fit doesn't linger as a double.
+ */
+::view-transition-group(.glide) {
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.7, 0, 0.2, 1);
+}
+::view-transition-old(.glide),
+::view-transition-new(.glide) {
+  inline-size: auto;
+  block-size: auto;
+  object-fit: none;
+  object-position: left top;
+  mix-blend-mode: normal;
+}
+::view-transition-old(.glide) {
+  animation: 150ms ease-out both vt-fade-out;
+}
+::view-transition-new(.glide) {
+  animation: none;
 }
 
 @keyframes vt-slide-out {
