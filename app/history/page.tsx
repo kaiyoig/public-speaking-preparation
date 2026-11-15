@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { HomePanelLink } from "@/components/HomePager";
+import { MapGestures } from "@/components/MapGestures";
 import { PageTransition } from "@/components/PageTransition";
 import { Shell } from "@/components/Shell";
+import { TRANSITION } from "@/components/transitions";
 import type { PracticeSessionSummary } from "@/domain/types";
 import { listPracticeSessions } from "@/src/db";
 
@@ -36,13 +38,19 @@ export default async function HistoryPage() {
 
   return (
     <PageTransition>
+      <MapGestures place="history" />
       <Shell
+        wordmarkTransition={TRANSITION.historyToTitle}
         rail={
           <nav aria-label="History navigation" className="flex flex-wrap gap-x-6 gap-y-2 lg:flex-col">
-            <HomePanelLink panel="modes" className="text-link self-start text-lg">
+            <HomePanelLink
+              panel="modes"
+              transitionTypes={[TRANSITION.historyToModes]}
+              className="text-link self-start text-lg"
+            >
               Choose a mode
             </HomePanelLink>
-            <Link href="/about" className="text-link self-start text-lg">
+            <Link href="/about" transitionTypes={[TRANSITION.historyToAbout]} className="text-link self-start text-lg">
               About Rhetor
             </Link>
           </nav>
@@ -50,14 +58,9 @@ export default async function HistoryPage() {
       >
         <div className="flex flex-col gap-12">
           <header className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-mute">
-                Neon Postgres · Practice Archive
-              </p>
-              <h1 className="mt-2 text-5xl font-bold leading-[0.9] tracking-tight font-display sm:text-6xl">
-                History.
-              </h1>
-            </div>
+            <h1 className="text-5xl font-bold leading-[0.9] tracking-tight font-display sm:text-6xl">
+              History<span className="text-highlight">.</span>
+            </h1>
             <p className="text-base text-mute">
               {sessions.length} {sessions.length === 1 ? "session" : "sessions"} recorded
             </p>
@@ -66,20 +69,10 @@ export default async function HistoryPage() {
           {sessions.length === 0 ? (
             <section className="rule-top hang-row">
               <h2 className="hang-label">No sessions yet</h2>
-              <div className="hang-body flex flex-col gap-6">
-                <p className="max-w-xl text-xl leading-relaxed">
-                  Complete a Normal or Improv Mode rehearsal and your spoken reflection, vocal delivery metrics, and
-                  transcript will appear here.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Link href="/normal" className="btn-primary">
-                    Start Normal Mode
-                  </Link>
-                  <Link href="/improv" className="btn-secondary">
-                    Start Improv Mode
-                  </Link>
-                </div>
-              </div>
+              <p className="hang-body max-w-xl text-xl leading-relaxed">
+                Complete a Normal or Improv Mode rehearsal and your spoken reflection, vocal delivery metrics, and
+                transcript will appear here.
+              </p>
             </section>
           ) : (
             <ol className="flex flex-col">
@@ -108,6 +101,7 @@ export default async function HistoryPage() {
                         <h2 className="text-2xl font-bold tracking-tight font-display sm:text-3xl">
                           <Link
                             href={`/history/${session.id}`}
+                            transitionTypes={[TRANSITION.openRecord]}
                             className="underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-ink hover:bg-highlight hover:text-on-highlight"
                           >
                             {session.topicOrAudience}
@@ -115,6 +109,7 @@ export default async function HistoryPage() {
                         </h2>
                         <Link
                           href={`/history/${session.id}`}
+                          transitionTypes={[TRANSITION.openRecord]}
                           className="text-link shrink-0 text-base"
                         >
                           Open reflection →

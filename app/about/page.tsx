@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
 import { HomePanelLink } from "@/components/HomePager";
+import { MapGestures } from "@/components/MapGestures";
 import { PageTransition } from "@/components/PageTransition";
 import { TRANSITION } from "@/components/transitions";
 import { Wordmark } from "@/components/Wordmark";
@@ -25,6 +26,7 @@ const HOST_ROLES = [
 export default function AboutPage() {
   return (
     <PageTransition>
+      <MapGestures place="about" />
       <div className="mx-auto grid min-h-screen w-full max-w-[1280px] grid-cols-4 gap-x-6 px-6 max-lg:grid-rows-[auto_auto_1fr_auto] sm:px-12 lg:grid-cols-12 lg:gap-x-8 lg:px-24">
         {/* On small screens the rail dissolves into the page, so the link can drop below the roles. */}
         <div className="max-lg:contents lg:sticky lg:top-0 lg:col-span-3 lg:flex lg:h-screen lg:flex-col lg:py-20">

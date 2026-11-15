@@ -3,8 +3,9 @@ import { addTransitionType, startTransition, type ViewTransitionClassPerType } f
 /**
  * The kinds of move the app makes, passed as transition types on each navigation or Phase change.
  * The app is laid out as a map: About sits to the right of Home's Title panel, the Modes panel
- * sits beneath Title (so About and Modes are diagonal neighbors), a Session sits beneath Home,
- * and a Session's Phases run downward in the rail.
+ * sits beneath Title (so About and Modes are diagonal neighbors), and History sits beneath About
+ * and to the right of Modes (so History and Title are diagonal neighbors). A Session sits beneath
+ * Home, a session record sits beneath History, and a Session's Phases run downward in the rail.
  */
 export const TRANSITION = {
   /** Home slides off to the left and About slides in from the right. */
@@ -15,6 +16,20 @@ export const TRANSITION = {
   aboutToModes: "about-to-modes",
   /** From the Modes panel up to About: Modes slides off to the lower left, About comes in from the upper right. */
   modesToAbout: "modes-to-about",
+  /** From the Modes panel across to History: Modes slides off to the left and History slides in from the right. */
+  modesToHistory: "modes-to-history",
+  /** From History back to the Modes panel: History slides off to the right and Modes slides in from the left. */
+  historyToModes: "history-to-modes",
+  /** From About down to History: About slides off upward and History comes in from below. */
+  aboutToHistory: "about-to-history",
+  /** From History up to About: History slides off downward and About comes in from above. */
+  historyToAbout: "history-to-about",
+  /** From History to Home's Title panel: History slides off to the lower right, Title comes in from the upper left. */
+  historyToTitle: "history-to-title",
+  /** Into a session record from History: History lifts away and the record rises in. */
+  openRecord: "open-record",
+  /** Back to History from a session record: the record sinks away and History comes down in its place. */
+  closeRecord: "close-record",
   /** Into a Mode from Home: the Mode's title shrinks into the rail, the Session rises in. */
   enterSession: "enter-session",
   /** Back to Home from a Session: the Session sinks away. */
@@ -38,6 +53,13 @@ export const PAGE_MOTION: ViewTransitionClassPerType = {
   [TRANSITION.fromAbout]: TRANSITION.fromAbout,
   [TRANSITION.aboutToModes]: TRANSITION.aboutToModes,
   [TRANSITION.modesToAbout]: TRANSITION.modesToAbout,
+  [TRANSITION.modesToHistory]: TRANSITION.modesToHistory,
+  [TRANSITION.historyToModes]: TRANSITION.historyToModes,
+  [TRANSITION.aboutToHistory]: TRANSITION.aboutToHistory,
+  [TRANSITION.historyToAbout]: TRANSITION.historyToAbout,
+  [TRANSITION.historyToTitle]: TRANSITION.historyToTitle,
+  [TRANSITION.openRecord]: TRANSITION.openRecord,
+  [TRANSITION.closeRecord]: TRANSITION.closeRecord,
   [TRANSITION.enterSession]: TRANSITION.enterSession,
   [TRANSITION.leaveSession]: TRANSITION.leaveSession,
   default: "none",

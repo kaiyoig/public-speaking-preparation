@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -11,11 +12,15 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { MAP_MOVES, type MapMove } from "@/components/mapMoves";
+import { arrowKey, attachScrollPaging, type Direction } from "@/components/scrollPaging";
 
 /** The panels, top to bottom. */
 const VIEWS = ["title", "modes"] as const;
 
 type View = (typeof VIEWS)[number];
+
+export type HomePanel = View;
 
 /** The URL hash each panel is kept under. The Title panel has none: any other hash shows it. */
 const HASHES: Partial<Record<View, string>> = { modes: "#modes" };
@@ -26,11 +31,7 @@ const SHIFT: Record<View, string> = { title: "", modes: "-translate-y-1/2" };
 /** How long the slide between panels takes. Scroll input is ignored until it has finished. */
 const SLIDE_MS = 600;
 
-/** A wheel event this soon after one that scrolled a panel belongs to the same gesture. */
-const SAME_GESTURE_MS = 200;
-
-/** How far a finger has to travel before a swipe changes panel. */
-const SWIPE_PX = 48;
+const panelHref = (view: View) => `/${HASHES[view] ?? ""}`;
 
 const viewFromHash = (): View => VIEWS.find((view) => HASHES[view] === window.location.hash) ?? "title";
 
@@ -71,7 +72,7 @@ export function HomePanelLink({ panel, ...props }: HomePanelLinkProps) {
   return (
     <Link
       {...props}
-      href={`/${HASHES[panel] ?? ""}`}
+      href={panelHref(panel)}
       onClick={(event) => {
         // Leave modified clicks alone, so they can still open Home in a new tab.
         if (!goToPanel || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -82,6 +83,21 @@ export function HomePanelLink({ panel, ...props }: HomePanelLinkProps) {
         requestedView = panel;
       }}
     />
+  );
+}
+
+/**
+ * Goes to a neighbor on the map with the slide its link would use. A move to one of Home's panels
+ * opens Home on that panel, as a HomePanelLink does.
+ */
+export function useMapMove() {
+  const router = useRouter();
+  return useCallback(
+    (move: MapMove) => {
+      if ("panel" in move) requestedView = move.panel;
+      router.push("panel" in move ? panelHref(move.panel) : move.href, { transitionTypes: [move.transition] });
+    },
+    [router],
   );
 }
 
@@ -98,7 +114,8 @@ export const usePanelShowing = () => useContext(PanelShowing);
  * to Title. The view never rests part-way.
  *
  * A panel taller than the screen scrolls inside itself first, and only hands over
- * to its neighbor from its own edge.
+ * to its neighbor from its own edge. Scrolling sideways, or the Left and Right arrow
+ * keys, leave Home for the page beside the panel: About beside Title, History beside Modes.
  *
  * The showing panel is kept in the URL hash, so links to `#modes` change panel,
  * and Back from a Session returns to Modes.
@@ -115,6 +132,8 @@ export function HomePager(panels: HomePagerProps) {
   const panelRefs = useRef<Partial<Record<View, HTMLDivElement | null>>>({});
   const viewRef = useRef<View>(view);
   const lockedUntil = useRef(0);
+
+  const mapMove = useMapMove();
 
   const show = useCallback((next: View) => {
     if (viewRef.current === next) return;
@@ -156,8 +175,24 @@ export function HomePager(panels: HomePagerProps) {
       const el = panel();
       return !el || el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
     };
-    /** The panel that moving in this direction leaves for, once the current one is at that edge. */
-    const leavesFor = (down: boolean) => ((down ? atEnd() : atStart()) ? neighbor(down) : undefined);
+    /**
+     * What moving in this direction does: up or down, change panel once the current one is at that
+     * edge; sideways, leave Home for the page beside the panel.
+     */
+    const leavesFor = (direction: Direction) => {
+      if (direction === "left" || direction === "right") {
+        const move = MAP_MOVES[viewRef.current][direction];
+        if (!move) return undefined;
+        return () => {
+          // Swallow the rest of the gesture while the next page loads. Home is gone once it has.
+          lockedUntil.current = Infinity;
+          mapMove(move);
+        };
+      }
+      const down = direction === "down";
+      const next = (down ? atEnd() : atStart()) ? neighbor(down) : undefined;
+      return next && (() => go(next));
+    };
 
     requestedView = undefined;
 
@@ -169,60 +204,22 @@ export function HomePager(panels: HomePagerProps) {
     }
     const onHashChange = () => show(viewFromHash());
 
-    let lastInnerScroll = 0;
-    const onWheel = (event: WheelEvent) => {
-      if (event.ctrlKey || event.deltaY === 0) return;
-      const now = performance.now();
-      if (now < lockedUntil.current) {
-        // Swallow the tail of the gesture that caused the slide.
-        event.preventDefault();
-        return;
-      }
-      // A gesture that was scrolling inside the panel stops at the edge; the next one crosses it.
-      const next = leavesFor(event.deltaY > 0);
-      if (!next || now - lastInnerScroll < SAME_GESTURE_MS) {
-        lastInnerScroll = now;
-        return;
-      }
-      event.preventDefault();
-      go(next);
-    };
-
-    let touchStartY: number | null = null;
-    let touchStartedAtStart = false;
-    let touchStartedAtEnd = false;
-    const onTouchStart = (event: TouchEvent) => {
-      const touch = event.touches.length === 1 ? event.touches[0] : undefined;
-      touchStartY = touch ? touch.clientY : null;
-      touchStartedAtStart = atStart();
-      touchStartedAtEnd = atEnd();
-    };
-    const onTouchMove = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      if (!touch || touchStartY === null || performance.now() < lockedUntil.current) return;
-      const traveled = touch.clientY - touchStartY;
-      if (Math.abs(traveled) < SWIPE_PX) return;
-      touchStartY = null;
-      // Swiping up moves down the page. The swipe has to start with the panel already at its edge.
-      const down = traveled < 0;
-      const startedAtEdge = down ? touchStartedAtEnd : touchStartedAtStart;
-      const next = startedAtEdge ? leavesFor(down) : undefined;
-      if (next) go(next);
-    };
-
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.altKey || event.ctrlKey || event.metaKey) return;
       const onControl = event.target instanceof Element && event.target.closest("a, button, input, textarea, select");
       const space = event.key === " " && !onControl;
       const down = event.key === "ArrowDown" || event.key === "PageDown" || event.key === "End" || (space && !event.shiftKey);
       const up = event.key === "ArrowUp" || event.key === "PageUp" || event.key === "Home" || (space && event.shiftKey);
-      if (!down && !up) return;
+      const arrow = arrowKey(event);
+      const sideways = arrow === "left" || arrow === "right" ? arrow : undefined;
+      if (!down && !up && !sideways) return;
       if (performance.now() < lockedUntil.current) {
         event.preventDefault();
         return;
       }
-      const next = leavesFor(down);
-      if (!next) {
+      const move = leavesFor(sideways ?? (down ? "down" : "up"));
+      if (!move) {
+        if (sideways) return;
         // Before anything has focus the keys reach no scroller, so scroll the panel for them.
         if (document.activeElement === document.body) {
           event.preventDefault();
@@ -233,22 +230,21 @@ export function HomePager(panels: HomePagerProps) {
         return;
       }
       event.preventDefault();
-      go(next);
+      move();
     };
 
+    const detachScrollPaging = attachScrollPaging(container, {
+      leavesFor,
+      locked: () => performance.now() < lockedUntil.current,
+    });
     window.addEventListener("hashchange", onHashChange);
     window.addEventListener("keydown", onKeyDown);
-    container.addEventListener("wheel", onWheel, { passive: false });
-    container.addEventListener("touchstart", onTouchStart, { passive: true });
-    container.addEventListener("touchmove", onTouchMove, { passive: true });
     return () => {
       window.removeEventListener("hashchange", onHashChange);
       window.removeEventListener("keydown", onKeyDown);
-      container.removeEventListener("wheel", onWheel);
-      container.removeEventListener("touchstart", onTouchStart);
-      container.removeEventListener("touchmove", onTouchMove);
+      detachScrollPaging();
     };
-  }, [show]);
+  }, [show, mapMove]);
 
 
   return (
