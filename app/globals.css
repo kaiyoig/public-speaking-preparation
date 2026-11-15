@@ -8,7 +8,7 @@
  * Highlight is a marker-pen yellow, always a fill under dark text and never a text color,
  * save for the period in the Rhetor. wordmark.
  * It marks where to go and what is yours right now: the arrow into a Mode, the main
- * button under the pointer, the current Phase, a chosen option, the Improv topic.
+ * button under the pointer, the current Phase, a chosen option.
  */
 :root {
   color-scheme: light dark;
