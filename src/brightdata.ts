@@ -73,7 +73,7 @@ export async function researchTopic(
 
   searchUrl.searchParams.set(
     "q",
-    `${topic} facts benefits challenges`
+    `${topic} arguments for and against pros cons`
   );
 
   searchUrl.searchParams.set("hl", "en");
