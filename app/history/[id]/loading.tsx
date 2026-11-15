@@ -1,4 +1,4 @@
-import { LoadingView } from "@/components/AsyncView";
+import { LoadingView } from "@/components/LoadingView";
 import { RecordShell } from "@/components/RecordShell";
 
 /** Shown in the record's place while the session loads after it's opened from History. */

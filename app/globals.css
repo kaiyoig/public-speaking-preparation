@@ -49,7 +49,6 @@
   --color-strength: var(--strength);
   --color-improvement: var(--improvement);
 
-  --animate-indeterminate: indeterminate 1.6s ease-in-out infinite;
   --animate-blink: blink 1s step-end infinite;
   --animate-nudge: nudge 1.1s ease-in-out 1.8s 3;
 
@@ -69,15 +68,6 @@
       opacity: 0;
     }
   }
-
-  @keyframes indeterminate {
-    from {
-      transform: translateX(-100%);
-    }
-    to {
-      transform: translateX(300%);
-    }
-  }
 }
 
 @layer base {
@@ -95,6 +85,11 @@
   html:has([data-pager]) {
     overflow: hidden;
     overscroll-behavior: none;
+  }
+
+  /* The loading view's highlight swings out past the edges of the page; that must not make the page scrollable. */
+  html:has([data-loading-line][data-looping]) {
+    overflow: clip;
   }
 
   /* No scrollbars anywhere. Pages and panels still scroll by wheel, touch and keyboard. */
