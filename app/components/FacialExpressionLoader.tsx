@@ -6,9 +6,10 @@ import { useOpenCv } from '../hooks/useOpenCv'
 
 interface FacialExpressionLoaderProps {
   children: (proxy: FacialExpressionProxy) => ReactNode
+  onError?: (error: unknown) => void
 }
 
-export default function FacialExpressionLoader({ children }: FacialExpressionLoaderProps) {
+export default function FacialExpressionLoader({ children, onError }: FacialExpressionLoaderProps) {
   const cv = useOpenCv()
   const [proxy, setProxy] = useState<FacialExpressionProxy>()
 
@@ -22,14 +23,17 @@ export default function FacialExpressionLoader({ children }: FacialExpressionLoa
         setProxy(loadedProxy)
       })
       .catch((error) => {
-        if (!cancelled) console.error('Facial expression model initialization failed', error)
+        if (!cancelled) {
+          console.error('Facial expression model initialization failed', error)
+          onError?.(error)
+        }
       })
 
     return () => {
       cancelled = true
       setProxy(undefined)
     }
-  }, [cv])
+  }, [cv, onError])
 
   return proxy ? children(proxy) : null
 }
