@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { ViewTransition, type ReactNode } from "react";
+import { HomePanelLink } from "@/components/HomePager";
 import { ModeTitle } from "@/components/ModeTitle";
 import { RAIL_GLIDE, TRANSITION } from "@/components/transitions";
 import { Wordmark } from "@/components/Wordmark";
@@ -42,9 +42,13 @@ export function Shell({ rail, wordmarkLinksHome = true, dense = false, children 
           default="none"
         >
           {wordmarkLinksHome ? (
-            <Link href="/" transitionTypes={[TRANSITION.leaveSession]} className={`${WORDMARK_CLASS} hover:text-mute`}>
+            <HomePanelLink
+              panel="title"
+              transitionTypes={[TRANSITION.leaveSession]}
+              className={`${WORDMARK_CLASS} hover:text-mute`}
+            >
               {wordmark}
-            </Link>
+            </HomePanelLink>
           ) : (
             <p className={WORDMARK_CLASS}>{wordmark}</p>
           )}
