@@ -47,7 +47,8 @@ export default function WebcamViewer({
         style={{
           width: '100%',
           height: '100%',
-          objectFit: 'cover',
+          // Contain, not cover: the whole frame shows, with the field color filling any spare space.
+          objectFit: 'contain',
           visibility: hidden ? 'hidden' : 'visible',
         }}
       />
