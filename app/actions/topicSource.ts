@@ -71,7 +71,13 @@ export async function getImprovBriefingAction(kind: TopicKind): Promise<TopicBri
     console.warn("Mastra improvWorkflow fallback:", workflowError);
   }
 
-  const research = await researchTopic(topic);
+  let research;
+  try {
+    research = await researchTopic(topic);
+  } catch (error) {
+    console.warn("Bright Data researchTopic failed:", error);
+    return null;
+  }
 
   const validSources = research.sources.filter(
     (s) => s.title.trim().length > 0 && s.description.trim().length > 0

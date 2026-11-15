@@ -78,6 +78,62 @@ export async function listVoices() {
   return response.voices ?? [];
 }
 
+export interface BatchTranscriptionResult {
+  text: string;
+  words: Array<{
+    text?: string;
+    start?: number;
+    end?: number;
+    type?: string;
+  }>;
+}
+
+/**
+ * Transcribes a recorded audio buffer with ElevenLabs Scribe v2 batch API
+ * (`scribe_v2`) locked to English for high-accuracy final transcripts and word timings.
+ */
+export async function transcribeAudioBuffer(
+  buffer: Buffer,
+  mimeType: string = "audio/webm"
+): Promise<BatchTranscriptionResult | null> {
+  const ext = mimeType.includes("mp4")
+    ? "mp4"
+    : mimeType.includes("ogg")
+      ? "ogg"
+      : mimeType.includes("wav")
+        ? "wav"
+        : "webm";
+
+  const audioFile = new File([new Uint8Array(buffer)], `speech.${ext}`, {
+    type: mimeType,
+  });
+
+  const response = await elevenlabs.speechToText.convert({
+    modelId: "scribe_v2",
+    file: audioFile,
+    languageCode: "en",
+    timestampsGranularity: "word",
+    tagAudioEvents: false,
+  });
+
+  if ("text" in response && typeof response.text === "string") {
+    const words = Array.isArray(response.words)
+      ? response.words.map((w) => ({
+          ...(w.text !== undefined ? { text: w.text } : {}),
+          ...(w.start !== undefined ? { start: w.start } : {}),
+          ...(w.end !== undefined ? { end: w.end } : {}),
+          ...(w.type !== undefined ? { type: w.type } : {}),
+        }))
+      : [];
+    return {
+      text: response.text.trim(),
+      words,
+    };
+  }
+
+  return null;
+}
+
 // Run standalone starter check if executed directly: `npm run elevenlabs`
 if (import.meta.url === `file:///${process.argv[1]?.replace(/\\/g, "/")}`) {
   const outputPath = "./output/elevenlabs-test.mp3";

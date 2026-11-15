@@ -10,7 +10,12 @@ import type {
 import type { ReflectionInput } from "@/services/HostBrain";
 import { searchWebContext, type SearchResult } from "@/src/brightdata";
 import { getConfig } from "@/src/config";
-import { elevenlabs, textToSpeechBuffer } from "@/src/elevenlabs";
+import {
+  elevenlabs,
+  textToSpeechBuffer,
+  transcribeAudioBuffer,
+  type BatchTranscriptionResult,
+} from "@/src/elevenlabs";
 import {
   buildSearchQueryFromSpeech,
   distillAudiencePrep,
@@ -164,4 +169,19 @@ export async function getRealtimeScribeTokenAction(): Promise<string | null> {
   if (!hasValidElevenLabsKey()) return null;
   const response = await elevenlabs.tokens.singleUse.create("realtime_scribe");
   return response.token;
+}
+
+export async function transcribeAudioAction(
+  audioBase64: string,
+  mimeType: string
+): Promise<BatchTranscriptionResult | null> {
+  if (!hasValidElevenLabsKey() || !audioBase64) return null;
+  try {
+    const buffer = Buffer.from(audioBase64, "base64");
+    if (buffer.byteLength < 256) return null;
+    return await transcribeAudioBuffer(buffer, mimeType);
+  } catch (error) {
+    console.warn("ElevenLabs batch Scribe fallback to realtime transcript:", error);
+    return null;
+  }
 }

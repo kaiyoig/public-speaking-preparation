@@ -56,7 +56,7 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   const [emotionProxy, setEmotionProxy] = useState<FacialExpressionProxy | undefined>(undefined);
   const expressionRecordRef = useRef<ExpressionRecord | null>(null);
   if (!expressionRecordRef.current) {
-    expressionRecordRef.current = new ExpressionRecord(250);
+    expressionRecordRef.current = new ExpressionRecord(1500);
   }
 
   const handleWebcamData = useCallback((data: WebcamData) => {

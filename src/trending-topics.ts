@@ -144,6 +144,12 @@ async function getHeadlines(
         JSON.stringify(responseText.slice(0, 150))
       );
 
+      if (attempt < maxAttempts) {
+        console.warn("Invalid JSON from Bright Data. Retrying...");
+        await wait(1500);
+        continue;
+      }
+
       throw new Error("Bright Data returned invalid JSON");
     }
 
