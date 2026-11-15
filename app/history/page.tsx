@@ -50,14 +50,9 @@ export default async function HistoryPage() {
       >
         <div className="flex flex-col gap-12">
           <header className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-mute">
-                Neon Postgres · Practice Archive
-              </p>
-              <h1 className="mt-2 text-5xl font-bold leading-[0.9] tracking-tight font-display sm:text-6xl">
-                History.
-              </h1>
-            </div>
+            <h1 className="text-5xl font-bold leading-[0.9] tracking-tight font-display sm:text-6xl">
+              History.
+            </h1>
             <p className="text-base text-mute">
               {sessions.length} {sessions.length === 1 ? "session" : "sessions"} recorded
             </p>
@@ -66,20 +61,10 @@ export default async function HistoryPage() {
           {sessions.length === 0 ? (
             <section className="rule-top hang-row">
               <h2 className="hang-label">No sessions yet</h2>
-              <div className="hang-body flex flex-col gap-6">
-                <p className="max-w-xl text-xl leading-relaxed">
-                  Complete a Normal or Improv Mode rehearsal and your spoken reflection, vocal delivery metrics, and
-                  transcript will appear here.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Link href="/normal" className="btn-primary">
-                    Start Normal Mode
-                  </Link>
-                  <Link href="/improv" className="btn-secondary">
-                    Start Improv Mode
-                  </Link>
-                </div>
-              </div>
+              <p className="hang-body max-w-xl text-xl leading-relaxed">
+                Complete a Normal or Improv Mode rehearsal and your spoken reflection, vocal delivery metrics, and
+                transcript will appear here.
+              </p>
             </section>
           ) : (
             <ol className="flex flex-col">
