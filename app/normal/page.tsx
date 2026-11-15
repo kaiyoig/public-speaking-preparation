@@ -53,7 +53,7 @@ export default function NormalModePage() {
   return (
     <Shell
       wordmarkLinksHome={!(state.phase === "delivery" || state.phase === "qa")}
-      dense={state.phase === "delivery"}
+      dense={state.phase === "delivery" || state.phase === "qa"}
       rail={
         <SessionRail mode="Normal Mode">
           <PhaseSteps phases={PHASES} current={state.phase} />
