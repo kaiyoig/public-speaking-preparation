@@ -185,17 +185,7 @@
   --vt-y: -100vh;
 }
 
-/* About and the Modes panel: diagonal neighbors, About up and to the right. */
-::view-transition-old(.about-to-modes) {
-  animation: var(--vt-travel) both vt-slide-out;
-  --vt-x: 100vw;
-  --vt-y: -100vh;
-}
-::view-transition-new(.about-to-modes) {
-  animation: var(--vt-travel) both vt-slide-in;
-  --vt-x: -100vw;
-  --vt-y: 100vh;
-}
+/* The Modes panel up to About: diagonal neighbors, About up and to the right. */
 ::view-transition-old(.modes-to-about) {
   animation: var(--vt-travel) both vt-slide-out;
   --vt-x: -100vw;
