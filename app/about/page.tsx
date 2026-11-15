@@ -9,16 +9,25 @@ export const metadata: Metadata = {
   title: "About Rhetor.",
 };
 
-/** What the Host does during a Session, in the order the Speaker meets it. */
-const HOST_ROLES = [
-  { title: "It listens", detail: "To every word, from your opening line to your last." },
-  { title: "It watches", detail: "How you stand, move and gesture while you speak." },
-  { title: "It asks questions", detail: "About what you said, the way an audience would." },
-  { title: "It gives feedback", detail: "Out loud, on what to improve next time." },
+/** What a Speaker can do with Rhetor, in the order they'd meet it across the two Modes. */
+const OFFERINGS = [
+  {
+    title: "Rehearse a speech",
+    detail: "Tell the host who it’s for, what it’s meant to do and how long you have, then give it.",
+  },
+  {
+    title: "Think on your feet",
+    detail: "Get a random topic, a classic debate question or one from the news, with a few facts to draw on.",
+  },
+  { title: "Take questions", detail: "Answer what an audience might ask about the speech you just gave." },
+  {
+    title: "Instant feedback",
+    detail: "Spoken feedback on your content, voice and body language, saved to your history.",
+  },
 ];
 
 /**
- * What the app is in the rail, and the Host's four roles two by two in the content field,
+ * What the app is in the rail, and what a Speaker can do with it two by two in the content field,
  * on the same 3 + 9 columns as the Modes panel on Home.
  */
 export default function AboutPage() {
@@ -26,7 +35,7 @@ export default function AboutPage() {
     <PageTransition>
       <MapGestures place="about" />
       <div className="mx-auto grid min-h-screen w-full max-w-[1280px] grid-cols-4 gap-x-6 px-6 max-lg:grid-rows-[auto_auto_1fr] sm:px-12 lg:grid-cols-12 lg:gap-x-8 lg:px-24">
-        {/* On small screens the rail dissolves into the page, above the roles. */}
+        {/* On small screens the rail dissolves into the page, above the offerings. */}
         <div className="max-lg:contents lg:sticky lg:top-0 lg:col-span-3 lg:flex lg:h-screen lg:flex-col lg:py-20">
           <Link
             href="/"
@@ -37,18 +46,18 @@ export default function AboutPage() {
           </Link>
           <h1 className="sr-only">About Rhetor</h1>
           <p className="col-span-4 mt-6 max-w-[30ch] text-xl leading-[1.25] font-medium lg:mt-14">
-            A practice room for speeches. Bring one you’ve prepared, or improvise on a random topic, and give it to an
-            AI host.
+            A practice room for speeches. Give one you’ve prepared, or improvise on a random topic, to an AI host, and
+            find out what to work on before the real thing.
           </p>
         </div>
 
         <ul className="col-span-4 grid auto-rows-fr grid-cols-2 gap-x-6 py-8 lg:col-span-9 lg:gap-x-8 lg:py-20">
-          {HOST_ROLES.map((role) => (
-            <li key={role.title} className="border-t-2 border-ink pt-4 pb-10 lg:pb-12">
+          {OFFERINGS.map((offering) => (
+            <li key={offering.title} className="border-t-2 border-ink pt-4 pb-10 lg:pb-12">
               <h2 className="text-[clamp(1.5rem,min(2.6vw,5.5vh),2.75rem)] font-bold leading-[0.95] tracking-[-0.035em] font-display">
-                {role.title}
+                {offering.title}
               </h2>
-              <p className="mt-3 max-w-[28ch] text-base leading-snug text-mute sm:text-lg">{role.detail}</p>
+              <p className="mt-3 max-w-[28ch] text-base leading-snug text-mute sm:text-lg">{offering.detail}</p>
             </li>
           ))}
         </ul>
