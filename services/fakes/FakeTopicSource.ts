@@ -50,7 +50,7 @@ const CANNED_TOPIC_BRIEFINGS: readonly TopicBriefing[] = [
   },
 ];
 
-/** Fake Topic Briefings: a random pick from a canned list. */
+/** Fake Topic Briefings: a random pick from a canned list, whatever the Topic Kind. */
 export class FakeTopicSource implements TopicSource {
   async getTopicBriefing(): Promise<TopicBriefing> {
     await fakeLatency();

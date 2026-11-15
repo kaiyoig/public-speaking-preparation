@@ -3,27 +3,47 @@
 import { useState } from "react";
 import { AsyncView } from "@/components/AsyncView";
 import { IMPROV_TIME_LIMIT_SECONDS } from "@/domain/config";
-import type { TopicBriefing } from "@/domain/types";
+import type { TopicBriefing, TopicKind } from "@/domain/types";
 import { services } from "@/services";
 
+const LOADING_LABEL: Record<TopicKind, string> = {
+  classic: "Researching a fresh topic…",
+  trending: "Searching the news for a trending topic…",
+};
+
+const TOPIC_LABEL: Record<TopicKind, string> = {
+  classic: "Your topic",
+  trending: "Trending topic",
+};
+
 interface TopicBriefingViewProps {
+  /** Where the topic comes from, as the Speaker chose just before. */
+  kind: TopicKind;
   onStart: (topicBriefing: TopicBriefing) => void;
+  /** Back to choosing the kind of topic. */
+  onChangeKind: () => void;
 }
 
-/** Improv Mode Setup: fetches a random Topic Briefing and shows it before Delivery. */
-export function TopicBriefingView({ onStart }: TopicBriefingViewProps) {
+/** Improv Mode Briefing: fetches a Topic Briefing of the kind chosen in Setup and shows it before Delivery. */
+export function TopicBriefingView({ kind, onStart, onChangeKind }: TopicBriefingViewProps) {
   const [attempt, setAttempt] = useState(0);
+  const changeKind = (
+    <button type="button" onClick={onChangeKind} className="btn-secondary">
+      Change kind
+    </button>
+  );
 
   return (
     <AsyncView
       key={attempt}
-      run={() => services.topicSource.getTopicBriefing()}
-      label="Researching a fresh topic…"
+      run={() => services.topicSource.getTopicBriefing(kind)}
+      label={LOADING_LABEL[kind]}
+      errorActions={changeKind}
     >
       {(topicBriefing) => (
         <div className="rule-top flex flex-col gap-9">
           <div className="hang-row lg:items-baseline">
-            <p className="hang-label">Your topic</p>
+            <p className="hang-label">{TOPIC_LABEL[kind]}</p>
             <h2 className="hang-body text-5xl font-bold leading-[0.95] tracking-tight font-display sm:text-6xl">
               {topicBriefing.topic}
             </h2>
@@ -62,6 +82,7 @@ export function TopicBriefingView({ onStart }: TopicBriefingViewProps) {
               <button type="button" onClick={() => setAttempt((n) => n + 1)} className="btn-secondary">
                 New topic
               </button>
+              {changeKind}
             </div>
           </div>
         </div>

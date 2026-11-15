@@ -12,11 +12,13 @@ interface AsyncViewProps<T> {
   run: () => Promise<T>;
   /** Shown above the loading bar while the call is pending. */
   label: string;
+  /** Extra buttons shown beside "Try again" when the call fails. */
+  errorActions?: ReactNode;
   children: (value: T) => ReactNode;
 }
 
 /** Wraps an async call with a loading view and an error-with-retry view. */
-export function AsyncView<T>({ run, label, children }: AsyncViewProps<T>) {
+export function AsyncView<T>({ run, label, errorActions, children }: AsyncViewProps<T>) {
   const [state, setState] = useState<AsyncState<T>>({ status: "pending" });
   const [attempt, setAttempt] = useState(0);
   const runRef = useRef(run);
@@ -46,7 +48,7 @@ export function AsyncView<T>({ run, label, children }: AsyncViewProps<T>) {
   if (state.status === "pending") return <LoadingView label={label} />;
 
   if (state.status === "error") {
-    return <ErrorView message={state.message} onRetry={() => setAttempt((n) => n + 1)} />;
+    return <ErrorView message={state.message} onRetry={() => setAttempt((n) => n + 1)} actions={errorActions} />;
   }
 
   return <>{children(state.value)}</>;
@@ -68,9 +70,11 @@ interface ErrorViewProps {
   onRetry: () => void;
   /** A smaller inline version for use inside other sections. */
   compact?: boolean;
+  /** Extra buttons shown after "Try again". */
+  actions?: ReactNode;
 }
 
-export function ErrorView({ message, onRetry, compact = false }: ErrorViewProps) {
+export function ErrorView({ message, onRetry, compact = false, actions }: ErrorViewProps) {
   return (
     <div
       role="alert"
@@ -81,9 +85,12 @@ export function ErrorView({ message, onRetry, compact = false }: ErrorViewProps)
       }
     >
       <p className={compact ? "font-semibold" : "max-w-[52ch] text-lg font-semibold"}>{message}</p>
-      <button type="button" onClick={onRetry} className={compact ? "btn-secondary" : "btn-primary"}>
-        Try again
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" onClick={onRetry} className={compact ? "btn-secondary" : "btn-primary"}>
+          Try again
+        </button>
+        {actions}
+      </div>
     </div>
   );
 }
