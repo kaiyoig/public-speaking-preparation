@@ -49,6 +49,7 @@ export default function ImprovModePage() {
   return (
     <Shell
       wordmarkLinksHome={state.phase !== "delivery"}
+      dense={state.phase === "delivery"}
       rail={
         <SessionRail mode="Improv Mode">
           <PhaseSteps phases={PHASES} current={state.phase} />

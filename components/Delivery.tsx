@@ -117,7 +117,7 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
   }, [state, overtimeSeconds, endSpeech]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <Timer
         shown={timerShown}
         label={inOvertime ? "Overtime" : state.status === "ready" || state.status === "starting" ? "Time Limit" : "Time left"}
@@ -142,15 +142,15 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
         }
       />
 
-      {cameraShown && (
-        <CameraPlaceholder
-          live={state.status === "speaking"}
-          className="aspect-video lg:aspect-auto lg:h-[clamp(20rem,62vh,48rem)]"
-        />
-      )}
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          {cameraShown && (
+            <CameraPlaceholder
+              live={state.status === "speaking"}
+              className="aspect-video lg:aspect-auto lg:h-[clamp(14rem,45vh,34rem)]"
+            />
+          )}
 
-      <div className="grid gap-8 lg:grid-cols-9">
-        <div className="flex flex-col gap-4 lg:col-span-6">
           <div className="flex flex-wrap items-center gap-3">
             {(state.status === "ready" || state.status === "starting") && (
               <button
@@ -204,7 +204,7 @@ export function Delivery({ mode, timeLimitSeconds, sidePanel, onFinished, onQuit
           </section>
         </div>
 
-        <aside className="flex flex-col gap-8 lg:col-span-3">
+        <aside className="flex flex-col gap-8">
           <Host caption={caption} isSpeaking={isSpeaking} />
           {greeting.status === "error" && (
             <ErrorView compact message={greeting.message} onRetry={() => setGreetingAttempt((n) => n + 1)} />
