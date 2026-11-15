@@ -9,35 +9,44 @@ import { SessionRail, Shell } from "@/components/Shell";
 import { changePhase, PHASE_MOTION, TRANSITION } from "@/components/transitions";
 import { Reflection } from "@/components/Reflection";
 import { SpeakingPointsList, TopicBriefingView } from "@/components/TopicBriefingView";
+import { TopicKindPicker } from "@/components/TopicKindPicker";
 import { IMPROV_TIME_LIMIT_SECONDS } from "@/domain/config";
-import type { Recording, TopicBriefing } from "@/domain/types";
+import type { Recording, TopicBriefing, TopicKind } from "@/domain/types";
 
 type State =
   | { phase: "setup" }
+  | { phase: "briefing"; kind: TopicKind }
   | { phase: "delivery"; topicBriefing: TopicBriefing }
   | { phase: "reflection"; topicBriefing: TopicBriefing; delivery: Recording };
 
 type Action =
+  | { type: "kindChosen"; kind: TopicKind }
+  | { type: "changeKind" }
   | { type: "started"; topicBriefing: TopicBriefing }
   | { type: "deliveryFinished"; delivery: Recording }
   | { type: "practiceAgain" };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
+    case "kindChosen":
+      return state.phase === "setup" ? { phase: "briefing", kind: action.kind } : state;
+    case "changeKind":
+      return state.phase === "briefing" ? { phase: "setup" } : state;
     case "started":
-      return state.phase === "setup" ? { phase: "delivery", topicBriefing: action.topicBriefing } : state;
+      return state.phase === "briefing" ? { phase: "delivery", topicBriefing: action.topicBriefing } : state;
     case "deliveryFinished":
       return state.phase === "delivery"
         ? { phase: "reflection", topicBriefing: state.topicBriefing, delivery: action.delivery }
         : state;
     case "practiceAgain":
-      // Setup fetches a fresh Topic Briefing when it mounts.
+      // Back to choosing a Topic Kind; Briefing fetches a fresh Topic Briefing once one is chosen.
       return state.phase === "reflection" ? { phase: "setup" } : state;
   }
 }
 
 const PHASES = [
   { id: "setup", label: "Setup" },
+  { id: "briefing", label: "Briefing" },
   { id: "delivery", label: "Delivery" },
   { id: "reflection", label: "Reflection" },
 ] as const;
@@ -63,7 +72,15 @@ export default function ImprovModePage() {
         {/* Keyed by Phase, so each Phase change is one leaving and one arriving. */}
         <ViewTransition key={state.phase} enter={PHASE_MOTION} exit={PHASE_MOTION} default="none">
           {state.phase === "setup" && (
-            <TopicBriefingView onStart={(topicBriefing) => forward({ type: "started", topicBriefing })} />
+            <TopicKindPicker onChoose={(kind) => forward({ type: "kindChosen", kind })} />
+          )}
+
+          {state.phase === "briefing" && (
+            <TopicBriefingView
+              kind={state.kind}
+              onStart={(topicBriefing) => forward({ type: "started", topicBriefing })}
+              onChangeKind={() => changePhase("back", () => dispatch({ type: "changeKind" }))}
+            />
           )}
 
           {state.phase === "delivery" && (

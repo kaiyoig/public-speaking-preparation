@@ -10,10 +10,11 @@ import { TypedName } from "@/components/TypedName";
 import { IMPROV_TIME_LIMIT_SECONDS, QUESTION_COUNT } from "@/domain/config";
 
 /**
- * Both Modes are laid out on the same four Phase columns, so what sets them
- * apart reads straight across: Improv Mode's Q&A column is simply empty.
+ * Both Modes are laid out on the same five Phase columns, so what sets them
+ * apart reads straight across: Normal Mode's Briefing column and Improv Mode's
+ * Q&A column are simply empty.
  */
-const PHASE_COLUMNS = ["Setup", "Delivery", "Q&A", "Reflection"] as const;
+const PHASE_COLUMNS = ["Setup", "Briefing", "Delivery", "Q&A", "Reflection"] as const;
 
 type PhaseName = (typeof PHASE_COLUMNS)[number];
 
@@ -42,7 +43,8 @@ const MODES: Mode[] = [
     title: "Improv Mode",
     description: "Speak off the cuff on a random topic, with a few facts to draw on.",
     phases: {
-      Setup: "Get a random topic",
+      Setup: "Classic or trending topic",
+      Briefing: "Read the topic and facts",
       Delivery: `${IMPROV_TIME_LIMIT_SECONDS / 60} minutes`,
       Reflection: "Spoken feedback",
     },
@@ -133,13 +135,13 @@ function ModeEntry({ mode }: { mode: Mode }) {
 
       <ol
         aria-label={`${mode.title} Phases`}
-        className="mt-auto grid grid-cols-2 gap-x-6 gap-y-5 pt-10 sm:grid-cols-4 lg:gap-x-8"
+        className="mt-auto grid grid-cols-2 gap-x-6 gap-y-5 pt-10 md:grid-cols-5 lg:gap-x-8"
       >
         {PHASE_COLUMNS.map((phase) => {
           const detail = mode.phases[phase];
           if (!detail) {
             // Hold the column open so the Phases after it stay aligned with the other Mode.
-            return <li key={phase} aria-hidden="true" className="hidden sm:block" />;
+            return <li key={phase} aria-hidden="true" className="hidden md:block" />;
           }
           return (
             <li key={phase} className="border-t border-mute pt-2.5 text-lg leading-snug">
