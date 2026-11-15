@@ -87,6 +87,11 @@
     overscroll-behavior: none;
   }
 
+  /* The loading view's highlight swings out past the edges of the page; that must not make the page scrollable. */
+  html:has([data-loading-line][data-looping]) {
+    overflow: clip;
+  }
+
   /* No scrollbars anywhere. Pages and panels still scroll by wheel, touch and keyboard. */
   * {
     scrollbar-width: none;
