@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HomePanelLink } from "@/components/HomePager";
 import { MapGestures } from "@/components/MapGestures";
+import { RecordLink } from "@/components/RecordLink";
 import { PageTransition } from "@/components/PageTransition";
 import { Shell } from "@/components/Shell";
 import { TRANSITION } from "@/components/transitions";
@@ -99,21 +100,16 @@ export default async function HistoryPage() {
                     <div className="hang-body flex flex-col gap-4">
                       <div className="flex flex-wrap items-baseline justify-between gap-3">
                         <h2 className="text-2xl font-bold tracking-tight font-display sm:text-3xl">
-                          <Link
-                            href={`/history/${session.id}`}
-                            transitionTypes={[TRANSITION.openRecord]}
+                          <RecordLink
+                            id={session.id}
                             className="underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-ink hover:bg-highlight hover:text-on-highlight"
                           >
                             {session.topicOrAudience}
-                          </Link>
+                          </RecordLink>
                         </h2>
-                        <Link
-                          href={`/history/${session.id}`}
-                          transitionTypes={[TRANSITION.openRecord]}
-                          className="text-link shrink-0 text-base"
-                        >
+                        <RecordLink id={session.id} className="text-link shrink-0 text-base">
                           Open reflection →
-                        </Link>
+                        </RecordLink>
                       </div>
 
                       <p className="max-w-2xl text-lg leading-snug text-ink/90">

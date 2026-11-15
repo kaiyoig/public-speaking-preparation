@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Archivo, Space_Grotesk } from 'next/font/google'
 import { INTRO_SCRIPT } from '@/components/intro'
 import { LoadingScreen } from '@/components/LoadingScreen'
+import { NavigationHoldRelease } from '@/components/NavigationHoldRelease'
 import './globals.css'
 
 const archivo = Archivo({
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-paper font-sans text-ink antialiased">
         {children}
         <LoadingScreen />
+        <NavigationHoldRelease />
       </body>
     </html>
   )

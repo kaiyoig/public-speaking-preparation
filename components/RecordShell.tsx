@@ -5,7 +5,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { Shell } from "@/components/Shell";
 import { TRANSITION } from "@/components/transitions";
 
-/** The page around a session record from History, shared by the record and its loading screen. */
+/** The page around a session record from History, with links back to History and to the Modes. */
 export function RecordShell({ children }: { children: ReactNode }) {
   return (
     <PageTransition>

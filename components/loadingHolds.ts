@@ -54,3 +54,20 @@ export function onLoadingChange(listener: () => void): () => void {
     listeners.delete(listener);
   };
 }
+
+let navigationRelease: (() => void) | undefined;
+
+/**
+ * Holds the loading screen from a link's click until the page it opens has rendered, so the page
+ * being left stays up underneath rather than a route's loading fallback.
+ */
+export function holdUntilNavigated(label: string): void {
+  navigationRelease?.();
+  navigationRelease = holdLoadingScreen(label);
+}
+
+/** Releases the hold `holdUntilNavigated` put on, if any. Called once each new route renders. */
+export function releaseNavigationHold(): void {
+  navigationRelease?.();
+  navigationRelease = undefined;
+}
