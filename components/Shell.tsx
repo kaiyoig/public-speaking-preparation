@@ -9,6 +9,8 @@ interface ShellProps {
   rail?: ReactNode;
   /** False mid-Session, so the wordmark can't skip the Quit confirmation. */
   wordmarkLinksHome?: boolean;
+  /** The transition type the wordmark's link home carries. Defaults to leaving a Session. */
+  wordmarkTransition?: string;
   /** Delivery: a narrower rail and tighter margins, so the working parts get the room and fit on one screen. */
   dense?: boolean;
   children: ReactNode;
@@ -20,7 +22,13 @@ const WORDMARK_CLASS = "block text-[1.75rem] font-bold leading-[0.92] tracking-t
  * The page grid: a 3-column rail and a 9-column content field on large screens
  * (2 and 10 when dense), collapsing to a top band with the content below on small ones.
  */
-export function Shell({ rail, wordmarkLinksHome = true, dense = false, children }: ShellProps) {
+export function Shell({
+  rail,
+  wordmarkLinksHome = true,
+  wordmarkTransition = TRANSITION.leaveSession,
+  dense = false,
+  children,
+}: ShellProps) {
   const wordmark = <Wordmark />;
 
   return (
@@ -44,7 +52,7 @@ export function Shell({ rail, wordmarkLinksHome = true, dense = false, children 
           {wordmarkLinksHome ? (
             <HomePanelLink
               panel="title"
-              transitionTypes={[TRANSITION.leaveSession]}
+              transitionTypes={[wordmarkTransition]}
               className={`${WORDMARK_CLASS} hover:text-mute`}
             >
               {wordmark}

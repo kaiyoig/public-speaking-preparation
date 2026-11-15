@@ -70,18 +70,13 @@ function Title() {
       <h1 className="relative text-[clamp(3.5rem,min(17vw,26vh),13rem)] font-bold leading-[0.8] tracking-[-0.045em] font-display">
         <TypedName />
       </h1>
-      <div className="relative mt-8 flex items-center gap-6 bg-paper text-lg sm:mt-10">
-        <Link href="/history" className="text-link">
-          History
-        </Link>
-        <Link
-          href="/about"
-          transitionTypes={[TRANSITION.toAbout]}
-          className="text-link"
-        >
-          About Rhetor
-        </Link>
-      </div>
+      <Link
+        href="/about"
+        transitionTypes={[TRANSITION.toAbout]}
+        className="text-link relative mt-8 bg-paper text-lg sm:mt-10"
+      >
+        About Rhetor
+      </Link>
       <a
         href="#modes"
         className="group absolute right-6 bottom-4 flex items-center gap-4 bg-paper pl-3 text-xl font-bold outline-offset-4 sm:right-12 lg:right-24"
@@ -95,13 +90,13 @@ function Title() {
   );
 }
 
-/** The bottom panel: the two Modes to choose between, with About linked from the rail. */
+/** The bottom panel: the two Modes to choose between, with History and About linked from the rail. */
 function Modes() {
   return (
     <Shell
       rail={
         <nav aria-label="Primary navigation" className="flex flex-wrap gap-x-6 gap-y-2 lg:flex-col">
-          <Link href="/history" className="text-link self-start text-lg">
+          <Link href="/history" transitionTypes={[TRANSITION.modesToHistory]} className="text-link self-start text-lg">
             History
           </Link>
           <Link href="/about" transitionTypes={[TRANSITION.modesToAbout]} className="text-link self-start text-lg">

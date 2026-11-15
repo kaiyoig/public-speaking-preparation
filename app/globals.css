@@ -112,6 +112,8 @@
  * The app is laid out as a map. About sits to the right of Home's Title panel, so the two slide
  * sideways as one strip, with the same ease and length as Home's own slide between its panels.
  * The Modes panel sits beneath Title, so About and Modes slide diagonally past each other.
+ * History sits beneath About and to the right of Modes, so it slides sideways to Modes,
+ * vertically to About and diagonally to Title. A session record sits beneath History, and rises in like a Phase.
  * A Session sits beneath Home: going in, the Mode's title flies into the rail and the Session
  * rises; leaving, it sinks away. Phases run down the rail, so each one rises in as the last lifts away.
  * What travels takes the long ease; what leaves goes quickly; what arrives settles in after.
@@ -127,22 +129,50 @@
   pointer-events: none;
 }
 
-/* Home and About: a side-by-side strip, slid a full screen width. */
-::view-transition-old(.to-about) {
+/* Home and About, and the Modes panel and History: side-by-side strips, slid a full screen width. */
+::view-transition-old(.to-about),
+::view-transition-old(.modes-to-history) {
   animation: var(--vt-travel) both vt-slide-out;
   --vt-x: -100vw;
 }
-::view-transition-new(.to-about) {
+::view-transition-new(.to-about),
+::view-transition-new(.modes-to-history) {
   animation: var(--vt-travel) both vt-slide-in;
   --vt-x: 100vw;
 }
-::view-transition-old(.from-about) {
+::view-transition-old(.from-about),
+::view-transition-old(.history-to-modes) {
   animation: var(--vt-travel) both vt-slide-out;
   --vt-x: 100vw;
 }
-::view-transition-new(.from-about) {
+::view-transition-new(.from-about),
+::view-transition-new(.history-to-modes) {
   animation: var(--vt-travel) both vt-slide-in;
   --vt-x: -100vw;
+}
+
+/* History and About: a stack, About on top, slid a full screen height. */
+::view-transition-old(.history-to-about) {
+  animation: var(--vt-travel) both vt-slide-out;
+  --vt-x: 0;
+  --vt-y: 100vh;
+}
+::view-transition-new(.history-to-about) {
+  animation: var(--vt-travel) both vt-slide-in;
+  --vt-x: 0;
+  --vt-y: -100vh;
+}
+
+/* History and the Title panel: diagonal neighbors, Title up and to the left. */
+::view-transition-old(.history-to-title) {
+  animation: var(--vt-travel) both vt-slide-out;
+  --vt-x: 100vw;
+  --vt-y: 100vh;
+}
+::view-transition-new(.history-to-title) {
+  animation: var(--vt-travel) both vt-slide-in;
+  --vt-x: -100vw;
+  --vt-y: -100vh;
 }
 
 /* About and the Modes panel: diagonal neighbors, About up and to the right. */
@@ -200,20 +230,27 @@
   animation: 360ms ease-out 180ms both vt-fade-in;
 }
 
-/* Between Phases: the old Phase lifts away and the next rises in. Practice again runs it downward. */
-::view-transition-old(.phase-forward) {
+/*
+ * Between Phases: the old Phase lifts away and the next rises in. Practice again runs it downward.
+ * Opening a session record from History, and going back, move the same way.
+ */
+::view-transition-old(.phase-forward),
+::view-transition-old(.open-record) {
   animation: var(--vt-leave) both vt-leave;
   --vt-y: -2.5rem;
 }
-::view-transition-new(.phase-forward) {
+::view-transition-new(.phase-forward),
+::view-transition-new(.open-record) {
   animation: 500ms var(--vt-arrive-ease) 150ms both vt-arrive;
   --vt-y: 3.5rem;
 }
-::view-transition-old(.phase-back) {
+::view-transition-old(.phase-back),
+::view-transition-old(.close-record) {
   animation: var(--vt-leave) both vt-leave;
   --vt-y: 2.5rem;
 }
-::view-transition-new(.phase-back) {
+::view-transition-new(.phase-back),
+::view-transition-new(.close-record) {
   animation: 500ms var(--vt-arrive-ease) 150ms both vt-arrive;
   --vt-y: -3.5rem;
 }

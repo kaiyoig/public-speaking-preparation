@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HomePanelLink } from "@/components/HomePager";
 import { PageTransition } from "@/components/PageTransition";
 import { Shell } from "@/components/Shell";
+import { TRANSITION } from "@/components/transitions";
 import type { PracticeSessionSummary } from "@/domain/types";
 import { listPracticeSessions } from "@/src/db";
 
@@ -37,12 +38,17 @@ export default async function HistoryPage() {
   return (
     <PageTransition>
       <Shell
+        wordmarkTransition={TRANSITION.historyToTitle}
         rail={
           <nav aria-label="History navigation" className="flex flex-wrap gap-x-6 gap-y-2 lg:flex-col">
-            <HomePanelLink panel="modes" className="text-link self-start text-lg">
+            <HomePanelLink
+              panel="modes"
+              transitionTypes={[TRANSITION.historyToModes]}
+              className="text-link self-start text-lg"
+            >
               Choose a mode
             </HomePanelLink>
-            <Link href="/about" className="text-link self-start text-lg">
+            <Link href="/about" transitionTypes={[TRANSITION.historyToAbout]} className="text-link self-start text-lg">
               About Rhetor
             </Link>
           </nav>
@@ -93,6 +99,7 @@ export default async function HistoryPage() {
                         <h2 className="text-2xl font-bold tracking-tight font-display sm:text-3xl">
                           <Link
                             href={`/history/${session.id}`}
+                            transitionTypes={[TRANSITION.openRecord]}
                             className="underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-ink hover:bg-highlight hover:text-on-highlight"
                           >
                             {session.topicOrAudience}
@@ -100,6 +107,7 @@ export default async function HistoryPage() {
                         </h2>
                         <Link
                           href={`/history/${session.id}`}
+                          transitionTypes={[TRANSITION.openRecord]}
                           className="text-link shrink-0 text-base"
                         >
                           Open reflection →
