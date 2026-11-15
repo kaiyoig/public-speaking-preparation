@@ -3,7 +3,7 @@
 /*
  * Swiss tokens. Paper and ink invert in dark mode; signal red and highlight yellow never change.
  * Red means "live" and nothing else: the mic capturing, the Host speaking, Overtime.
- * Paper and ink stop just short of pure white and black so body text doesn't glare.
+ * Paper is an off-white in light mode and ink stops just short of black, so body text doesn't glare.
  * Mute is for secondary text: about 65% of ink.
  * Highlight is a marker-pen yellow, always a fill under dark text and never a text color,
  * save for the period in the Rhetor. wordmark.
@@ -12,10 +12,10 @@
  */
 :root {
   color-scheme: light dark;
-  --paper: #fafafa;
+  --paper: #f2f2ef;
   --ink: #0a0a0a;
-  --mute: #666666;
-  --field: #ebebeb;
+  --mute: #63635f;
+  --field: #e2e2de;
   --signal: #b3001b;
   --highlight: #ffd60a;
   --on-highlight: #0a0a0a;
