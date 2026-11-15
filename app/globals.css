@@ -107,8 +107,9 @@
 /*
  * Page and Phase transitions. The class names match the transition types in components/transitions.ts.
  *
- * The app is laid out as a map. About sits to the right of Home, so the two slide sideways
- * as one strip, with the same ease and length as Home's own slide between its panels.
+ * The app is laid out as a map. About sits to the right of Home's Title panel, so the two slide
+ * sideways as one strip, with the same ease and length as Home's own slide between its panels.
+ * The Modes panel sits beneath Title, so About and Modes slide diagonally past each other.
  * A Session sits beneath Home: going in, the Mode's title flies into the rail and the Session
  * rises; leaving, it sinks away. Phases run down the rail, so each one rises in as the last lifts away.
  * What travels takes the long ease; what leaves goes quickly; what arrives settles in after.
@@ -140,6 +141,28 @@
 ::view-transition-new(.from-about) {
   animation: var(--vt-travel) both vt-slide-in;
   --vt-x: -100vw;
+}
+
+/* About and the Modes panel: diagonal neighbors, About up and to the right. */
+::view-transition-old(.about-to-modes) {
+  animation: var(--vt-travel) both vt-slide-out;
+  --vt-x: 100vw;
+  --vt-y: -100vh;
+}
+::view-transition-new(.about-to-modes) {
+  animation: var(--vt-travel) both vt-slide-in;
+  --vt-x: -100vw;
+  --vt-y: 100vh;
+}
+::view-transition-old(.modes-to-about) {
+  animation: var(--vt-travel) both vt-slide-out;
+  --vt-x: -100vw;
+  --vt-y: 100vh;
+}
+::view-transition-new(.modes-to-about) {
+  animation: var(--vt-travel) both vt-slide-in;
+  --vt-x: 100vw;
+  --vt-y: -100vh;
 }
 
 /* Into a Session: Home fades, the Mode's title travels into the rail, then the Session rises in under it. */
@@ -225,12 +248,12 @@
 
 @keyframes vt-slide-out {
   to {
-    translate: var(--vt-x) 0;
+    translate: var(--vt-x) var(--vt-y, 0);
   }
 }
 @keyframes vt-slide-in {
   from {
-    translate: var(--vt-x) 0;
+    translate: var(--vt-x) var(--vt-y, 0);
   }
 }
 @keyframes vt-leave {

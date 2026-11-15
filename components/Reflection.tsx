@@ -18,19 +18,14 @@ interface ReflectionProps {
 /** The Reflection Phase, shared by both Modes: what the Speaker can improve. No numeric scores. */
 export function Reflection({ input, onPracticeAgain }: ReflectionProps) {
   return (
-<<<<<<< HEAD
-    <AsyncView run={() => services.hostBrain.getReflection(input)} label="The Host is writing your Reflection…">
+    <AsyncView run={() => services.hostBrain.getReflection(input)} label="The host is writing your reflection…">
       {(reflection) => (
         <ReflectionView
           reflection={reflection}
           vocalMetrics={input.delivery.vocalMetrics}
-          onPractiseAgain={onPractiseAgain}
+          onPracticeAgain={onPracticeAgain}
         />
       )}
-=======
-    <AsyncView run={() => services.hostBrain.getReflection(input)} label="The host is writing your reflection…">
-      {(reflection) => <ReflectionView reflection={reflection} onPracticeAgain={onPracticeAgain} />}
->>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
     </AsyncView>
   );
 }
@@ -41,19 +36,15 @@ const SECTIONS = [
   { key: "content", title: "Content" },
 ] as const;
 
-<<<<<<< HEAD
 function ReflectionView({
   reflection,
   vocalMetrics,
-  onPractiseAgain,
+  onPracticeAgain,
 }: {
   reflection: ReflectionData;
   vocalMetrics?: VocalDeliveryMetrics | undefined;
-  onPractiseAgain: () => void;
+  onPracticeAgain: () => void;
 }) {
-=======
-function ReflectionView({ reflection, onPracticeAgain }: { reflection: ReflectionData; onPracticeAgain: () => void }) {
->>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
   const { caption, isSpeaking, say } = useHost();
 
   return (
@@ -78,85 +69,64 @@ function ReflectionView({ reflection, onPracticeAgain }: { reflection: Reflectio
         </div>
       </div>
 
-<<<<<<< HEAD
-      {vocalMetrics && (
-        <section aria-label="Vocal Delivery Analysis" className="card">
-          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            Vocal Delivery Telemetry (ElevenLabs STT + Acoustic Analysis)
-          </h3>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">Pace</p>
-              <p className="mt-0.5 text-lg font-semibold capitalize">
-                {vocalMetrics.wordsPerMinute} WPM · {vocalMetrics.paceLabel}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">Vocal Inflection</p>
-              <p className="mt-0.5 text-lg font-semibold capitalize">
-                {vocalMetrics.inflectionVariety} (±{vocalMetrics.pitchRangeHz} Hz)
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">Volume &amp; Dynamics</p>
-              <p className="mt-0.5 text-lg font-semibold capitalize">
-                {vocalMetrics.volumeLevel} · {vocalMetrics.volumeDynamics}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">Pauses &amp; Fillers</p>
-              <p className="mt-0.5 text-lg font-semibold">
-                {vocalMetrics.pauseCount} pauses · {vocalMetrics.fillerWordCount} fillers
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
+      {vocalMetrics && <VocalMetricsRow metrics={vocalMetrics} />}
 
-      <div className="grid gap-6 md:grid-cols-3">
-=======
       <div className="flex flex-col gap-10">
->>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
         {SECTIONS.map((section) => (
           <ReflectionSectionRow key={section.key} title={section.title} section={reflection[section.key]} />
         ))}
       </div>
 
-<<<<<<< HEAD
       {reflection.sources && reflection.sources.length > 0 && (
-        <section aria-label="Helpful Sources" className="card">
-          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            Helpful Sources for Your Next Draft
-          </h3>
-          <ul className="mt-2 flex flex-col gap-1.5 text-sm">
-            {reflection.sources.map((source) => (
-              <li key={source.url} className="truncate">
-                <a
-                  href={source.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-indigo-600 hover:underline dark:text-indigo-400"
-                >
-                  {source.title}
-                </a>
-              </li>
-            ))}
-          </ul>
+        <section aria-label="Helpful Sources" className="rule-top hang-row">
+          <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">Sources</h3>
+          <div className="hang-body mt-2 lg:mt-0">
+            <p className="text-lg">Helpful for your next draft.</p>
+            <ul className="mt-3 flex max-w-2xl flex-col gap-1 text-lg">
+              {reflection.sources.map((source) => (
+                <li key={source.url} className="truncate">
+                  <a href={source.url} target="_blank" rel="noreferrer" className="text-link">
+                    {source.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
       )}
 
-      <div className="flex flex-wrap justify-end gap-3">
-=======
       <div className="flex flex-wrap gap-3">
         <button type="button" onClick={onPracticeAgain} className="btn-primary">
           Practice again
         </button>
->>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
         <Link href="/" className="btn-secondary">
           Home
         </Link>
       </div>
     </div>
+  );
+}
+
+/** Pace, inflection, volume and pauses measured from the Speaker's voice during Delivery. */
+function VocalMetricsRow({ metrics }: { metrics: VocalDeliveryMetrics }) {
+  const stats = [
+    { label: "Pace", value: `${metrics.wordsPerMinute} WPM · ${metrics.paceLabel}` },
+    { label: "Inflection", value: `${metrics.inflectionVariety} (±${metrics.pitchRangeHz} Hz)` },
+    { label: "Volume", value: `${metrics.volumeLevel} · ${metrics.volumeDynamics}` },
+    { label: "Pauses & Fillers", value: `${metrics.pauseCount} pauses · ${metrics.fillerWordCount} fillers` },
+  ];
+  return (
+    <section aria-label="Vocal Delivery" className="rule-top hang-row">
+      <h3 className="text-3xl font-bold leading-[0.95] tracking-tight font-display lg:col-span-2">Your Voice</h3>
+      <dl className="hang-body mt-2 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:mt-0 xl:grid-cols-4">
+        {stats.map((stat) => (
+          <div key={stat.label}>
+            <dt className="font-bold">{stat.label}</dt>
+            <dd className="mt-1 text-xl first-letter:uppercase tabular-nums">{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 

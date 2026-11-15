@@ -2,7 +2,8 @@ import { addTransitionType, startTransition, type ViewTransitionClassPerType } f
 
 /**
  * The kinds of move the app makes, passed as transition types on each navigation or Phase change.
- * The app is laid out as a map: About sits to the right of Home, a Session sits beneath it,
+ * The app is laid out as a map: About sits to the right of Home's Title panel, the Modes panel
+ * sits beneath Title (so About and Modes are diagonal neighbors), a Session sits beneath Home,
  * and a Session's Phases run downward in the rail.
  */
 export const TRANSITION = {
@@ -10,6 +11,10 @@ export const TRANSITION = {
   toAbout: "to-about",
   /** About slides back off to the right and Home slides in from the left. */
   fromAbout: "from-about",
+  /** From About down to the Modes panel: About slides off to the upper right, Modes comes in from the lower left. */
+  aboutToModes: "about-to-modes",
+  /** From the Modes panel up to About: Modes slides off to the lower left, About comes in from the upper right. */
+  modesToAbout: "modes-to-about",
   /** Into a Mode from Home: the Mode's title shrinks into the rail, the Session rises in. */
   enterSession: "enter-session",
   /** Back to Home from a Session: the Session sinks away. */
@@ -27,6 +32,8 @@ export const TRANSITION = {
 export const PAGE_MOTION: ViewTransitionClassPerType = {
   [TRANSITION.toAbout]: TRANSITION.toAbout,
   [TRANSITION.fromAbout]: TRANSITION.fromAbout,
+  [TRANSITION.aboutToModes]: TRANSITION.aboutToModes,
+  [TRANSITION.modesToAbout]: TRANSITION.modesToAbout,
   [TRANSITION.enterSession]: TRANSITION.enterSession,
   [TRANSITION.leaveSession]: TRANSITION.leaveSession,
   default: "none",

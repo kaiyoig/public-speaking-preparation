@@ -203,77 +203,6 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
           </div>
         </div>
 
-<<<<<<< HEAD
-      <div>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <label htmlFor={fieldId("notes")} className="font-medium">
-            Notes <span className="font-normal text-neutral-500">(optional)</span>
-          </label>
-          <button
-            type="button"
-            onClick={() => void handleResearchAudience()}
-            disabled={prepLoading}
-            className="text-sm font-medium text-indigo-600 hover:underline disabled:opacity-50 dark:text-indigo-400"
-          >
-            {prepLoading ? "Researching audience & topic…" : "Research audience & topic"}
-          </button>
-        </div>
-        <textarea
-          id={fieldId("notes")}
-          rows={6}
-          value={fields.notes}
-          onChange={(event) => update("notes", event.target.value)}
-          placeholder="Key points, an outline, or your full script"
-          className={inputClass("notes")}
-        />
-        {prepError && (
-          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">{prepError}</p>
-        )}
-        {prepResult && (
-          <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/70 p-4 text-sm dark:border-indigo-900 dark:bg-indigo-950/40">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-medium text-indigo-950 dark:text-indigo-100">
-                Audience &amp; Evidence Prep (via Bright Data)
-              </p>
-              <button
-                type="button"
-                onClick={insertInsightsIntoNotes}
-                className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-              >
-                Insert into Notes
-              </button>
-            </div>
-            <ul className="mt-2 flex flex-col gap-1.5 text-neutral-700 dark:text-neutral-300">
-              {prepResult.insights.map((insight) => (
-                <li key={insight} className="flex gap-2">
-                  <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-indigo-500" />
-                  <span>{insight}</span>
-                </li>
-              ))}
-            </ul>
-            {prepResult.sources.length > 0 && (
-              <div className="mt-3 border-t border-indigo-200/80 pt-2 dark:border-indigo-900">
-                <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Sources</p>
-                <ul className="mt-1 flex flex-col gap-0.5 text-xs">
-                  {prepResult.sources.map((source) => (
-                    <li key={source.url} className="truncate">
-                      <a
-                        href={source.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-indigo-600 hover:underline dark:text-indigo-400"
-                      >
-                        {source.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-=======
         <div className="hang-row">
           <label htmlFor={fieldId("notes")} className="hang-label lg:pt-3">
             Notes <span className="font-normal text-mute">(optional)</span>
@@ -287,9 +216,49 @@ export function SpeechBriefForm({ initial, onSubmit }: SpeechBriefFormProps) {
               placeholder="Key points, an outline, or your full script"
               className="block w-full resize-y border border-ink bg-transparent p-3 text-lg placeholder:text-mute focus:shadow-[inset_0_0_0_1px_var(--color-ink)] focus-visible:outline-none"
             />
+            <button
+              type="button"
+              onClick={() => void handleResearchAudience()}
+              disabled={prepLoading}
+              className="text-link mt-3 disabled:cursor-not-allowed disabled:text-mute disabled:hover:bg-transparent"
+            >
+              {prepLoading ? "Researching audience & topic…" : "Research audience & topic"}
+            </button>
+            {prepError && <p className="mt-3 font-bold">{prepError}</p>}
+            {prepResult && (
+              <div className="mt-5 rule-top">
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
+                  <p className="font-bold">Audience &amp; Evidence Prep</p>
+                  <button type="button" onClick={insertInsightsIntoNotes} className="text-link">
+                    Insert into Notes
+                  </button>
+                </div>
+                <ul className="mt-3 flex flex-col gap-2.5 text-lg leading-snug">
+                  {prepResult.insights.map((insight) => (
+                    <li key={insight} className="flex items-baseline gap-3">
+                      <span aria-hidden className="size-2 shrink-0 -translate-y-0.5 bg-ink" />
+                      <span>{insight}</span>
+                    </li>
+                  ))}
+                </ul>
+                {prepResult.sources.length > 0 && (
+                  <div className="mt-4">
+                    <p className="font-bold">Sources</p>
+                    <ul className="mt-1 flex flex-col gap-1">
+                      {prepResult.sources.map((source) => (
+                        <li key={source.url} className="truncate">
+                          <a href={source.url} target="_blank" rel="noreferrer" className="text-link">
+                            {source.title}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
->>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
 
         <div className="hang-row">
           <div className="hang-body lg:col-start-3">

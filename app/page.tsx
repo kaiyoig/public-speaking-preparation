@@ -59,7 +59,7 @@ export default function Home() {
 
 /**
  * The top panel: the name, centered, with famous speeches typing themselves out behind it.
- * About is linked from the top corner, and the arrow at the foot shows the Modes are below.
+ * About is linked just under the name, and the arrow at the foot shows the Modes are below.
  */
 function Title() {
   return (
@@ -71,7 +71,7 @@ function Title() {
       <Link
         href="/about"
         transitionTypes={[TRANSITION.toAbout]}
-        className="text-link absolute top-5 right-6 bg-paper text-lg sm:top-9 sm:right-12 lg:right-24"
+        className="text-link relative mt-8 bg-paper text-lg sm:mt-10"
       >
         About Rhetor
       </Link>
@@ -93,7 +93,7 @@ function Modes() {
   return (
     <Shell
       rail={
-        <Link href="/about" transitionTypes={[TRANSITION.toAbout]} className="text-link self-start text-lg">
+        <Link href="/about" transitionTypes={[TRANSITION.modesToAbout]} className="text-link self-start text-lg">
           About Rhetor
         </Link>
       }
