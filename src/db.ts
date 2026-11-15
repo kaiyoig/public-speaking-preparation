@@ -1,5 +1,11 @@
 import { neon } from "@neondatabase/serverless";
-import type { Reflection } from "../domain/types.ts";
+import type {
+  Mode,
+  PracticeSessionDetail,
+  PracticeSessionSummary,
+  Reflection,
+  VocalDeliveryMetrics,
+} from "../domain/types.ts";
 import type { ReflectionInput } from "../services/HostBrain.ts";
 
 let schemaInitialized = false;
@@ -148,5 +154,106 @@ export async function getRecentSessionSummaries(
   } catch (error) {
     console.warn("Failed to fetch recent practice sessions from Neon:", error);
     return [];
+  }
+}
+
+function mapSummaryRow(row: Record<string, unknown>): PracticeSessionSummary {
+  const rawCreatedAt = row.created_at;
+  const createdAt =
+    rawCreatedAt instanceof Date
+      ? rawCreatedAt.toISOString()
+      : String(rawCreatedAt ?? new Date().toISOString());
+
+  return {
+    id: Number(row.id),
+    mode: row.mode === "improv" ? ("improv" as Mode) : ("normal" as Mode),
+    topicOrAudience: String(row.topic_or_audience ?? "Untitled session"),
+    purpose: row.purpose != null ? String(row.purpose) : null,
+    vocalMetrics: (row.vocal_metrics as VocalDeliveryMetrics | null) ?? null,
+    reflection: row.reflection as Reflection,
+    createdAt,
+  };
+}
+
+/**
+ * Lists recorded practice sessions from Neon Postgres, newest first.
+ */
+export async function listPracticeSessions(
+  limit = 25
+): Promise<PracticeSessionSummary[]> {
+  const sql = getSql();
+  if (!sql) return [];
+
+  try {
+    await ensureSchema();
+
+    const rows = await sql`
+      SELECT
+        id,
+        mode,
+        topic_or_audience,
+        purpose,
+        vocal_metrics,
+        reflection,
+        created_at
+      FROM practice_sessions
+      ORDER BY created_at DESC, id DESC
+      LIMIT ${limit}
+    `;
+
+    return rows.map((row) => mapSummaryRow(row as Record<string, unknown>));
+  } catch (error) {
+    console.warn("Failed to list practice sessions from Neon:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetches a single practice session (including transcript, body language observations,
+ * and Q&A answers) by ID from Neon Postgres.
+ */
+export async function getPracticeSessionById(
+  id: number
+): Promise<PracticeSessionDetail | null> {
+  if (!Number.isInteger(id) || id <= 0) return null;
+  const sql = getSql();
+  if (!sql) return null;
+
+  try {
+    await ensureSchema();
+
+    const rows = await sql`
+      SELECT
+        id,
+        mode,
+        topic_or_audience,
+        purpose,
+        delivery_transcript,
+        vocal_metrics,
+        body_language,
+        qa_answers,
+        reflection,
+        created_at
+      FROM practice_sessions
+      WHERE id = ${id}
+      LIMIT 1
+    `;
+
+    const row = rows[0] as Record<string, unknown> | undefined;
+    if (!row) return null;
+
+    return {
+      ...mapSummaryRow(row),
+      deliveryTranscript: String(row.delivery_transcript ?? ""),
+      bodyLanguage: Array.isArray(row.body_language)
+        ? (row.body_language as string[])
+        : [],
+      qaAnswers: Array.isArray(row.qa_answers)
+        ? (row.qa_answers as string[])
+        : null,
+    };
+  } catch (error) {
+    console.warn("Failed to fetch practice session detail from Neon:", error);
+    return null;
   }
 }

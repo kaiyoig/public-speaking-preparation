@@ -70,3 +70,19 @@ export interface Reflection {
   content: ReflectionSection;
   sources?: TopicSourceLink[];
 }
+
+export interface PracticeSessionSummary {
+  id: number;
+  mode: Mode;
+  topicOrAudience: string;
+  purpose: string | null;
+  vocalMetrics: VocalDeliveryMetrics | null;
+  reflection: Reflection;
+  createdAt: string;
+}
+
+export interface PracticeSessionDetail extends PracticeSessionSummary {
+  deliveryTranscript: string;
+  bodyLanguage: string[];
+  qaAnswers: string[] | null;
+}

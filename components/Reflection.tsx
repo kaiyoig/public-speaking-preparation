@@ -18,19 +18,14 @@ interface ReflectionProps {
 /** The Reflection Phase, shared by both Modes: what the Speaker can improve. No numeric scores. */
 export function Reflection({ input, onPracticeAgain }: ReflectionProps) {
   return (
-<<<<<<< HEAD
-    <AsyncView run={() => services.hostBrain.getReflection(input)} label="The Host is writing your Reflection…">
+    <AsyncView run={() => services.hostBrain.getReflection(input)} label="The host is writing your reflection…">
       {(reflection) => (
         <ReflectionView
           reflection={reflection}
           vocalMetrics={input.delivery.vocalMetrics}
-          onPractiseAgain={onPractiseAgain}
+          onPracticeAgain={onPracticeAgain}
         />
       )}
-=======
-    <AsyncView run={() => services.hostBrain.getReflection(input)} label="The host is writing your reflection…">
-      {(reflection) => <ReflectionView reflection={reflection} onPracticeAgain={onPracticeAgain} />}
->>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
     </AsyncView>
   );
 }
@@ -41,19 +36,17 @@ const SECTIONS = [
   { key: "content", title: "Content" },
 ] as const;
 
-<<<<<<< HEAD
-function ReflectionView({
+export function ReflectionView({
   reflection,
   vocalMetrics,
-  onPractiseAgain,
+  onPracticeAgain,
+  showHistoryLink = true,
 }: {
   reflection: ReflectionData;
   vocalMetrics?: VocalDeliveryMetrics | undefined;
-  onPractiseAgain: () => void;
+  onPracticeAgain?: (() => void) | undefined;
+  showHistoryLink?: boolean;
 }) {
-=======
-function ReflectionView({ reflection, onPracticeAgain }: { reflection: ReflectionData; onPracticeAgain: () => void }) {
->>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
   const { caption, isSpeaking, say } = useHost();
 
   return (
@@ -78,34 +71,31 @@ function ReflectionView({ reflection, onPracticeAgain }: { reflection: Reflectio
         </div>
       </div>
 
-<<<<<<< HEAD
       {vocalMetrics && (
-        <section aria-label="Vocal Delivery Analysis" className="card">
-          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            Vocal Delivery Telemetry (ElevenLabs STT + Acoustic Analysis)
-          </h3>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">Pace</p>
-              <p className="mt-0.5 text-lg font-semibold capitalize">
+        <section aria-label="Vocal Delivery Analysis" className="rule-top hang-row">
+          <h3 className="hang-label">Vocal Delivery</h3>
+          <div className="hang-body grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="border-t-2 border-ink pt-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-mute">Pace</p>
+              <p className="mt-1 text-xl font-bold capitalize tabular-nums">
                 {vocalMetrics.wordsPerMinute} WPM · {vocalMetrics.paceLabel}
               </p>
             </div>
-            <div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">Vocal Inflection</p>
-              <p className="mt-0.5 text-lg font-semibold capitalize">
+            <div className="border-t-2 border-ink pt-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-mute">Vocal Inflection</p>
+              <p className="mt-1 text-xl font-bold capitalize tabular-nums">
                 {vocalMetrics.inflectionVariety} (±{vocalMetrics.pitchRangeHz} Hz)
               </p>
             </div>
-            <div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">Volume &amp; Dynamics</p>
-              <p className="mt-0.5 text-lg font-semibold capitalize">
+            <div className="border-t-2 border-ink pt-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-mute">Volume &amp; Dynamics</p>
+              <p className="mt-1 text-xl font-bold capitalize">
                 {vocalMetrics.volumeLevel} · {vocalMetrics.volumeDynamics}
               </p>
             </div>
-            <div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">Pauses &amp; Fillers</p>
-              <p className="mt-0.5 text-lg font-semibold">
+            <div className="border-t-2 border-ink pt-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-mute">Pauses &amp; Fillers</p>
+              <p className="mt-1 text-xl font-bold tabular-nums">
                 {vocalMetrics.pauseCount} pauses · {vocalMetrics.fillerWordCount} fillers
               </p>
             </div>
@@ -113,29 +103,23 @@ function ReflectionView({ reflection, onPracticeAgain }: { reflection: Reflectio
         </section>
       )}
 
-      <div className="grid gap-6 md:grid-cols-3">
-=======
       <div className="flex flex-col gap-10">
->>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
         {SECTIONS.map((section) => (
           <ReflectionSectionRow key={section.key} title={section.title} section={reflection[section.key]} />
         ))}
       </div>
 
-<<<<<<< HEAD
       {reflection.sources && reflection.sources.length > 0 && (
-        <section aria-label="Helpful Sources" className="card">
-          <h3 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            Helpful Sources for Your Next Draft
-          </h3>
-          <ul className="mt-2 flex flex-col gap-1.5 text-sm">
+        <section aria-label="Helpful Sources" className="rule-top hang-row">
+          <h3 className="hang-label">Helpful Sources</h3>
+          <ul className="hang-body flex max-w-2xl flex-col gap-2 text-lg">
             {reflection.sources.map((source) => (
               <li key={source.url} className="truncate">
                 <a
                   href={source.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-indigo-600 hover:underline dark:text-indigo-400"
+                  className="underline underline-offset-4 hover:bg-highlight hover:text-on-highlight"
                 >
                   {source.title}
                 </a>
@@ -145,13 +129,21 @@ function ReflectionView({ reflection, onPracticeAgain }: { reflection: Reflectio
         </section>
       )}
 
-      <div className="flex flex-wrap justify-end gap-3">
-=======
       <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={onPracticeAgain} className="btn-primary">
-          Practice again
-        </button>
->>>>>>> 6cc5ef563e0753c7a09cd9fe51d42c7baff30d4c
+        {onPracticeAgain ? (
+          <button type="button" onClick={onPracticeAgain} className="btn-primary">
+            Practice again
+          </button>
+        ) : (
+          <Link href="/#modes" className="btn-primary">
+            New practice
+          </Link>
+        )}
+        {showHistoryLink && (
+          <Link href="/history" className="btn-secondary">
+            History
+          </Link>
+        )}
         <Link href="/" className="btn-secondary">
           Home
         </Link>

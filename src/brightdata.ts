@@ -57,10 +57,11 @@ function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Research an improv speaking topic.
-export async function researchTopic(
-  topic: string
-): Promise<ResearchResponse> {
+// Run a Bright Data Google SERP search for an arbitrary query string.
+export async function searchWebContext(
+  query: string,
+  timeoutMs: number = 30000
+): Promise<SearchResult[]> {
 
   // Step 1: Load API credentials.
   const apiKey = process.env.BRIGHTDATA_API_KEY;
@@ -75,11 +76,7 @@ export async function researchTopic(
     "https://www.google.com/search"
   );
 
-  searchUrl.searchParams.set(
-    "q",
-    `${topic} arguments for and against pros cons`
-  );
-
+  searchUrl.searchParams.set("q", query);
   searchUrl.searchParams.set("hl", "en");
   searchUrl.searchParams.set("gl", "us");
   searchUrl.searchParams.set("brd_json", "1");
@@ -109,7 +106,7 @@ export async function researchTopic(
             url: searchUrl.toString(),
             format: "raw"
           }),
-          signal: AbortSignal.timeout(30000)
+          signal: AbortSignal.timeout(timeoutMs)
         }
       );
     } catch (error) {
@@ -183,7 +180,7 @@ export async function researchTopic(
     }
 
     // Step 6: Extract and clean results.
-    const sources: SearchResult[] = data.organic
+    return data.organic
       .map(result => ({
         title: result.title ?? "",
         description: result.description ?? "",
@@ -194,13 +191,22 @@ export async function researchTopic(
         isValidUrl(result.url)
       )
       .slice(0, 5);
-
-    // Step 7: Return the research.
-    return {
-      topic,
-      sources
-    };
   }
 
   throw new Error("Bright Data request failed.");
+}
+
+// Research an improv speaking topic.
+export async function researchTopic(
+  topic: string
+): Promise<ResearchResponse> {
+  const sources = await searchWebContext(
+    `${topic} arguments for and against pros cons`,
+    30000
+  );
+
+  return {
+    topic,
+    sources,
+  };
 }
