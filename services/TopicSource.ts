@@ -1,15 +1,17 @@
-import type { TopicBriefing } from "@/domain/types";
+import type { TopicBriefing, TopicKind } from "@/domain/types";
 
 /**
- * Picks a random topic and gathers Speaking Points for Improv Mode.
+ * Picks a topic of the chosen Topic Kind and gathers Speaking Points for Improv Mode.
  *
  * Owner: Andrew (Improv Mode, webscraping).
  *
  * Contract:
- * - `getTopicBriefing()` resolves with a fresh, randomly chosen Topic Briefing
- *   on every call, with a handful of Speaking Points.
+ * - `getTopicBriefing(kind)` resolves with a fresh Topic Briefing on every call,
+ *   with a handful of Speaking Points.
+ * - `"classic"` picks from a fixed list of topics; `"trending"` writes a new topic
+ *   from recent news headlines.
  * - Rejects with an Error whose message can be shown to the Speaker.
  */
 export interface TopicSource {
-  getTopicBriefing(): Promise<TopicBriefing>;
+  getTopicBriefing(kind: TopicKind): Promise<TopicBriefing>;
 }

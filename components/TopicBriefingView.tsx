@@ -17,7 +17,7 @@ export function TopicBriefingView({ onStart }: TopicBriefingViewProps) {
   return (
     <AsyncView
       key={attempt}
-      run={() => services.topicSource.getTopicBriefing()}
+      run={() => services.topicSource.getTopicBriefing("classic")}
       label="Researching a fresh topic…"
     >
       {(topicBriefing) => (

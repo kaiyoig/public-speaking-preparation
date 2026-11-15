@@ -14,6 +14,12 @@ export interface SpeechBrief {
   notes?: string;
 }
 
+/**
+ * Where an Improv Mode topic comes from: Classic picks from a fixed list,
+ * Trending writes a fresh one from recent news headlines.
+ */
+export type TopicKind = "classic" | "trending";
+
 export interface TopicSourceLink {
   title: string;
   url: string;
