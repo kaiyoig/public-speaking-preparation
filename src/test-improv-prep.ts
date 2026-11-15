@@ -2,7 +2,8 @@ import { createImprovPrep } from "./improv-prep.ts";
 
 async function main() {
 
-  const session = await createImprovPrep();
+  const session = await createImprovPrep("trending");
+  console.log("Topic Mode:", session.topicMode);
 
   console.log("=== IMPROV MODE ===");
 

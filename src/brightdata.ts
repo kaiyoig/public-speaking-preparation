@@ -14,7 +14,7 @@ interface ResearchResponse {
   sources: SearchResult[];
 }
 
-// Structure of a Bright Data result.
+// Bright Data search result structure.
 interface BrightDataResult {
   title?: string;
   description?: string;
@@ -25,7 +25,7 @@ interface BrightDataResponse {
   organic?: BrightDataResult[];
 }
 
-// Check whether a URL is valid.
+// Check whether a source URL is usable.
 function isValidUrl(link: string): boolean {
   try {
     const url = new URL(link);
@@ -37,7 +37,7 @@ function isValidUrl(link: string): boolean {
       return false;
     }
 
-    // Exclude Google redirect links.
+    // Exclude Google's redirect links.
     if (
       (url.hostname === "google.com" ||
         url.hostname.endsWith(".google.com")) &&
@@ -53,7 +53,12 @@ function isValidUrl(link: string): boolean {
   }
 }
 
-// Search the web for an improv speaking topic.
+// Wait before retrying a failed request.
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Research an improv speaking topic.
 export async function researchTopic(
   topic: string
 ): Promise<ResearchResponse> {
@@ -66,7 +71,7 @@ export async function researchTopic(
     throw new Error("Missing Bright Data credentials!");
   }
 
-  // Step 2: Build our search query.
+  // Step 2: Build our Google search.
   const searchUrl = new URL(
     "https://www.google.com/search"
   );
@@ -80,81 +85,123 @@ export async function researchTopic(
   searchUrl.searchParams.set("gl", "us");
   searchUrl.searchParams.set("brd_json", "1");
 
-  // Step 3: Send request to Bright Data.
-  const response = await fetch(
-    "https://api.brightdata.com/request",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        zone: zone,
-        url: searchUrl.toString(),
-        format: "raw"
-      }),
-      signal: AbortSignal.timeout(60000)
+  // Step 3: Attempt the request up to 2 times.
+  const maxAttempts = 2;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+
+    console.log(
+      `Bright Data research attempt ${attempt}/${maxAttempts}`
+    );
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        "https://api.brightdata.com/request",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            zone,
+            url: searchUrl.toString(),
+            format: "raw"
+          }),
+          signal: AbortSignal.timeout(30000)
+        }
+      );
+    } catch (error) {
+      if (attempt < maxAttempts) {
+        console.warn("Network request failed. Retrying...");
+        await wait(1500);
+        continue;
+      }
+
+      throw error;
     }
-  );
 
-  // Step 4: Check for HTTP errors.
-  if (!response.ok) {
-    const errorCode =
-      response.headers.get("x-brd-error-code") ??
-      "unknown";
+    // Do not retry quota or authentication errors.
+    if (response.status === 429) {
+      throw new Error(
+        "Bright Data rate limit reached."
+      );
+    }
 
-    throw new Error(
-      `Bright Data error: ${response.status}, code: ${errorCode}`
-    );
-  }
+    // Retry temporary server errors.
+    if (!response.ok) {
+      const temporaryError =
+        [502, 503, 504].includes(response.status);
 
-  // Step 5: Read the response as text first.
-  const responseText = await response.text();
+      if (temporaryError && attempt < maxAttempts) {
+        console.warn("Temporary server error. Retrying...");
+        await wait(1500);
+        continue;
+      }
 
-  // Detect an empty response.
-  if (!responseText.trim()) {
-    throw new Error(
-      `Bright Data returned an empty response (HTTP ${response.status}).`
-    );
-  }
+      throw new Error(
+        `Bright Data error: HTTP ${response.status}`
+      );
+    }
 
-  // Step 6: Convert response text into JSON.
-  let data: BrightDataResponse;
+    // Step 4: Read the response.
+    const responseText = await response.text();
 
-  try {
-    data = JSON.parse(responseText);
-  } catch {
-    throw new Error(
-      `Bright Data returned invalid JSON (HTTP ${response.status}, length: ${responseText.length}).`
-    );
-  }
+    // Retry if Bright Data returned an empty response.
+    if (!responseText.trim()) {
 
-  // Step 7: Verify that organic results exist.
-  if (!Array.isArray(data.organic)) {
-    throw new Error(
-      "Bright Data did not return organic search results."
-    );
-  }
+      if (attempt < maxAttempts) {
+        console.warn(
+          "Bright Data returned empty data. Retrying..."
+        );
 
-  // Step 8: Extract valid search results.
-  const sources: SearchResult[] = data.organic
-    .map((result) => ({
-      title: result.title ?? "",
-      description: result.description ?? "",
-      url: result.link ?? ""
-    }))
-    .filter((result) => {
-      return (
+        await wait(1500);
+        continue;
+      }
+
+      throw new Error(
+        "Bright Data returned an empty response after retry."
+      );
+    }
+
+    // Step 5: Parse the response JSON.
+    let data: BrightDataResponse;
+
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(
+        "Bright Data returned invalid JSON."
+      );
+    }
+
+    if (!Array.isArray(data.organic)) {
+      throw new Error(
+        "Bright Data did not return organic search results."
+      );
+    }
+
+    // Step 6: Extract and clean results.
+    const sources: SearchResult[] = data.organic
+      .map(result => ({
+        title: result.title ?? "",
+        description: result.description ?? "",
+        url: result.link ?? ""
+      }))
+      .filter(result =>
         result.title.length > 0 &&
         isValidUrl(result.url)
-      );
-    })
-    .slice(0, 5);
+      )
+      .slice(0, 5);
 
-  // Step 9: Return information to Improv Mode.
-  return {
-    topic: topic,
-    sources: sources
-  };
+    // Step 7: Return the research.
+    return {
+      topic,
+      sources
+    };
+  }
+
+  throw new Error("Bright Data request failed.");
 }
