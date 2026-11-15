@@ -1,10 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HistoryDetailClient } from "@/components/HistoryDetailClient";
-import { HomePanelLink } from "@/components/HomePager";
-import { PageTransition } from "@/components/PageTransition";
-import { Shell } from "@/components/Shell";
-import { TRANSITION } from "@/components/transitions";
+import { RecordShell } from "@/components/RecordShell";
 import { getPracticeSessionById } from "@/src/db";
 
 export const dynamic = "force-dynamic";
@@ -40,38 +36,20 @@ export default async function HistoryDetailPage({
   const modeLabel = session.mode === "normal" ? "Normal Mode" : "Improv Mode";
 
   return (
-    <PageTransition>
-      <Shell
-        wordmarkTransition={TRANSITION.historyToTitle}
-        rail={
-          <nav aria-label="Session detail navigation" className="flex flex-wrap gap-x-6 gap-y-2 lg:flex-col">
-            <Link href="/history" transitionTypes={[TRANSITION.closeRecord]} className="text-link self-start text-lg">
-              ← All history
-            </Link>
-            <HomePanelLink
-              panel="modes"
-              transitionTypes={[TRANSITION.historyToModes]}
-              className="text-link self-start text-lg"
-            >
-              Choose a mode
-            </HomePanelLink>
-          </nav>
-        }
-      >
-        <div className="flex flex-col gap-12">
-          <header className="flex flex-col gap-2">
-            <p className="text-sm font-semibold uppercase tracking-widest text-mute">
-              {modeLabel} · {formatSessionDate(session.createdAt)}
-              {session.purpose && session.purpose !== "improv" ? ` · Purpose: ${session.purpose}` : ""}
-            </p>
-            <h1 className="text-4xl font-bold leading-[0.95] tracking-tight font-display sm:text-5xl">
-              {session.topicOrAudience}
-            </h1>
-          </header>
+    <RecordShell>
+      <div className="flex flex-col gap-12">
+        <header className="flex flex-col gap-2">
+          <p className="text-sm font-semibold uppercase tracking-widest text-mute">
+            {modeLabel} · {formatSessionDate(session.createdAt)}
+            {session.purpose && session.purpose !== "improv" ? ` · Purpose: ${session.purpose}` : ""}
+          </p>
+          <h1 className="text-4xl font-bold leading-[0.95] tracking-tight font-display sm:text-5xl">
+            {session.topicOrAudience}
+          </h1>
+        </header>
 
-          <HistoryDetailClient session={session} />
-        </div>
-      </Shell>
-    </PageTransition>
+        <HistoryDetailClient session={session} />
+      </div>
+    </RecordShell>
   );
 }
